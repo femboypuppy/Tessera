@@ -1,0 +1,8 @@
+# The docs site is its own pnpm project with its own lockfile. The root workspace only covers
+# apps/* and packages/*, so this file makes `pnpm install` here independent of the monorepo:
+#   pnpm --dir docs install && pnpm --dir docs build
+packages:
+  - '.'
+
+allowBuilds:
+  esbuild: true

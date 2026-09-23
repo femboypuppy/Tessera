@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
+  },
+  "include": ["scripts", ".vitepress/**/*.ts", ".vitepress/**/*.mts"],
+  "exclude": [".vitepress/cache", ".vitepress/dist"]
+}
