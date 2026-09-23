@@ -6,7 +6,7 @@ import { AllSelection, TextSelection } from '@tiptap/pm/state';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createEditorController, type EditorController } from '../react/controller';
 import { blockTexts, createTestEditor } from '../test-utils';
-import { clipboard, isEditorHTML, sanitizeHTML } from './clipboard';
+import { accountsForText, clipboard, isEditorHTML, sanitizeHTML } from './clipboard';
 import { FakeRichCodec } from './fake-codec';
 
 let app: TestAppContext;
@@ -157,6 +157,33 @@ describe('paste', () => {
     expect(paste(editor, { 'text/plain': '# not a heading' })).toBe(false);
   });
 
+  it('falls back to the plain-text flavor when the codec loses text from the HTML', () => {
+    class LossyCodec extends FakeRichCodec {
+      // Keeps only the first block, the way a codec that doesn't know lists might.
+      override parseHTML(): DocJSON {
+        return b.doc(b.heading(2, 'Flight notes'));
+      }
+    }
+    const lossy: AppContext = {
+      ...app.ctx,
+      services: { ...app.ctx.services, markdownCodec: new LossyCodec() },
+    };
+    const controller = createEditorController(lossy, 'host');
+    const result = createTestEditor({
+      content: b.doc(b.paragraph()),
+      extra: clipboard(controller),
+    });
+    controller.editor = result.editor;
+    cleanups.push(result.destroy);
+    const html = '<h2>Flight notes</h2><ul><li>Stage one</li><li>Stage two</li></ul>';
+    const text = ['## Flight notes', '', '- Stage one', '- Stage two'].join('\n');
+    expect(paste(result.editor, { 'text/html': html, 'text/plain': text })).toBe(true);
+    expect(blockTexts(result.editor)).toEqual([
+      'heading:Flight notes',
+      'bulletList:Stage oneStage two',
+    ]);
+  });
+
   it('works with the stub codec too (paragraphs and headings)', () => {
     const editor = setup(b.doc(b.paragraph()), { rich: false });
     paste(editor, { 'text/plain': '# Title\n\nFirst paragraph\n\nSecond' });
@@ -165,6 +192,35 @@ describe('paste', () => {
       'paragraph:First paragraph',
       'paragraph:Second',
     ]);
+  });
+});
+
+describe('accountsForText', () => {
+  const html = '<h2>Flight notes</h2><p>Orbit reached.</p>';
+
+  it('accepts a document with the same text, whatever the whitespace', () => {
+    expect(
+      accountsForText(b.doc(b.heading(2, 'Flight notes'), b.paragraph('Orbit  reached.')), html),
+    ).toBe(true);
+  });
+
+  it('rejects a document that drops or doubles text', () => {
+    expect(accountsForText(b.doc(b.heading(2, 'Flight notes')), html)).toBe(false);
+    expect(
+      accountsForText(
+        b.doc(
+          b.paragraph('Flight notes Orbit reached.'),
+          b.paragraph('Flight notes Orbit reached.'),
+        ),
+        html,
+      ),
+    ).toBe(false);
+  });
+
+  it('ignores markup that sanitizing removes', () => {
+    expect(accountsForText(b.doc(b.paragraph('Hi')), '<p>Hi<script>steal()</script></p>')).toBe(
+      true,
+    );
   });
 });
 

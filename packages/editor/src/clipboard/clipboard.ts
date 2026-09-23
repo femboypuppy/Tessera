@@ -1,4 +1,4 @@
-import { normalizeDocJSON, type AppContext, type DocJSON } from '@tessera/core';
+import { extractPlainText, normalizeDocJSON, type AppContext, type DocJSON } from '@tessera/core';
 import { Extension, type AnyExtension } from '@tiptap/core';
 import { Slice, type Schema } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
@@ -57,6 +57,34 @@ export function parseClipboardHTML(ctx: AppContext, html: string): DocJSON {
   return ctx.services.markdownCodec.parseHTML(sanitizeHTML(html));
 }
 
+function letters(text: string): number {
+  return text.replace(/\s+/g, '').length;
+}
+
+/**
+ * True when a parsed document accounts for the text of the HTML it came from (within 15%). A
+ * codec that drops or duplicates text fails this, and paste falls back to the plain-text flavor,
+ * so pasting never silently loses words.
+ */
+export function accountsForText(doc: DocJSON, html: string): boolean {
+  if (typeof DOMParser === 'undefined') return true;
+  const expected = letters(
+    new DOMParser().parseFromString(sanitizeHTML(html), 'text/html').body.textContent ?? '',
+  );
+  if (expected === 0) return true;
+  const ratio = letters(extractPlainText(doc)) / expected;
+  return ratio > 0.85 && ratio < 1.15;
+}
+
+/** The document to paste for clipboard data, through the codec (null when there is nothing). */
+export function clipboardDoc(ctx: AppContext, html: string, text: string): DocJSON | null {
+  if (html) {
+    const fromHtml = parseClipboardHTML(ctx, html);
+    return text && !accountsForText(fromHtml, html) ? parseClipboardText(ctx, text) : fromHtml;
+  }
+  return text ? parseClipboardText(ctx, text) : null;
+}
+
 /**
  * Copy and paste. Copying puts HTML (for rich targets) and markdown (the plain-text flavor,
  * through the `MarkdownCodec`) on the clipboard. Pasting HTML from another Tessera editor keeps
@@ -110,14 +138,9 @@ export function clipboard(controller: EditorController): AnyExtension[] {
               const html = data.getData('text/html');
               // From Tessera (or another ProseMirror editor): let ProseMirror keep the structure.
               if (html && isEditorHTML(html)) return false;
-              let doc: DocJSON | null = null;
               try {
-                if (html) doc = parseClipboardHTML(controller.ctx, html);
-                else {
-                  const text = data.getData('text/plain');
-                  if (!text) return false;
-                  doc = parseClipboardText(controller.ctx, text);
-                }
+                const doc = clipboardDoc(controller.ctx, html, data.getData('text/plain'));
+                if (!doc) return false;
                 const slice = docToSlice(view.state.schema, doc);
                 if (slice.size === 0) return true;
                 event.preventDefault();
