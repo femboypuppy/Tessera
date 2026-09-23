@@ -36,6 +36,7 @@ describe('.github/workflows', () => {
   it('has the workflows the project needs', () => {
     expect(WORKFLOWS.map((workflow) => path.basename(workflow.file))).toEqual(
       expect.arrayContaining([
+        'bench.yml',
         'ci.yml',
         'codeql.yml',
         'desktop.yml',

@@ -27,5 +27,6 @@ export {
   type TesseraFixtures,
   type TesseraWorkerFixtures,
 } from './fixtures';
+export { readZip, temporaryFolder, writeFolder, writeZip } from './files';
 export { harnessSearch, startHarness, type HarnessServer } from './harness-server';
 export { freePort, startSyncServer, type SyncServer } from './sync-server';
