@@ -205,3 +205,27 @@ test.describe('version history', () => {
     await expect.poll(() => readText(page, pageId)).toBe('First draft\nA risky rewrite');
   });
 });
+
+test.describe('at phone width', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('the sync settings and status fit and work with the keyboard', async ({ page }) => {
+    await createLocalWorkspace(page, 'Pocket notes');
+    await page.goto('/settings/sync');
+    await expect(page.getByRole('button', { name: 'Connect to a server' })).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    await page.getByRole('button', { name: 'Connect to a server' }).click();
+    await expect(page.getByLabel('Server address')).toBeVisible();
+
+    // The status popover opens from the keyboard and closes with Escape.
+    await syncStatus(page).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog').getByText(/lives on this device/)).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(syncStatus(page)).toBeFocused();
+  });
+});
