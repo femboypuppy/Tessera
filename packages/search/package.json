@@ -13,7 +13,8 @@
     "./palette-host": "./src/palette/index.ts",
     "./search-page": "./src/search-page/search-page.tsx",
     "./test-hooks": "./src/dev/test-hooks.ts",
-    "./backlinks": "./src/backlinks/index.tsx"
+    "./backlinks": "./src/backlinks/index.tsx",
+    "./graph": "./src/graph/index.tsx"
   },
   "scripts": {
     "build": "tsdown",

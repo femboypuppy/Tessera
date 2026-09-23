@@ -4,7 +4,7 @@ import { Button, cn, EmptyState, Skeleton, Switch } from '@tessera/ui';
 import { ChevronRight, Link2, Link2Off, TriangleAlert } from 'lucide-react';
 import { useId, useState, type ReactNode } from 'react';
 import { t } from '../i18n';
-import { displayTitle, Highlighted, PageGlyph } from '../ui/common';
+import { displayTitle, focusSnippet, Highlighted, PageGlyph } from '../ui/common';
 import {
   Context,
   groupBySource,
@@ -242,17 +242,13 @@ function UnlinkedMentions({ pageId, readOnly }: { pageId: string; readOnly: bool
                 <ul className="mt-0.5 flex flex-col gap-0.5">
                   {group.items.map((mention) => {
                     const key = mentionKey(mention);
-                    const range = mentionRange(mention, group.items);
                     return (
                       <li
                         key={key}
                         className="group/mention ml-6 flex items-start gap-2 rounded-md border-l-2 border-border px-2 py-1 hover:bg-hover"
                       >
                         <span className="line-clamp-3 min-w-0 flex-1 text-ui leading-relaxed text-fg-muted">
-                          <Highlighted
-                            text={mention.blockText}
-                            ranges={range ? [range] : undefined}
-                          />
+                          <MentionText mention={mention} siblings={group.items} />
                         </span>
                         {readOnly ? null : (
                           <Button
@@ -279,6 +275,19 @@ function UnlinkedMentions({ pageId, readOnly }: { pageId: string; readOnly: bool
       )}
     </Section>
   );
+}
+
+/** The mention in its block, with the text around it (long blocks are cut before it). */
+function MentionText({
+  mention,
+  siblings,
+}: {
+  mention: UnlinkedMention;
+  siblings: readonly UnlinkedMention[];
+}) {
+  const range = mentionRange(mention, siblings);
+  const excerpt = focusSnippet({ text: mention.blockText, highlights: range ? [range] : [] }, 48);
+  return <Highlighted text={excerpt.text} ranges={excerpt.highlights} />;
 }
 
 function FooterToggle() {

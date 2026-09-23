@@ -123,6 +123,7 @@ export const en = {
   // Graph
   graph: 'Graph',
   graphTitle: 'Graph view',
+  graphDocumentTitle: 'Graph · Tessera',
   localGraph: 'Local graph',
   graphSearch: 'Find a page in the graph',
   graphSearchPlaceholder: 'Find a page…',

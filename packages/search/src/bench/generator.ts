@@ -403,7 +403,7 @@ export function generateWorkspace(options: GeneratorOptions): GeneratedWorkspace
   }
   const popularity = new Map<string, number>();
   const chooseTarget = (from: Plan): Plan => {
-    const sameTopic = random() < 0.82;
+    const sameTopic = random() < 0.9;
     const pool = sameTopic ? (byTopic.get(from.topic) ?? plans) : plans;
     // Weighted by (1 + popularity), sampled from a few candidates to stay fast.
     let best = pick(random, pool);
@@ -423,10 +423,28 @@ export function generateWorkspace(options: GeneratorOptions): GeneratedWorkspace
   for (const plan of plans) {
     const topic = plan.topic;
     const others = byTopic.get(topic) ?? plans;
-    const otherSubject = () => pick(random, others).subject;
+    const otherSubject = () => {
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        const subject = pick(random, others).subject;
+        if (subject !== plan.subject) return subject;
+      }
+      return topic.name;
+    };
     const number = () => String(2 + Math.floor(random() * 97));
+    // Facts come from a shuffled deck, so a page never repeats one until it used them all.
+    let deck: string[] = [];
+    const nextFact = (): string => {
+      if (deck.length === 0) {
+        deck = [...topic.facts];
+        for (let i = deck.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j] ?? '', deck[i] ?? ''];
+        }
+      }
+      return deck.pop() ?? '';
+    };
     const sentence = (target: Plan | null): InlineJSON[] => {
-      const template = pick(random, topic.facts);
+      const template = nextFact();
       const other = otherSubject();
       const text = fill(template, { subject: plan.subject, other, number: number() });
       if (!target) return [b.text(text)];
@@ -460,14 +478,14 @@ export function generateWorkspace(options: GeneratorOptions): GeneratedWorkspace
         const inline: InlineJSON[] = [...sentence(target)];
         inline.push(
           b.text(
-            ` ${fill(pick(random, topic.facts), { subject: plan.subject, other: otherSubject(), number: number() })}`,
+            ` ${fill(nextFact(), { subject: plan.subject, other: otherSubject(), number: number() })}`,
           ),
         );
         if (random() < 0.35) inline.push(b.text(' '), b.tag(topic.tag));
         blocks.push(b.paragraph(...inline));
       }
       const fact = () =>
-        fill(pick(random, topic.facts), {
+        fill(nextFact(), {
           subject: plan.subject,
           other: otherSubject(),
           number: number(),
@@ -512,7 +530,7 @@ export function generateWorkspace(options: GeneratorOptions): GeneratedWorkspace
         blocks.push(
           b.toggle('More details', [
             b.paragraph(
-              fill(pick(random, topic.facts), {
+              fill(nextFact(), {
                 subject: plan.subject,
                 other: otherSubject(),
                 number: number(),
@@ -528,7 +546,7 @@ export function generateWorkspace(options: GeneratorOptions): GeneratedWorkspace
       }
     }
     const tags = new Set<string>();
-    if (plan.level > 0 && random() < 0.7) tags.add(topic.tag);
+    if (plan.level === 0 || random() < 0.85) tags.add(topic.tag);
     if (random() < 0.18) tags.add(pick(random, EXTRA_TAGS));
     if (random() < 0.08) tags.add(`${topic.tag}/${pick(random, ['archive', 'active', 'someday'])}`);
     const alias =

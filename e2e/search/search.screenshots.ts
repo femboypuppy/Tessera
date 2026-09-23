@@ -42,3 +42,54 @@ test('palette screenshot', async ({ page }) => {
     await expect(dialog.getByText('Loading preview…')).toHaveCount(0);
   });
 });
+
+async function waitForSettledGraph(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      const graph = (window as unknown as { __tesseraGraph?: { settled(): boolean } })
+        .__tesseraGraph;
+      return graph?.settled() === true;
+    },
+    undefined,
+    { timeout: 60_000 },
+  );
+  // Let sigma draw the final frame.
+  await page.waitForTimeout(400);
+}
+
+test('graph screenshots', async ({ page }) => {
+  await openWorkspace(page, 'Field notes');
+  await seed(page, 300, 11);
+  await openPalette(page);
+  await page.keyboard.type('>graph view');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('img', { name: /Graph view/ })).toBeVisible();
+  await waitForSettledGraph(page);
+  await page.mouse.move(0, 0);
+  await snap(page, 'graph', () => page.waitForTimeout(300));
+});
+
+test('backlinks and local graph screenshots', async ({ page }) => {
+  await openWorkspace(page, 'Field notes');
+  await seed(page, 300, 11);
+  await openPalette(page);
+  await page.keyboard.type('europa');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue('Europa');
+
+  await page.getByRole('button', { name: 'Backlinks', exact: true }).click();
+  const backlinks = page.getByRole('complementary', { name: 'Backlinks' });
+  await expect(backlinks.getByRole('region', { name: /Linked references/ })).toBeVisible();
+  await expect(backlinks.getByText('Loading backlinks…')).toHaveCount(0);
+  await expect(backlinks.getByRole('button', { name: /Link this mention/ }).first()).toBeVisible();
+  await page.mouse.move(0, 0);
+  await snap(page, 'backlinks');
+
+  await page.getByRole('button', { name: 'Local graph', exact: true }).first().click();
+  await expect(page.getByRole('img', { name: /Local graph/ })).toBeVisible();
+  await page.getByLabel('Depth 1').fill('2');
+  await expect(page.getByText('Depth 2')).toBeVisible();
+  await waitForSettledGraph(page);
+  await page.mouse.move(0, 0);
+  await snap(page, 'local-graph', () => page.waitForTimeout(300));
+});
