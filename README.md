@@ -27,7 +27,7 @@ real-time collaboration and sandboxed plugins. On your device, on your own serve
 
 <!-- PLACEHOLDER: assets/demo.gif is a "coming soon" frame until the polish phase records the demo (agents/12-polish.md). -->
 <p align="center">
-  <img src="assets/demo.gif" alt="A 20-second tour of Tessera: writing with the slash menu, linking pages, dragging a card on a board and exploring the graph" width="860">
+  <img src="assets/demo.gif" alt="Tessera demo: writing with the slash menu, linking pages, dragging a card on a board and exploring the graph (recording coming soon)" width="860">
 </p>
 
 - **It's yours.** Your device holds the real data. Tessera works fully offline, and a server is optional.
@@ -144,7 +144,7 @@ nothing lost. Every page keeps a version history you can restore.
   </tr>
 </table>
 
-### Plugins that can't hurt you
+### Plugins, safely sandboxed
 
 Plugins add commands, panels and custom blocks. Each one runs in its own sandboxed iframe and can
 only do what you allowed. Scaffold one with `pnpm create tessera-plugin`.
