@@ -107,7 +107,8 @@ export function HeaderCell({
       data-property-type={property.type}
       className={cn(
         'group/header relative flex shrink-0 items-center border-r border-b border-border bg-bg',
-        active && 'outline-2 -outline-offset-2 outline-accent',
+        active &&
+          'outline-2 -outline-offset-2 outline-transparent group-focus-within/grid:outline-accent',
         isDragging && 'z-20 opacity-80 shadow-popover',
       )}
     >

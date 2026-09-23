@@ -858,7 +858,8 @@ export function TableView({
             }
           }}
           className={cn(
-            'relative overflow-auto border-t border-border bg-bg outline-none',
+            // The active cell's outline shows while focus is in the grid.
+            'group/grid relative overflow-auto border-t border-border bg-bg outline-none',
             heightClassName,
           )}
         >

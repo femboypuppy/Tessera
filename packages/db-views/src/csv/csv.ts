@@ -132,7 +132,13 @@ export function inferColumn(
   }
   const distinct = distinctNames(filled, false);
   const repeats = distinct.length < filled.length;
-  const small = filled.length < 8 && distinct.length <= 4;
+  // In a small file, a few short labels (High, Low) are a select even without repeats; sentences
+  // and numbers with a typo are not.
+  const small =
+    filled.length < 8 &&
+    distinct.length <= 4 &&
+    longest <= 24 &&
+    numbers.every((number) => number === null);
   if (longest <= 60 && distinct.length <= MAX_SELECT_OPTIONS && (repeats || small)) {
     if (repeats && distinct.length <= Math.max(3, filled.length * 0.6))
       return { ...plan, type: 'select', options: distinct };

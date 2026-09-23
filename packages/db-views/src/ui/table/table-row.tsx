@@ -208,7 +208,8 @@ export const TableRow = memo(function TableRow({
               'relative flex shrink-0 cursor-default items-start border-r border-border bg-bg py-1.5 select-none',
               !wrap && 'items-center py-0',
               inRange && 'bg-selected',
-              active && 'z-[2] outline-2 -outline-offset-2 outline-accent',
+              active &&
+                'z-[2] outline-2 -outline-offset-2 outline-transparent group-focus-within/grid:outline-accent',
             )}
           >
             {content}

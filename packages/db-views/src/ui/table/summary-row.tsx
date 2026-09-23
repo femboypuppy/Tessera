@@ -135,7 +135,8 @@ export function SummaryRow({
             data-active={activeCol === col || undefined}
             className={cn(
               'group/summary flex shrink-0 items-center justify-end bg-bg',
-              activeCol === col && 'outline-2 -outline-offset-2 outline-accent',
+              activeCol === col &&
+                'outline-2 -outline-offset-2 outline-transparent group-focus-within/grid:outline-accent',
             )}
             style={{
               width: column.width,

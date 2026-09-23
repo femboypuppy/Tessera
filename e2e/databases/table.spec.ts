@@ -97,8 +97,7 @@ test('creates a database with every property type, 20 rows, a filter and a sort'
   await choose(page, page.getByRole('combobox', { name: 'Property' }), 'Status');
   await page.getByRole('button', { name: 'Value' }).click();
   await page.getByRole('option', { name: 'Reading' }).click();
-  // Escape closes the value picker, then the filter panel (each once the other has closed).
-  await page.keyboard.press('Escape');
+  // Picking a single value closes the picker; then Escape closes the filter panel.
   await expect(page.getByRole('option', { name: 'Reading' })).toBeHidden();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Add a filter rule' })).toBeHidden();
