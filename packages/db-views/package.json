@@ -7,13 +7,15 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./query": "./src/query/index.ts"
   },
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "test:coverage": "vitest run src/query --exclude \"**/perf.test.ts\" --coverage.enabled --coverage.provider=v8 --coverage.include=\"src/query/**\" --coverage.exclude=\"**/*.test.ts\" --coverage.reporter=text --coverage.thresholds.lines=95 --coverage.thresholds.statements=95 --coverage.thresholds.functions=95 --coverage.thresholds.branches=95"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
@@ -36,6 +38,7 @@
   "devDependencies": {
     "@types/papaparse": "5.5.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "fast-check": "4.10.2"
   }
 }

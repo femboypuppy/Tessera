@@ -328,6 +328,9 @@ importers:
       '@types/papaparse':
         specifier: 5.5.2
         version: 5.5.2
+      fast-check:
+        specifier: 4.10.2
+        version: 4.10.2
       react:
         specifier: 19.3.0
         version: 19.3.0
