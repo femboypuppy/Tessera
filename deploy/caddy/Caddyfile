@@ -1,0 +1,19 @@
+# Caddy in front of Tessera: automatic HTTPS (Let's Encrypt), HTTP/3, compression.
+# Used by `docker compose --profile https up -d`; for Caddy installed on a VPS, see
+# deploy/vps/README.md (replace `tessera:8787` with `127.0.0.1:8787`).
+
+{$TESSERA_DOMAIN} {
+	encode zstd gzip
+
+	# WebSocket upgrades (real-time sync) pass through reverse_proxy as-is.
+	reverse_proxy tessera:8787 {
+		# Health-aware: Caddy stops sending traffic to a container that is restarting.
+		health_uri /api/health
+		health_interval 15s
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+}

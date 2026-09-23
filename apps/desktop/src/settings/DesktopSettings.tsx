@@ -153,15 +153,13 @@ function FolderSection() {
         <Button
           size="sm"
           onClick={() =>
-            void backend
-              .revealFolder(workspace.path ?? '')
-              .catch((error: unknown) =>
-                ctx.toast({
-                  variant: 'error',
-                  title: t('openFailed'),
-                  description: toError(error).message,
-                }),
-              )
+            void backend.revealFolder(workspace.path ?? '').catch((error: unknown) =>
+              ctx.toast({
+                variant: 'error',
+                title: t('openFailed'),
+                description: toError(error).message,
+              }),
+            )
           }
         >
           {revealLabel(ctx.platform.os)}

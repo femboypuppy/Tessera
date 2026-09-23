@@ -1,0 +1,34 @@
+manifestVersion: 1
+id: tessera
+category: files
+name: Tessera
+version: '0.1.0'
+tagline: Local-first notes, docs and databases
+icon: https://raw.githubusercontent.com/femboypuppy/Tessera/main/apps/desktop/src-tauri/icons/icon.png
+description: >-
+  Tessera is an open-source knowledge app: Notion-style pages and databases, Obsidian-style
+  [[links]], backlinks and a graph, real-time collaboration and plugins.
+
+
+  Running it on your Umbrel gives you and the people you invite a private sync server and the web
+  app. Notes also stay on every device that uses them, and export to plain markdown any time.
+
+
+  After installing, create the first account from the app's terminal:
+  `tessera-server create-owner`.
+releaseNotes: ''
+developer: Tessera contributors
+website: https://github.com/femboypuppy/Tessera
+dependencies: []
+repo: https://github.com/femboypuppy/Tessera
+support: https://github.com/femboypuppy/Tessera/issues
+port: 8787
+gallery:
+  - 1.jpg
+  - 2.jpg
+  - 3.jpg
+path: ''
+defaultUsername: ''
+defaultPassword: ''
+submitter: Tessera contributors
+submission: ''
