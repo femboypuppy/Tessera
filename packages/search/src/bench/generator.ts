@@ -231,7 +231,7 @@ const TOPICS: Topic[] = [
     facets: ['itinerary', 'packing list', 'budget', 'journal', 'places to eat'],
     facts: [
       'Spend at least {number} days in {subject} to see it without rushing.',
-      'The train from {subject} to {other} is scenic and cheap.',
+      'Pair {subject} with {other} if there is time for a second stop.',
       'Book the popular spots in {subject} a month ahead.',
       'Shoulder season is the best time to visit {subject}.',
     ],
@@ -466,8 +466,27 @@ export function generateWorkspace(options: GeneratorOptions): GeneratedWorkspace
         if (random() < 0.35) inline.push(b.text(' '), b.tag(topic.tag));
         blocks.push(b.paragraph(...inline));
       }
-      for (const target of targets.slice(paragraphs)) {
-        blocks.push(b.bulletList(b.listItem(b.paragraph('Related: ', b.pageLink(target.id)))));
+      const fact = () =>
+        fill(pick(random, topic.facts), {
+          subject: plan.subject,
+          other: otherSubject(),
+          number: number(),
+        });
+      if (random() < (plan.level === 1 ? 0.9 : 0.55)) {
+        const count = plan.level === 1 ? 3 : 2 + Math.floor(random() * 2);
+        blocks.push(b.heading(3, plan.level === 1 ? 'Key facts' : 'Notes'));
+        blocks.push(
+          b.bulletList(...Array.from({ length: count }, () => b.listItem(b.paragraph(fact())))),
+        );
+      }
+      if (random() < 0.12) blocks.push(b.blockquote(b.paragraph(fact())));
+      const related = targets.slice(paragraphs);
+      if (related.length) {
+        blocks.push(
+          b.bulletList(
+            ...related.map((target) => b.listItem(b.paragraph('Related: ', b.pageLink(target.id)))),
+          ),
+        );
       }
       if (random() < 0.25) {
         blocks.push(b.heading(3, 'Next steps'));

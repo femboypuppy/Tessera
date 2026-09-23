@@ -251,6 +251,9 @@ export class IndexHost {
   }
 
   get status(): IndexStatus {
+    // The transport may fall back to in-process after the host started.
+    if (this.statusValue.transport !== this.transport.kind)
+      this.statusValue = { ...this.statusValue, transport: this.transport.kind };
     return this.statusValue;
   }
 
