@@ -6,6 +6,7 @@
  * `@tessera/core/testing`. See SPEC.md.
  */
 export * from './json';
+export * from './json-schema';
 export * from './ids';
 export * from './errors';
 export * from './order';
@@ -13,6 +14,7 @@ export * from './order';
 // Data model
 export * from './model/doc-names';
 export * from './model/page-meta';
+export * from './model/page-meta-schema';
 export * from './model/page-index';
 export * from './model/pages';
 export * from './model/observe-pages';

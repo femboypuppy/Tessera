@@ -11,9 +11,9 @@ import {
   extractTags,
   extractTasks,
   extractTextBlocks,
-  headingSlug,
   inlineText,
 } from './extract';
+import { headingSlug } from './slug';
 import { readDocJSON, createDocFromJSON } from './ydoc';
 
 const titles: Record<string, string> = {

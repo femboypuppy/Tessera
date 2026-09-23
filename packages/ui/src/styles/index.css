@@ -1,2 +1,9 @@
-/* Tessera design tokens and base styles. Imported by apps/web/src/styles.css after Tailwind. */
+/*
+ * @tessera/ui styles. Import once, right after Tailwind, in the app's stylesheet; the app also adds
+ * an @source directive for the packages folder so classes used in packages are generated
+ * (see apps/web/src/styles.css).
+ */
+@import '@fontsource-variable/inter';
 @import './tokens.css';
+@import './theme.css';
+@import './base.css';

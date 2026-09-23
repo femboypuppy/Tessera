@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import '@tessera/ui/styles.css';
 
-/* Generate utilities for classes used in any package, not just this app. */
-@source '../../../packages/*/src';
+/*
+ * Generate utilities for classes used in any package, not just this app. The glob names files,
+ * so a new package is picked up without editing this file.
+ */
+@source '../../../packages/*/src/**/*.{ts,tsx}';

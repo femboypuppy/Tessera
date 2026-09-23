@@ -1,4 +1,199 @@
+/*
+ * Tessera design tokens. Every color, radius, shadow, duration and layout size used anywhere in
+ * the app comes from these variables, so both themes stay consistent. Light is the default;
+ * `:root[data-theme='dark']` overrides (apps/web/public/theme-init.js sets data-theme before paint).
+ * Components use them through Tailwind utilities defined in theme.css (bg-surface, text-fg-muted…).
+ */
+
 :root {
+  color-scheme: light;
+
+  /* Surfaces */
   --tess-bg: #ffffff;
-  --tess-fg: #1f1f1e;
+  --tess-bg-subtle: #f7f7f5;
+  --tess-surface: #ffffff;
+  --tess-surface-raised: #ffffff;
+  --tess-overlay: rgb(15 15 15 / 0.4);
+  --tess-hover: rgb(55 53 47 / 0.06);
+  --tess-active: rgb(55 53 47 / 0.1);
+  --tess-selected: rgb(91 91 214 / 0.1);
+
+  /* Text */
+  --tess-fg: #1f1e1d;
+  --tess-fg-muted: #6b6a66;
+  --tess-fg-subtle: #8f8e8a;
+  --tess-fg-disabled: #b9b8b5;
+
+  /* Borders */
+  --tess-border: #e9e9e7;
+  --tess-border-strong: #d8d7d4;
+
+  /* The one accent color */
+  --tess-accent: #5b5bd6;
+  --tess-accent-hover: #5151cd;
+  --tess-accent-fg: #ffffff;
+  --tess-accent-subtle: #eeeefd;
+  --tess-accent-text: #4a4ac2;
+  --tess-focus: rgb(91 91 214 / 0.6);
+  --tess-selection: rgb(91 91 214 / 0.18);
+
+  /* Status */
+  --tess-danger: #dc3e42;
+  --tess-danger-hover: #cf353a;
+  --tess-danger-fg: #ffffff;
+  --tess-danger-subtle: #fdecec;
+  --tess-danger-text: #ce2c31;
+  --tess-success: #30a46c;
+  --tess-success-subtle: #e6f6eb;
+  --tess-success-text: #18794e;
+  --tess-warning: #f5a524;
+  --tess-warning-subtle: #fff4d5;
+  --tess-warning-text: #9a5b00;
+  --tess-info: #0090ff;
+  --tess-info-subtle: #e6f4fe;
+  --tess-info-text: #0d74ce;
+
+  /* Named colors (select options, block colors, highlights, graph). Keep in sync with TAG_COLORS. */
+  --tess-tag-default-bg: #ededeb;
+  --tess-tag-default-fg: #37352f;
+  --tess-tag-gray-bg: #e3e2e0;
+  --tess-tag-gray-fg: #6b6a66;
+  --tess-tag-brown-bg: #eee0da;
+  --tess-tag-brown-fg: #8a5a3c;
+  --tess-tag-orange-bg: #fadec9;
+  --tess-tag-orange-fg: #b35c1c;
+  --tess-tag-yellow-bg: #fdecc8;
+  --tess-tag-yellow-fg: #8f6100;
+  --tess-tag-green-bg: #dbeddb;
+  --tess-tag-green-fg: #2f7a4e;
+  --tess-tag-blue-bg: #d3e5ef;
+  --tess-tag-blue-fg: #2b6fa8;
+  --tess-tag-purple-bg: #e8deee;
+  --tess-tag-purple-fg: #7d4f9e;
+  --tess-tag-pink-bg: #f5e0e9;
+  --tess-tag-pink-fg: #b3437a;
+  --tess-tag-red-bg: #ffe2dd;
+  --tess-tag-red-fg: #c4403a;
+
+  /* Typography */
+  --tess-font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+  --tess-font-mono:
+    ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Radii */
+  --tess-radius-sm: 4px;
+  --tess-radius-md: 6px;
+  --tess-radius-lg: 8px;
+  --tess-radius-xl: 12px;
+
+  /* Shadows */
+  --tess-shadow-sm: 0 1px 2px rgb(15 15 15 / 0.06);
+  --tess-shadow-md:
+    0 0 0 1px rgb(15 15 15 / 0.05), 0 3px 6px rgb(15 15 15 / 0.08), 0 9px 24px rgb(15 15 15 / 0.12);
+  --tess-shadow-lg:
+    0 0 0 1px rgb(15 15 15 / 0.05), 0 5px 10px rgb(15 15 15 / 0.1), 0 15px 40px rgb(15 15 15 / 0.2);
+
+  /* Motion (reduced to zero when the user prefers reduced motion) */
+  --tess-duration-fast: 120ms;
+  --tess-duration-normal: 180ms;
+  --tess-duration-slow: 260ms;
+  --tess-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --tess-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Layout */
+  --tess-sidebar-width: 256px;
+  --tess-sidebar-min-width: 200px;
+  --tess-sidebar-max-width: 420px;
+  --tess-topbar-height: 44px;
+  --tess-panel-width: 360px;
+  --tess-page-width: 720px;
+  --tess-page-padding: 96px;
+
+  /* Layers */
+  --tess-z-sidebar: 20;
+  --tess-z-overlay: 40;
+  --tess-z-popover: 50;
+  --tess-z-toast: 60;
+  --tess-z-tooltip: 70;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --tess-bg: #191919;
+  --tess-bg-subtle: #202020;
+  --tess-surface: #252525;
+  --tess-surface-raised: #2c2c2c;
+  --tess-overlay: rgb(0 0 0 / 0.6);
+  --tess-hover: rgb(255 255 255 / 0.055);
+  --tess-active: rgb(255 255 255 / 0.09);
+  --tess-selected: rgb(129 126 240 / 0.16);
+
+  --tess-fg: #ebebea;
+  --tess-fg-muted: #a3a3a0;
+  --tess-fg-subtle: #858481;
+  --tess-fg-disabled: #5a5a58;
+
+  --tess-border: #2f2f2f;
+  --tess-border-strong: #3f3f3e;
+
+  --tess-accent: #5b5bd6;
+  --tess-accent-hover: #6a67e2;
+  --tess-accent-fg: #ffffff;
+  --tess-accent-subtle: rgb(110 106 222 / 0.18);
+  --tess-accent-text: #b1a9ff;
+  --tess-focus: rgb(142 138 240 / 0.7);
+  --tess-selection: rgb(110 106 222 / 0.32);
+
+  --tess-danger: #e5484d;
+  --tess-danger-hover: #ec5d5e;
+  --tess-danger-fg: #ffffff;
+  --tess-danger-subtle: rgb(229 72 77 / 0.16);
+  --tess-danger-text: #ff9592;
+  --tess-success: #30a46c;
+  --tess-success-subtle: rgb(48 164 108 / 0.18);
+  --tess-success-text: #3dd68c;
+  --tess-warning: #ffc53d;
+  --tess-warning-subtle: rgb(255 197 61 / 0.14);
+  --tess-warning-text: #ffca16;
+  --tess-info: #3b9eff;
+  --tess-info-subtle: rgb(0 144 255 / 0.16);
+  --tess-info-text: #70b8ff;
+
+  --tess-tag-default-bg: #373737;
+  --tess-tag-default-fg: #d4d4d2;
+  --tess-tag-gray-bg: #3a3a3a;
+  --tess-tag-gray-fg: #a8a8a5;
+  --tess-tag-brown-bg: #4a3a30;
+  --tess-tag-brown-fg: #d0ad92;
+  --tess-tag-orange-bg: #5c3b23;
+  --tess-tag-orange-fg: #eca46e;
+  --tess-tag-yellow-bg: #564328;
+  --tess-tag-yellow-fg: #e6c865;
+  --tess-tag-green-bg: #243d30;
+  --tess-tag-green-fg: #72c894;
+  --tess-tag-blue-bg: #1f3a52;
+  --tess-tag-blue-fg: #72b5ea;
+  --tess-tag-purple-bg: #3c2d49;
+  --tess-tag-purple-fg: #bfa2dd;
+  --tess-tag-pink-bg: #4e2c3c;
+  --tess-tag-pink-fg: #e893bb;
+  --tess-tag-red-bg: #522e2a;
+  --tess-tag-red-fg: #f2938b;
+
+  --tess-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --tess-shadow-md:
+    0 0 0 1px rgb(255 255 255 / 0.07), 0 3px 6px rgb(0 0 0 / 0.3), 0 9px 24px rgb(0 0 0 / 0.4);
+  --tess-shadow-lg:
+    0 0 0 1px rgb(255 255 255 / 0.08), 0 5px 10px rgb(0 0 0 / 0.3), 0 15px 40px rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --tess-duration-fast: 0ms;
+    --tess-duration-normal: 0ms;
+    --tess-duration-slow: 0ms;
+  }
 }

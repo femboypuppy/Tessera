@@ -1,5 +1,5 @@
 import type * as Y from 'yjs';
-import { addRow, deleteRow, getRow, initDatabaseDoc } from '../database/database-doc';
+import type { addRow, initDatabaseDoc } from '../database/database-doc';
 import { InvalidOperationError, NotFoundError, toError } from '../errors';
 import { newId } from '../ids';
 import { databaseDocName, pageDocName, workspaceDocName } from '../model/doc-names';
@@ -21,7 +21,6 @@ import {
   trashPage,
   type MutationOptions,
 } from '../model/pages';
-import { readDocJSON, writeDocJSON } from '../schema/ydoc';
 import { MemoryAssetBackend, MemoryAssetStore } from '../services/asset-store';
 import { MemoryDocStore, MemoryDocStoreBackend } from '../services/doc-store';
 import {
@@ -30,8 +29,6 @@ import {
   createExporterRegistry,
   createImporterRegistry,
 } from '../services/import-export';
-import { NaiveLinkIndex } from '../services/link-index';
-import { BasicMarkdownCodec } from '../services/markdown-codec';
 import {
   disposeService,
   resolveService,
@@ -42,7 +39,6 @@ import {
   type ServiceMap,
   type StorageServiceContext,
 } from '../services/registry';
-import { NaiveSearchIndex } from '../services/search-index';
 import { LocalSyncProvider } from '../services/sync-provider';
 import { MemoryWorkspaceRegistry, type WorkspaceInfo } from '../services/workspace-registry';
 import type { AppContext, ShellBridge, ToastOptions, WorkspaceApi } from './app-context';
@@ -122,6 +118,12 @@ export interface AppRuntime {
   dispose(): Promise<void>;
 }
 
+/**
+ * The database doc helpers, loaded the first time a database is touched. They validate with zod,
+ * which the shell bundle doesn't otherwise need.
+ */
+const loadDatabaseHelpers = () => import('../database/database-doc');
+
 /** Creates the {@link AppRuntime}: validates features and resolves the app-phase services. */
 export async function createAppRuntime(options: AppRuntimeOptions): Promise<AppRuntime> {
   const report = (error: unknown, context: RuntimeErrorContext) => {
@@ -200,7 +202,8 @@ export async function createAppRuntime(options: AppRuntimeOptions): Promise<AppR
     appContext,
     {
       id: 'basic',
-      create: () => new BasicMarkdownCodec(),
+      // The stubs load on demand, so their helpers (and ProseMirror) stay out of the shell bundle.
+      create: async () => new (await import('../services/markdown-codec')).BasicMarkdownCodec(),
     },
     { onError: onServiceError },
   );
@@ -436,7 +439,8 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
     indexContext,
     {
       id: 'naive',
-      create: () => new NaiveSearchIndex(indexSources),
+      create: async () =>
+        new (await import('../services/search-index')).NaiveSearchIndex(indexSources),
     },
     { onError: onServiceError },
   );
@@ -446,7 +450,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
     indexContext,
     {
       id: 'naive',
-      create: () => new NaiveLinkIndex(indexSources),
+      create: async () => new (await import('../services/link-index')).NaiveLinkIndex(indexSources),
     },
     { onError: onServiceError },
   );
@@ -477,6 +481,8 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
         byDatabase.set(parentId, [...(byDatabase.get(parentId) ?? []), page.id]);
       }
     }
+    if (byDatabase.size === 0) return;
+    const { deleteRow, getRow } = await loadDatabaseHelpers();
     for (const [databaseId, rowIds] of byDatabase) {
       const handle = await loadDatabaseDoc(databaseId);
       try {
@@ -542,7 +548,11 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       if (original.icon) pageInput.icon = original.icon;
       if (original.cover) pageInput.cover = original.cover;
       const copy = createPage(workspaceDoc, pageInput, opts());
-      const [source, target] = await Promise.all([loadPageDoc(id), loadPageDoc(copy.id)]);
+      const [source, target, { readDocJSON, writeDocJSON }] = await Promise.all([
+        loadPageDoc(id),
+        loadPageDoc(copy.id),
+        import('../schema/ydoc'),
+      ]);
       try {
         target.doc.transact(() => {
           writeDocJSON(target.doc, readDocJSON(source.doc));
@@ -556,11 +566,14 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
     },
     async createDatabase({ titlePropertyName, viewName, viewType, ...pageInput }) {
       const page = createPage(workspaceDoc, { ...pageInput, kind: 'database' }, opts());
-      const handle = await loadDatabaseDoc(page.id);
+      const [handle, helpers] = await Promise.all([
+        loadDatabaseDoc(page.id),
+        loadDatabaseHelpers(),
+      ]);
       try {
         const init: Parameters<typeof initDatabaseDoc>[1] = { titlePropertyName, viewName };
         if (viewType) init.viewType = viewType;
-        const ids = initDatabaseDoc(handle.doc, init, opts());
+        const ids = helpers.initDatabaseDoc(handle.doc, init, opts());
         return { page, ...ids };
       } finally {
         handle.release();
@@ -576,17 +589,22 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       };
       if (rowInput.icon) pageInput.icon = rowInput.icon;
       const page = createPage(workspaceDoc, pageInput, opts());
-      const handle = await loadDatabaseDoc(databaseId);
+      let handle: DocHandle | undefined;
       try {
+        const [loaded, helpers] = await Promise.all([
+          loadDatabaseDoc(databaseId),
+          loadDatabaseHelpers(),
+        ]);
+        handle = loaded;
         const row: Parameters<typeof addRow>[1] = { id: page.id };
         if (rowInput.values) row.values = rowInput.values;
         if (rowInput.position) row.position = rowInput.position;
-        addRow(handle.doc, row, opts());
+        helpers.addRow(handle.doc, row, opts());
       } catch (error) {
         deletePagePermanently(workspaceDoc, page.id, opts());
         throw error;
       } finally {
-        handle.release();
+        handle?.release();
       }
       return page;
     },

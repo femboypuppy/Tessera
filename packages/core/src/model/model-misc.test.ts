@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { isValidBlockId, isValidId, newBlockId, newId } from '../ids';
-import { cloneJson, isJsonObject, isJsonValue, jsonEqual, jsonValueSchema } from '../json';
+import { cloneJson, isJsonObject, isJsonValue, jsonEqual } from '../json';
+import { jsonValueSchema } from '../json-schema';
 import {
   compareOrdered,
   isValidOrderKey,
@@ -14,7 +15,8 @@ import {
 } from '../order';
 import { databaseDocName, pageDocName, parseDocName, workspaceDocName } from './doc-names';
 import { createPageIndex, flattenPageTree } from './page-index';
-import { isValidIcon, normalizeTitle, pageMetaSchema, type PageMeta } from './page-meta';
+import { isValidIcon, normalizeTitle, parsePageCover, type PageMeta } from './page-meta';
+import { pageCoverSchema, pageMetaSchema } from './page-meta-schema';
 import {
   getPageContent,
   getPageProp,
@@ -178,6 +180,34 @@ describe('page meta', () => {
     expect(isValidIcon('')).toBe(false);
     expect(pageMetaSchema.safeParse(page('valid-id')).success).toBe(true);
     expect(pageMetaSchema.safeParse({ ...page('x'), kind: 'folder' }).success).toBe(false);
+  });
+
+  it('parses covers exactly like pageCoverSchema, without zod', () => {
+    const samples: unknown[] = [
+      { kind: 'preset', value: 'aurora' },
+      { kind: 'asset', value: 'asset-1', positionY: 0 },
+      { kind: 'url', value: 'https://example.com/cover.png', positionY: 100 },
+      { kind: 'preset', value: 'aurora', positionY: 37.5, extra: 'dropped' },
+      { kind: 'video', value: 'x' },
+      { kind: 'preset', value: '' },
+      { kind: 'preset', value: 'x'.repeat(2048) },
+      { kind: 'preset', value: 'x'.repeat(2049) },
+      { kind: 'preset', value: 'aurora', positionY: -1 },
+      { kind: 'preset', value: 'aurora', positionY: 101 },
+      { kind: 'preset', value: 'aurora', positionY: Number.NaN },
+      { kind: 'preset', value: 'aurora', positionY: Number.POSITIVE_INFINITY },
+      { kind: 'preset', value: 'aurora', positionY: '50' },
+      { kind: 'preset', value: 42 },
+      { value: 'aurora' },
+      ['preset', 'aurora'],
+      'aurora',
+      null,
+      undefined,
+    ];
+    for (const sample of samples) {
+      const zod = pageCoverSchema.safeParse(sample);
+      expect(parsePageCover(sample), JSON.stringify(sample)).toEqual(zod.success ? zod.data : null);
+    }
   });
 });
 

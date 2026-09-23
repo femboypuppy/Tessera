@@ -4,6 +4,7 @@ export * from './description';
 export * from './docjson';
 export * from './ydoc';
 export * from './extract';
+export * from './slug';
 export * from './mentions';
 export * from './tags';
 export * from './embeds';

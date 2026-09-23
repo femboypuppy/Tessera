@@ -1,0 +1,100 @@
+/* Base element styles shared by the whole app. */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  html,
+  body {
+    background-color: var(--tess-bg);
+    color: var(--tess-fg);
+    font-family: var(--tess-font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    isolation: isolate;
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background-color: var(--tess-selection);
+  }
+
+  /* Visible, consistent focus for keyboard users everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--tess-focus);
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  button,
+  [role='button'],
+  label[for] {
+    cursor: default;
+  }
+
+  a {
+    color: var(--tess-accent-text);
+    text-decoration: none;
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--tess-font-mono);
+  }
+
+  /* Quiet scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tess-border-strong) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--tess-border-strong);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--tess-fg-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
