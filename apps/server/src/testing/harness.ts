@@ -1,7 +1,8 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { HocuspocusProvider, HocuspocusProviderWebsocket } from '@hocuspocus/provider';
+import { HocuspocusProvider, type HocuspocusProviderWebsocket } from '@hocuspocus/provider';
+import { SyncSocket } from '@tessera/sync/socket';
 import pino from 'pino';
 import WebSocket from 'ws';
 import * as Y from 'yjs';
@@ -237,7 +238,7 @@ export function connectClient(
   const doc = options.doc ?? new Y.Doc();
   const socket =
     options.socket ??
-    new HocuspocusProviderWebsocket({
+    new SyncSocket({
       url: wsUrl,
       WebSocketPolyfill: NodeWebSocket,
       delay: 50,

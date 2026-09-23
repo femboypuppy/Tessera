@@ -1,14 +1,11 @@
-import {
-  HocuspocusProvider,
-  HocuspocusProviderWebsocket,
-  WebSocketStatus,
-} from '@hocuspocus/provider';
+import { HocuspocusProvider, WebSocketStatus } from '@hocuspocus/provider';
 import { Awareness, type SyncHandle, type SyncProvider, type SyncStatusInfo } from '@tessera/core';
 import type * as Y from 'yjs';
 import type { AuthMode } from '../client/api';
 import { syncSocketUrl } from '../client/server-url';
 import { t } from '../i18n';
 import { serverDocName } from './doc-names';
+import { SyncSocket } from './socket';
 import { errorCode, sameStatus, type SyncErrorCode, type TesseraSyncStatus } from './status';
 
 export interface HocuspocusSyncProviderOptions {
@@ -74,7 +71,7 @@ function errorMessage(code: SyncErrorCode, reason: string): string {
  */
 export class HocuspocusSyncProvider implements SyncProvider {
   readonly id = 'hocuspocus';
-  readonly socket: HocuspocusProviderWebsocket;
+  readonly socket: SyncSocket;
   readonly workspaceId: string;
   readonly serverUrl: string;
   private readonly entries = new Map<HocuspocusProvider, DocEntry>();
@@ -105,7 +102,7 @@ export class HocuspocusSyncProvider implements SyncProvider {
       options.isOnline?.() ?? (typeof navigator === 'undefined' ? true : navigator.onLine !== false)
     );
     const retry = options.retry ?? { delay: 1000, minDelay: 1000, maxDelay: 30_000 };
-    this.socket = new HocuspocusProviderWebsocket({
+    this.socket = new SyncSocket({
       url: syncSocketUrl(options.serverUrl),
       ...(options.WebSocketPolyfill ? { WebSocketPolyfill: options.WebSocketPolyfill } : {}),
       autoConnect: !this.browserOffline,
@@ -292,14 +289,9 @@ export class HocuspocusSyncProvider implements SyncProvider {
     this.update();
   };
 
-  /**
-   * Connects the socket now. After a quick offline/online flip the old socket may not have
-   * reported its close yet: `connect()` then sees it as connected and does nothing, so
-   * `shouldConnect` is set first and the close handler reconnects.
-   */
+  /** Connects the socket now, also after it was disconnected for going offline. */
   private reconnectSocket(): void {
-    this.socket.shouldConnect = true;
-    void this.socket.connect();
+    void this.socket.resume();
   }
 
   private readonly goOffline = () => {

@@ -18,11 +18,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { HocuspocusProvider, HocuspocusProviderWebsocket } from '@hocuspocus/provider';
+import { HocuspocusProvider } from '@hocuspocus/provider';
+import { SyncSocket } from '@tessera/sync/socket';
 import WebSocket from 'ws';
 import * as Y from 'yjs';
 
 const { values: args } = parseArgs({
+  // pnpm passes the `--` separator through to the script.
+  args: process.argv.slice(2).filter((arg, index) => !(index === 0 && arg === '--')),
   options: {
     clients: { type: 'string', default: '50' },
     seconds: { type: 'string', default: '30' },
@@ -134,7 +137,7 @@ async function main(): Promise<void> {
       id: number;
       docName: string;
       doc: Y.Doc;
-      socket: HocuspocusProviderWebsocket;
+      socket: SyncSocket;
       provider: HocuspocusProvider;
     }
     const clients: Client[] = [];
@@ -142,7 +145,7 @@ async function main(): Promise<void> {
     for (let id = 0; id < CLIENTS; id += 1) {
       const docName = docNames[id % DOCS] ?? 'page:load-0';
       const doc = new Y.Doc();
-      const socket = new HocuspocusProviderWebsocket({
+      const socket = new SyncSocket({
         url: `ws://127.0.0.1:${port}/sync`,
         WebSocketPolyfill: NodeWebSocket,
       });
@@ -227,7 +230,7 @@ async function main(): Promise<void> {
     let serverMatches = 0;
     for (const docName of docNames) {
       const reader = new Y.Doc();
-      const socket = new HocuspocusProviderWebsocket({
+      const socket = new SyncSocket({
         url: `ws://127.0.0.1:${port}/sync`,
         WebSocketPolyfill: NodeWebSocket,
       });

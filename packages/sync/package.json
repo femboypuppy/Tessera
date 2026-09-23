@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./stores": "./src/stores/index.ts",
     "./provider": "./src/provider/index.ts",
+    "./socket": "./src/provider/socket.ts",
     "./client": "./src/client/index.ts",
     "./activate": "./src/feature/activate.ts",
     "./ui": "./src/ui/entry.tsx",

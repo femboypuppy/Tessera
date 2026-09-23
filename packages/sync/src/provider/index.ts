@@ -12,6 +12,7 @@ export { BackgroundReplicator, type ReplicatorOptions, type UploadableVersion } 
 export { createRemoteAssets } from './remote-assets';
 export { serverDocName } from './doc-names';
 export { signalOutbox, syncStateFor } from './shared';
+export { SyncSocket } from './socket';
 export type { TesseraSyncStatus } from './status';
 
 /** Creates the provider of a workspace that has a `serverUrl`. */
