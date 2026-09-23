@@ -1,5 +1,6 @@
 import { databaseDocName, pageDocName, SETTING_KEYS, type AppContext } from '@tessera/core';
-import { ServerApiError, type ServerApi } from '../client/api';
+import type { ServerApi } from '../client/api';
+import { ServerApiError } from '../client/errors';
 import type { SyncStateStore } from '../stores/sync-state';
 import { authModeFor, serverApi } from '../client/connection';
 import { t } from '../i18n';
@@ -7,9 +8,7 @@ import { HocuspocusSyncProvider } from '../provider/hocuspocus-provider';
 import { BackgroundReplicator } from '../provider/replicator';
 import { signalOutbox, syncStateFor } from '../provider/shared';
 import { IndexedDbDocStore } from '../stores/doc-store';
-
-/** Device setting: a workspace created only to join a server one (removed once joined). */
-export const TEMP_WORKSPACE_KEY = 'sync.removeWorkspace';
+import { TEMP_WORKSPACE_KEY } from './keys';
 
 /** What a connected session exposes to the rest of the feature (history uploads). */
 export interface ServerSyncSession {

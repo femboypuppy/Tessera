@@ -1,6 +1,7 @@
 import { newId, pageDocName, type AppContext, type WorkspaceApi } from '@tessera/core';
 import * as Y from 'yjs';
-import { ServerApiError, type ServerApi } from '../client/api';
+import type { ServerApi } from '../client/api';
+import { ServerApiError } from '../client/errors';
 import { signalOutbox } from '../provider/shared';
 import type { SyncStateStore } from '../stores/sync-state';
 import { contentOf, currentContent, restoreInto, sameContent } from './snapshots';

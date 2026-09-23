@@ -23,25 +23,9 @@ import {
   type Role,
   type ServerVersionMeta,
 } from './schemas';
+import { ServerApiError } from './errors';
 
-/**
- * A failed server call. `status` 0 means the server couldn't be reached (offline, wrong
- * address, or the browser blocked it: CORS).
- */
-export class ServerApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'ServerApiError';
-  }
-
-  get isNetworkError(): boolean {
-    return this.status === 0;
-  }
-}
+export { ServerApiError };
 
 /** How this device authenticates: the web app's cookie, or the desktop app's bearer token. */
 export type AuthMode = 'cookie' | 'bearer';

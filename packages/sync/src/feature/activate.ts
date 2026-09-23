@@ -2,9 +2,9 @@ import type { AppContext } from '@tessera/core';
 import { clearHistoryService, HistoryService, setHistoryService } from '../history/history-service';
 import { LocalVersionStore } from '../history/version-store';
 import { t } from '../i18n';
-import { JOIN_WORKSPACE_KEY } from '../ui/settings/actions';
+import { JOIN_WORKSPACE_KEY } from './keys';
 import { installDebugHooks } from './debug';
-import { startServerSync, type ServerSyncSession } from './server-sync';
+import type { ServerSyncSession } from './server-sync';
 import { requestPersistentStorage, watchStorageHealth } from './storage-health';
 
 /**
@@ -69,7 +69,10 @@ export async function activateSync(ctx: AppContext): Promise<() => void> {
   cleanups.push(watchStorageHealth(ctx));
   if (ctx.serviceSources.docStore === 'indexeddb')
     void requestPersistentStorage({ interactive: false });
-  const server = await startServerSync(ctx);
+  // Local workspaces never load the sync provider's code.
+  const server = ctx.workspace.info.serverUrl
+    ? await (await import('./server-sync')).startServerSync(ctx)
+    : { session: null, stop: () => undefined };
   cleanups.push(server.stop);
   const history = await startHistory(ctx, server.session);
   setHistoryService(ctx, history.service);

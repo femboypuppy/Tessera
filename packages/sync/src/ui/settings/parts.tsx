@@ -1,6 +1,6 @@
 import { Button, Callout, cn, Skeleton } from '@tessera/ui';
 import type { ReactNode } from 'react';
-import { ServerApiError } from '../../client/api';
+import { ServerApiError } from '../../client/errors';
 import { t } from '../../i18n';
 
 /** A plain-language message for a failed server call. */

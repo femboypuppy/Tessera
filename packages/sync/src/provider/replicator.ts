@@ -1,7 +1,8 @@
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { parseDocName, workspaceDocName, type AssetStore, type DocStore } from '@tessera/core';
 import * as Y from 'yjs';
-import { ServerApiError, type ServerApi } from '../client/api';
+import type { ServerApi } from '../client/api';
+import { ServerApiError } from '../client/errors';
 import { IndexedDbDocStore } from '../stores/doc-store';
 import type { OutboxItem, SyncStateRecord, SyncStateStore } from '../stores/sync-state';
 import { serverDocName } from './doc-names';

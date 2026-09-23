@@ -7,5 +7,7 @@ export default defineProject({
     setupFiles: ['@tessera/core/testing/setup-dom'],
     // IndexedDB-backed runtimes and Radix popovers are slow to start in jsdom under load.
     testTimeout: 20_000,
+    // After the other packages' tests (see apps/server/vitest.config.ts), before the server's.
+    sequence: { groupOrder: 1 },
   },
 });

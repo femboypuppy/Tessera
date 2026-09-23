@@ -3,12 +3,9 @@ import { ServerApiError, type ServerApi } from '../../client/api';
 import { authModeFor, serverApi } from '../../client/connection';
 import { healthSchema, type Health, type Me } from '../../client/schemas';
 import { normalizeServerUrl } from '../../client/server-url';
-import { TEMP_WORKSPACE_KEY } from '../../feature/server-sync';
+import { JOIN_WORKSPACE_KEY, TEMP_WORKSPACE_KEY } from '../../feature/keys';
 import { t } from '../../i18n';
 import { syncStateFor } from '../../provider/shared';
-
-/** Device setting: the workspace the onboarding "join" action created (removed once joined). */
-export const JOIN_WORKSPACE_KEY = 'sync.joinWorkspace';
 
 export type ServerCheck =
   | { ok: true; serverUrl: string; api: ServerApi; health: Health; me: Me | null }
