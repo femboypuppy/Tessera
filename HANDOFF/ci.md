@@ -216,7 +216,9 @@ diagnostics).
 6. **Regenerate `assets/screenshots/ci`** (`pnpm screenshots e2e/ci`) once the editor renders
    page bodies.
 7. **Owner settings** (below).
-8. Optional: add `scripts` to the root `tsconfig.json` `include` (today testkit's `typecheck`
+8. Add `.lighthouseci/` to the root `.gitignore` (Lighthouse CI writes it in the working folder
+   when run locally).
+9. Optional: add `scripts` to the root `tsconfig.json` `include` (today testkit's `typecheck`
    covers it); the startup bundle already loads core's markdown codec stub on the onboarding
    screen (16 kB beyond the entry), which the Architect may want to defer.
 

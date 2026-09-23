@@ -4,7 +4,7 @@
  * the seeded harness (the real app with a generated workspace), runs each benchmark in a fresh
  * Chromium context, prints a markdown table and writes JSON.
  *
- *   pnpm exec tsx scripts/bench/run.ts [--out bench-results] [--only cold-start,search]
+ *   pnpm exec tsx scripts/bench/run.ts [--out dir] [--only cold-start,search]
  *     [--runs 3] [--compare baseline/results.json] [--strict]
  *
  * Budgets are reported, not enforced (the owners' tests and the bundle check enforce theirs);
@@ -24,7 +24,8 @@ import { benchMarkdown, parseRun, type BenchResult, type BenchRun } from './repo
 const root = path.resolve(import.meta.dirname, '..', '..');
 const { values } = parseArgs({
   options: {
-    out: { type: 'string', default: path.join(root, 'bench-results') },
+    // Ignored by git; CI passes --out bench-results to upload them.
+    out: { type: 'string', default: path.join(root, 'node_modules', '.cache', 'bench-results') },
     only: { type: 'string' },
     runs: { type: 'string', default: '3' },
     compare: { type: 'string' },
@@ -122,7 +123,7 @@ const baseline =
 if (values.compare && !baseline) log(`No baseline at ${values.compare}; nothing to compare with.`);
 const markdown = benchMarkdown(run, baseline);
 
-const out = values.out ?? path.join(root, 'bench-results');
+const out = values.out ?? path.join(root, 'node_modules', '.cache', 'bench-results');
 mkdirSync(out, { recursive: true });
 writeFileSync(path.join(out, 'results.json'), `${JSON.stringify(run, null, 2)}\n`);
 writeFileSync(path.join(out, 'results.md'), markdown);
