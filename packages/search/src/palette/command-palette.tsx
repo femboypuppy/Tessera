@@ -515,6 +515,25 @@ function PaletteBody({ initialQuery, open }: { initialQuery: string; open: boole
     [ctx, text],
   );
 
+  const pickRef = useRef(pick);
+  useEffect(() => {
+    pickRef.current = pick;
+  }, [pick]);
+
+  const pendingEnter = useRef<string | null>(null);
+  useEffect(() => {
+    if (pendingEnter.current === null) return;
+    if (pendingEnter.current !== text) {
+      pendingEnter.current = null;
+      return;
+    }
+    if (search.status === 'error') pendingEnter.current = null;
+    else if (search.status === 'done' && search.query === text) {
+      pendingEnter.current = null;
+      pickRef.current(flat[0]);
+    }
+  }, [search, text, flat]);
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
     const count = flat.length;
@@ -535,10 +554,23 @@ function PaletteBody({ initialQuery, open }: { initialQuery: string; open: boole
       case 'PageUp':
         move(Math.max(0, active - 5));
         break;
-      case 'Enter':
+      case 'Enter': {
         event.preventDefault();
-        pick(activeItem, event.metaKey || event.ctrlKey);
+        const openAll = event.metaKey || event.ctrlKey;
+        // Typed fast and pressed Enter before this text's results arrived: pick once they do,
+        // rather than whatever the previous keystroke's list had first.
+        if (
+          !openAll &&
+          !commandMode &&
+          text &&
+          (search.status !== 'done' || search.query !== text)
+        ) {
+          pendingEnter.current = text;
+          break;
+        }
+        pick(activeItem, openAll);
         break;
+      }
       default:
         break;
     }
