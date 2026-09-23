@@ -50,7 +50,7 @@ export const Link = BaseLink.extend({
   autolink: true,
   enableClickSelection: false,
   defaultProtocol: 'https',
-  HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer nofollow', class: null },
+  HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer nofollow', class: 'tess-link' },
   isAllowedUri: (url) => isSafeHref(url),
   shouldAutoLink: (url) => /^https?:\/\//i.test(url) || /^www\./i.test(url),
 });

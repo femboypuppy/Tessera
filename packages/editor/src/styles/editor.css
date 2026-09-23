@@ -92,7 +92,7 @@
   font-weight: 650;
 }
 
-.tess-editor a[href]:not([data-type]) {
+.tess-editor a.tess-link {
   color: inherit;
   text-decoration: underline;
   text-decoration-color: var(--tess-fg-subtle);
@@ -101,7 +101,7 @@
   cursor: pointer;
 }
 
-.tess-editor a[href]:not([data-type]):hover {
+.tess-editor a.tess-link:hover {
   text-decoration-color: var(--tess-accent);
   color: var(--tess-accent-text);
 }
@@ -467,9 +467,10 @@
 /* ------------------------------------------------------------------------------------------ */
 
 .tess-editor .tess-toggle {
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: 2px;
+  align-items: start;
   margin: 1px 0;
 }
 
@@ -506,8 +507,14 @@
   transform: rotate(90deg);
 }
 
+.tess-editor .tess-toggle-button {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .tess-editor .tess-toggle-content {
-  flex: 1 1 auto;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
 }
 
@@ -515,13 +522,27 @@
   display: none;
 }
 
+.tess-editor .tess-toggle-empty {
+  grid-column: 2;
+  grid-row: 2;
+  display: none;
+  padding: 3px 2px;
+  color: var(--tess-fg-subtle);
+  cursor: text;
+  user-select: none;
+}
+
+.tess-editor .tess-toggle-empty:hover {
+  color: var(--tess-fg-muted);
+}
+
+.tess-editor .tess-toggle[data-open='true'][data-empty='true'] > .tess-toggle-empty {
+  display: block;
+}
+
 .tess-editor [data-type='toggle-summary'] {
   padding: 3px 2px;
   min-height: 1.6em;
-}
-
-.tess-editor .tess-toggle-empty-hint {
-  display: none;
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -873,4 +894,76 @@
     animation: none;
     background-color: var(--tess-accent-subtle);
   }
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Block selection, handle and drag                                                            */
+/* ------------------------------------------------------------------------------------------ */
+
+.tess-editor
+  :is(p, h1, h2, h3, li, blockquote, aside, pre, hr, .tess-toggle).ProseMirror-selectednode,
+.tess-editor .tess-block-selected {
+  border-radius: var(--tess-radius-sm);
+  background-color: var(--tess-selection);
+  box-shadow: 0 0 0 2px var(--tess-selection);
+}
+
+.tess-editor .tess-drag-source {
+  opacity: 0.35;
+}
+
+.tess-drop-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--tess-accent);
+  pointer-events: none;
+  z-index: var(--tess-z-popover);
+  display: none;
+  will-change: transform;
+}
+
+.tess-drop-indicator[data-nested='true']::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--tess-accent);
+  background: var(--tess-bg);
+}
+
+.tess-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  max-height: 180px;
+  overflow: hidden;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: var(--tess-z-popover);
+  border-radius: var(--tess-radius-md);
+  background: var(--tess-surface);
+  box-shadow: var(--tess-shadow-md);
+  padding: 4px 8px;
+  font-size: 15px;
+  will-change: transform;
+}
+
+.tess-drag-ghost .tess-drag-source {
+  opacity: 1;
+}
+
+body.tess-block-dragging,
+body.tess-block-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+.tess-block-handle {
+  animation: tess-fade-in var(--tess-duration-fast) var(--tess-ease-out);
 }

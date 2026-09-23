@@ -23,6 +23,7 @@ export const en = {
   // Slash menu
   slashMenuLabel: 'Insert a block',
   noResults: 'No results',
+  insertFailed: 'Couldn’t insert the block',
   groupRecent: 'Recently used',
   groupBasic: 'Basic blocks',
   groupMedia: 'Media',
@@ -113,6 +114,7 @@ export const en = {
   // Toggle
   toggleOpen: 'Open toggle',
   toggleClose: 'Close toggle',
+  toggleEmpty: 'Empty toggle. Click to add a block inside.',
 
   // Code block
   codeLanguage: 'Code language',
@@ -161,6 +163,7 @@ export const en = {
   addColumn: 'Add a column',
 
   // Embeds
+  webEmbed: 'Web embed',
   needsPlugin: 'This block needs a plugin',
   needsPluginHint: 'Enable the plugin that provides “{kind}” to see it. Its content is kept.',
   embedCrashed: 'This block couldn’t be displayed',

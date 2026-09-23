@@ -1,0 +1,174 @@
+import type { Node as PMNode } from '@tiptap/pm/model';
+import { NodeSelection, Selection, TextSelection, type EditorState } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
+import { adaptForParent, blockAt, joinListsAt, type BlockRef } from '../actions/blocks';
+
+const LIST_TYPES = new Set(['bulletList', 'orderedList', 'taskList']);
+const ITEM_TYPES = new Set(['listItem', 'taskItem']);
+const NESTING_CONTAINERS = new Set(['listItem', 'taskItem', 'callout', 'blockquote']);
+/** How far right of a block's text the pointer must be to nest into it. */
+export const NEST_OFFSET = 36;
+
+/** Where a dragged block would land. */
+export interface DropTarget {
+  /** Insertion position in the current document. */
+  pos: number;
+  /** The indicator line, in viewport coordinates. */
+  line: { left: number; top: number; width: number };
+  /** True when the block goes inside a toggle or list item (the indicator is indented). */
+  nested: boolean;
+}
+
+function isBlockUnitNode(node: PMNode, parent: PMNode): boolean {
+  if (ITEM_TYPES.has(node.type.name)) return true;
+  if (!node.type.isInGroup('block') || LIST_TYPES.has(node.type.name)) return false;
+  return !['tableCell', 'tableHeader', 'tableRow'].includes(parent.type.name);
+}
+
+/** The block under a point: an atom block directly, or the block around the nearest position. */
+export function blockAtCoords(view: EditorView, x: number, y: number): BlockRef | null {
+  const box = view.dom.getBoundingClientRect();
+  const left = Math.min(Math.max(x, box.left + 2), box.right - 2);
+  const top = Math.min(Math.max(y, box.top + 1), box.bottom - 1);
+  const result = view.posAtCoords({ left, top });
+  if (!result) return null;
+  const { doc } = view.state;
+  if (result.inside >= 0) {
+    const node = doc.nodeAt(result.inside);
+    if (node && node.isBlock && node.isAtom) {
+      const $inside = doc.resolve(result.inside);
+      if (isBlockUnitNode(node, $inside.parent)) return { pos: result.inside, node };
+    }
+  }
+  return blockAt(doc.resolve(result.pos));
+}
+
+function elementRect(view: EditorView, pos: number): DOMRect | null {
+  const dom = view.nodeDOM(pos);
+  return dom instanceof HTMLElement ? dom.getBoundingClientRect() : null;
+}
+
+/** True when `pos` lies inside the dragged block (dropping there is a no-op or impossible). */
+function insideDragged(pos: number, dragged: BlockRef): boolean {
+  return pos > dragged.pos && pos < dragged.pos + dragged.node.nodeSize;
+}
+
+/** True when the dragged block can be inserted at `pos` (adapted to the parent there). */
+export function canDropAt(state: EditorState, pos: number, dragged: BlockRef): boolean {
+  if (insideDragged(pos, dragged)) return false;
+  if (pos === dragged.pos || pos === dragged.pos + dragged.node.nodeSize) return false;
+  const $pos = state.doc.resolve(pos);
+  const origin = state.doc.resolve(dragged.pos).parent;
+  const content = adaptForParent(dragged.node, $pos.parent, origin);
+  return !!content && $pos.parent.canReplace($pos.index(), $pos.index(), content);
+}
+
+/**
+ * Computes where a block dragged to (x, y) would land: before or after the block under the
+ * pointer, or inside a toggle (or a list item, quote or callout) when the pointer is over the lower
+ * half of its first line and to the right of its text start. Returns null over the dragged block
+ * itself or where it can't go.
+ */
+export function dropTargetAt(
+  view: EditorView,
+  x: number,
+  y: number,
+  dragged: BlockRef,
+): DropTarget | null {
+  const { state } = view;
+  const editorBox = view.dom.getBoundingClientRect();
+  // Below the last block: the end of the document.
+  if (y > editorBox.bottom - 4) {
+    const pos = state.doc.content.size;
+    const last = state.doc.lastChild;
+    const lastRect = last ? elementRect(view, pos - last.nodeSize) : null;
+    if (!canDropAt(state, pos, dragged)) return null;
+    return {
+      pos,
+      nested: false,
+      line: {
+        left: editorBox.left,
+        top: lastRect?.bottom ?? editorBox.bottom,
+        width: editorBox.width,
+      },
+    };
+  }
+  const block = blockAtCoords(view, x, y);
+  if (!block) return null;
+  if (block.pos === dragged.pos || insideDragged(block.pos, dragged)) return null;
+  const rect = elementRect(view, block.pos);
+  if (!rect) return null;
+
+  // Nesting: the lower half of the first line of a toggle or container, right of its text start.
+  const firstChild = block.node.firstChild;
+  const isToggle = block.node.type.name === 'toggle';
+  if ((isToggle || NESTING_CONTAINERS.has(block.node.type.name)) && firstChild?.isTextblock) {
+    const firstPos = block.pos + 1;
+    const lineRect = elementRect(view, firstPos);
+    if (
+      lineRect &&
+      y > lineRect.top + lineRect.height / 2 &&
+      y <= lineRect.bottom + 2 &&
+      x > lineRect.left + NEST_OFFSET
+    ) {
+      const open = !isToggle || block.node.attrs.open === true;
+      const pos = open ? firstPos + firstChild.nodeSize : block.pos + block.node.nodeSize - 1;
+      if (canDropAt(state, pos, dragged)) {
+        const indent = isToggle ? lineRect.left : lineRect.left + 24;
+        return {
+          pos,
+          nested: true,
+          line: { left: indent, top: lineRect.bottom, width: Math.max(40, rect.right - indent) },
+        };
+      }
+    }
+  }
+
+  const before = y < rect.top + rect.height / 2;
+  const pos = before ? block.pos : block.pos + block.node.nodeSize;
+  if (!canDropAt(state, pos, dragged)) return null;
+  return {
+    pos,
+    nested: false,
+    line: { left: rect.left, top: before ? rect.top : rect.bottom, width: rect.width },
+  };
+}
+
+/**
+ * Moves a block to `target` in one transaction (so it's one undo step and the block keeps its ID),
+ * adapting it to its new parent, then selects it.
+ */
+export function moveBlockTo(view: EditorView, dragged: BlockRef, target: number): boolean {
+  const { state } = view;
+  const node = state.doc.nodeAt(dragged.pos);
+  if (!node || node !== dragged.node) return false;
+  const origin = state.doc.resolve(dragged.pos).parent;
+  const tr = state.tr;
+  // Insert first, then delete the original (mapped), so the target position stays exact.
+  const $target = state.doc.resolve(target);
+  const content = adaptForParent(node, $target.parent, origin);
+  if (!content || !$target.parent.canReplace($target.index(), $target.index(), content))
+    return false;
+  tr.insert(target, content);
+  const from = tr.mapping.map(dragged.pos);
+  const to = tr.mapping.map(dragged.pos + node.nodeSize);
+  tr.deleteRange(from, to);
+  // Lists the block used to separate merge again.
+  joinListsAt(tr, tr.mapping.slice(1).map(from, -1));
+  const inserted = tr.mapping.slice(1).map(target, 1);
+  const wrapped = content.firstChild !== null && content.firstChild.type !== node.type;
+  // Track the moved block (inside its list wrapper when it got one) through list joins.
+  let movedPos = wrapped ? inserted + 1 : inserted;
+  const joinsFrom = tr.mapping.maps.length;
+  joinListsAt(tr, inserted + content.size);
+  joinListsAt(tr, inserted);
+  movedPos = tr.mapping.slice(joinsFrom).map(movedPos, 1);
+  const moved = tr.doc.nodeAt(movedPos);
+  if (moved && NodeSelection.isSelectable(moved))
+    tr.setSelection(NodeSelection.create(tr.doc, movedPos));
+  else if (moved) tr.setSelection(Selection.near(tr.doc.resolve(movedPos + 1)));
+  else tr.setSelection(TextSelection.near(tr.doc.resolve(Math.min(inserted, tr.doc.content.size))));
+  tr.setMeta('uiEvent', 'drop');
+  view.dispatch(tr.scrollIntoView());
+  return true;
+}

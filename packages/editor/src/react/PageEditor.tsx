@@ -4,10 +4,22 @@ import { Button, EmptyState, Skeleton } from '@tessera/ui';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { AlertTriangle } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CodeHighlight } from '../code/highlight';
 import { contributedExtensions } from '../contributed';
 import { editorExtensions } from '../editor-extensions';
+import { blockSelection } from '../extensions/block-selection';
+import { mediaDrop } from '../extensions/media-drop';
+import { BlockHandle } from '../handle/BlockHandle';
+import { blockHandle } from '../handle/handle-plugin';
 import { t } from '../i18n';
+import { slashCommand } from '../menus/slash-command';
+import { SuggestionMenu } from '../menus/SuggestionMenu';
+import { createNodeViews } from '../node-views';
+import { EditorControllerContext } from './context';
+import { createEditorController } from './controller';
+import { EditorPopovers } from './EditorPopovers';
 import { focusBody, focusTail, revealTarget } from './focus';
+import { TableControls } from './TableControls';
 import '../styles/editor.css';
 
 function EditorSkeleton() {
@@ -26,6 +38,7 @@ interface EditorViewProps extends PageBodyProps {
 
 function EditorView({
   handle,
+  pageId,
   readOnly,
   target,
   focusTitle,
@@ -35,6 +48,8 @@ function EditorView({
   const contributions = useContributions('editorExtensions');
   const focusTitleRef = useRef(focusTitle);
   focusTitleRef.current = focusTitle;
+  const controller = useMemo(() => createEditorController(ctx, pageId), [ctx, pageId]);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const extensions = useMemo(
     () =>
@@ -42,9 +57,17 @@ function EditorView({
         fragment: getPageContent(handle.doc),
         focusTitle: (position) => focusTitleRef.current(position),
         resizableTables: true,
-        extra: contributedExtensions(contributions, ctx),
+        nodeViews: createNodeViews(controller),
+        extra: [
+          CodeHighlight,
+          slashCommand(controller),
+          mediaDrop(controller),
+          blockHandle(controller),
+          blockSelection(controller),
+          ...contributedExtensions(contributions, ctx),
+        ],
       }),
-    [handle, contributions, ctx],
+    [handle, contributions, ctx, controller],
   );
 
   const editor = useEditor(
@@ -66,11 +89,25 @@ function EditorView({
     },
     [extensions],
   );
+  controller.editor = editor;
 
   useEffect(() => {
+    controller.readOnly.set(readOnly);
     if (editor.isEditable !== !readOnly) editor.setEditable(!readOnly);
     editor.view.dom.setAttribute('aria-readonly', readOnly ? 'true' : 'false');
-  }, [editor, readOnly]);
+    if (readOnly) {
+      controller.menu.set(null);
+      controller.closePopover({ focusEditor: false });
+    }
+  }, [editor, controller, readOnly]);
+
+  useEffect(
+    () => () => {
+      controller.closePopover({ focusEditor: false });
+      controller.releaseLinkPreview({ immediate: true });
+    },
+    [controller],
+  );
 
   useEffect(
     () => registerFocusHandler((position) => focusBody(editor, position)),
@@ -90,20 +127,26 @@ function EditorView({
   }, [editor, targetKey]);
 
   return (
-    <div className="tess-editor-root" data-readonly={readOnly || undefined}>
-      <EditorContent editor={editor} />
-      {!readOnly ? (
-        // A generous click target under the last block, like Notion: it adds a block to type in.
-        <div
-          className="tess-editor-tail"
-          aria-hidden="true"
-          onMouseDown={(event) => {
-            event.preventDefault();
-            focusTail(editor);
-          }}
-        />
-      ) : null}
-    </div>
+    <EditorControllerContext.Provider value={controller}>
+      <div ref={rootRef} className="tess-editor-root" data-readonly={readOnly || undefined}>
+        <BlockHandle controller={controller} editor={editor} root={rootRef} />
+        <TableControls controller={controller} editor={editor} root={rootRef} />
+        <EditorContent editor={editor} />
+        {!readOnly ? (
+          // A generous click target under the last block, like Notion: it adds a block to type in.
+          <div
+            className="tess-editor-tail"
+            aria-hidden="true"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              focusTail(editor);
+            }}
+          />
+        ) : null}
+      </div>
+      <SuggestionMenu controller={controller} editor={editor} />
+      <EditorPopovers controller={controller} editor={editor} />
+    </EditorControllerContext.Provider>
   );
 }
 
