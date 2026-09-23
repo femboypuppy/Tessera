@@ -42,7 +42,8 @@ async function spawnServer(dataDir: string, port: number): Promise<ChildProcess>
     stdio: 'ignore',
   });
   children.push(child);
-  const deadline = Date.now() + 30_000;
+  // Generous: tsx compiles the server on start, which is slow on a busy machine.
+  const deadline = Date.now() + 60_000;
   for (;;) {
     try {
       const response = await fetch(`http://127.0.0.1:${port}/api/health`);
@@ -111,5 +112,5 @@ describe('crash safety', () => {
     clients.push(reader);
     await reader.synced();
     expect(reader.doc.getText('t').toString()).toBe('every acknowledged keystroke survives');
-  }, 90_000);
+  }, 180_000);
 });

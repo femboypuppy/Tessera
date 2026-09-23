@@ -112,10 +112,12 @@ async function fuzz(seed: number, options: { devices: number; steps: number }) {
   for (const d of offline) d.goOnline();
   for (const handles of open.values()) for (const handle of handles.values()) handle.release();
   for (const d of fleet) await d.manager.flush();
-  for (const d of fleet) void d.replicator.runNow();
 
-  const expected = new Y.Doc();
+  // Closed docs converge through background passes, which the app runs on reconnect and every few
+  // minutes. A device's pass can pull a doc before another device has pushed to it, so each check
+  // first runs a pass on every device, as the next periodic pass would.
   await eventually(async () => {
+    await Promise.all(fleet.map((d) => d.replicator.runNow()));
     for (const docName of DOCS) {
       const server = new Y.Doc();
       const state = t.server.services.persistence.load(workspaceId, docName);
@@ -135,8 +137,7 @@ async function fuzz(seed: number, options: { devices: number; steps: number }) {
         }
       }
     }
-  }, 30_000);
-  expected.destroy();
+  }, 60_000);
   for (const d of fleet) await d.settled(20_000);
 }
 
@@ -146,6 +147,6 @@ describe('convergence', () => {
     async (seed) => {
       await fuzz(seed, { devices: 4, steps: 160 });
     },
-    120_000,
+    180_000,
   );
 });
