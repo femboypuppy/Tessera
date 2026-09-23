@@ -58,6 +58,23 @@ describe('the Inbox', () => {
   });
 });
 
+describe('the quick-capture window', () => {
+  it('follows the workspace the main window opens', async () => {
+    const { ctx, shell, fake } = await desktopTestContext({ windowLabel: 'capture' });
+    const other = await ctx.services.workspaceRegistry.create({ name: 'Personal' });
+    // The main window opens "Personal" (Rust announces the registry change to every window).
+    const entry = fake.state.registry.find((item) => item.id === other.id);
+    if (entry) entry.lastOpenedAt = Date.now() + 1000;
+    fake.emit('desktop://registry-changed', { origin: 'main' });
+    await waitFor(() => expect(shell.workspaceSwitches).toEqual([other.id]));
+  });
+
+  it('stays on /capture', async () => {
+    const { shell } = await desktopTestContext({ windowLabel: 'capture' });
+    expect(shell.navigations).toContainEqual({ path: '/capture', options: { replace: true } });
+  });
+});
+
 describe('<QuickCapture>', () => {
   it('appends on Enter and puts the window away', async () => {
     const { ctx, fake } = await desktopTestContext({ windowLabel: 'capture' });

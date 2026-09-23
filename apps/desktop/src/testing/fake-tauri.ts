@@ -184,16 +184,31 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
   const channel =
     options.persist && g.BroadcastChannel ? new g.BroadcastChannel('fake-tauri') : null;
   channel?.addEventListener('message', (message: MessageEvent) => {
-    const data = message.data as { event: string; payload: unknown };
-    reload();
+    const data = message.data as { event: string; payload: unknown; state?: State };
+    // The sender's state comes with the message: localStorage can reach this page later.
+    if (data.state) {
+      state = data.state;
+      save();
+    } else reload();
     emitLocal(data.event, data.payload);
   });
   // A channel left open keeps the old document alive after a navigation (Firefox then hangs
   // closing the browser context).
   (g as unknown as Window).addEventListener?.('pagehide', () => channel?.close(), { once: true });
+  /** Tells the other pages, after the current command's changes (a microtask runs later). */
+  const relay = (event: string, payload: unknown) => {
+    if (!channel) return;
+    queueMicrotask(() => {
+      try {
+        channel.postMessage({ event, payload, state });
+      } catch {
+        // The page is going away and closed the channel.
+      }
+    });
+  };
   const emitAll = (event: string, payload: unknown) => {
     emitLocal(event, payload);
-    channel?.postMessage({ event, payload });
+    relay(event, payload);
   };
 
   const fail = (code: string, message: string) => ({ code, message });
@@ -529,10 +544,7 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
       db.updates.push({ seq: db.nextSeq, doc, data });
       db.nextSeq += 1;
       save();
-      channel?.postMessage({
-        event: 'desktop://doc-update',
-        payload: { workspaceId, docName: doc, update: data, origin: label },
-      });
+      relay('desktop://doc-update', { workspaceId, docName: doc, update: data, origin: label });
       return null;
     },
     doc_compact: (_args, opts, payload) => {

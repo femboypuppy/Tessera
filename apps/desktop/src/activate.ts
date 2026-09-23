@@ -83,6 +83,16 @@ export async function activateDesktop(ctx: AppContext): Promise<() => void> {
     });
   }
 
+  if (backend.windowLabel === WINDOWS.capture) {
+    // The quick-capture window only ever shows /capture (switching workspaces goes home first).
+    if (window.location.pathname !== '/capture') ctx.navigateTo('/capture', { replace: true });
+    // It captures into the workspace open in the main window: the most recently opened one.
+    cleanups.push(
+      ctx.services.workspaceRegistry.subscribe(([latest]) => {
+        if (latest && latest.id !== ctx.workspace.info.id) ctx.switchWorkspace(latest.id);
+      }),
+    );
+  }
   if (backend.windowLabel !== WINDOWS.main) {
     return () => cleanups.reverse().forEach((cleanup) => cleanup());
   }

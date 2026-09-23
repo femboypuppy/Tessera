@@ -14,10 +14,9 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { lazy } from 'react';
+import { runDesktopCommand } from './commands';
 import { currentWindowLabel, DESKTOP_COMMANDS, WINDOWS } from './constants';
 import { t } from './i18n';
-
-const commands = () => import('./commands');
 
 const isMainWindow = () => currentWindowLabel() === WINDOWS.main;
 
@@ -33,7 +32,7 @@ function command(
     ...extra,
     // The quick-capture window runs the app too; its commands stay in the main window.
     when: (context: CommandContext) => isMainWindow() && (extra.when ? extra.when(context) : true),
-    run: async (context) => (await commands()).runDesktopCommand(id, context),
+    run: (context) => runDesktopCommand(id, context),
   };
 }
 

@@ -178,6 +178,15 @@ test.describe('the desktop app (Tauri mocked)', () => {
 
     // Written by the capture window, relayed to the main window's open workspace.
     await expect(pageTree(page).getByRole('treeitem', { name: 'Inbox' })).toBeVisible();
+
+    // The main window opens another workspace: quick capture follows it.
+    await page.keyboard.press(`${MOD}+o`);
+    await page.getByRole('button', { name: 'New workspace…' }).click();
+    await page.getByRole('dialog', { name: 'New workspace' }).getByLabel('Name').fill('Personal');
+    await page.getByRole('button', { name: 'Create workspace' }).click();
+    await expect(page.getByRole('button', { name: 'Switch workspace' })).toContainText('Personal');
+    await expect(capture.getByText('Into Inbox · Personal')).toBeVisible();
+    await expect(capture).toHaveURL(/\/capture$/);
     await capture.close();
   });
 
