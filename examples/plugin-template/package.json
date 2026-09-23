@@ -1,0 +1,23 @@
+{
+  "name": "my-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Tessera plugin.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "pack": "vite build && node scripts/pack.mjs"
+  },
+  "devDependencies": {
+    "@tessera/plugin-api": "^0.1.0",
+    "fflate": "0.8.3",
+    "jsdom": "30.1.1",
+    "typescript": "6.0.3",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  }
+}
