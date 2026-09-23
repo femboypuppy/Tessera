@@ -1,0 +1,3 @@
+#!/bin/sh
+# Conventional Commits check (scripts/git-hooks/commit-msg.ts). Skip with --no-verify.
+exec node "$(git rev-parse --show-toplevel)/scripts/git-hooks/commit-msg.ts" "$1"
