@@ -33,6 +33,7 @@ Milestones from `agents/03-sync.md`, in order; each ended typechecked, linted, t
 | `src/stores/sync-state.ts` | `SyncStateStore`: per-doc `{ dirty, version, serverSeq }` and the persistent outbox; `markDirtyInTransaction` for the doc store. |
 | `src/client/` | `ServerApi` (typed, every response validated with zod, `ServerApiError` with `status 0` = unreachable/CORS), URL helpers, `CredentialStore` (IndexedDB by default, replaceable with `setCredentialStore`). |
 | `src/provider/hocuspocus-provider.ts` | `HocuspocusSyncProvider` (see Decisions): per-doc `SyncHandle`s with awareness, aggregate status (`TesseraSyncStatus` adds `readOnly`, `serverUrl`, `backgroundPending`), `retry()`, `setLocalChangeHandler`. |
+| `src/provider/socket.ts` | `SyncSocket` (also `@tessera/sync/socket`): Hocuspocus's shared WebSocket without zombie reconnects (see Decisions). |
 | `src/provider/replicator.ts` | `BackgroundReplicator`: pushes dirty docs, pulls docs whose server `seq` moved, drains the outbox (deletions, asset uploads, version uploads). |
 | `src/history/` | `LocalVersionStore` (IndexedDB), snapshot helpers (`contentOf`, `restoreInto` with a `Y.UndoManager` on the restore origin), `HistoryService` (auto versions 3 min after edits start, dedup, list merged with the server's, restore). |
 | `src/feature/` | `syncServices` (registrations), `activateSync` (storage health, server sync, history, `sync.saveVersion` command, debug hooks), `startJoin` (onboarding), invite-link capture, `window.__tesseraSync` test hooks (device setting `sync.debug` only). |
@@ -64,9 +65,9 @@ Milestones from `agents/03-sync.md`, in order; each ended typechecked, linted, t
   no duplicate writes, load/watch race), asset store, registry, runtime persistence across a reload,
   quota toast, history (auto/dedup/manual/restore/undo/concurrent undo/deletion/pruning), API client,
   UI (status, presence, preview safety, user agents).
-- `apps/server` (74): config, HTTP/auth (18), workspaces and invites (8), assets (9), sync
+- `apps/server` (77): config, HTTP/auth (18), workspaces and invites (8), assets (9), sync
   authorization (13), persistence (6), **crash** (kills the server process), client integration
-  with the real provider and DocManager (8), **convergence fuzz** (3 seeds × 4 devices × 160 random
+  with the real provider and DocManager (9), `SyncSocket` against a real server (2), **convergence fuzz** (3 seeds × 4 devices × 160 random
   steps with random disconnects and doc closes), backup/restore and create-owner (4).
 - `e2e/sync/sync.spec.ts` (7 specs, Chromium and Firefox): reload persistence; two tabs without a
   server; two people seeing each other's changes and presence within a second; offline and back
@@ -134,7 +135,16 @@ other client and everything converged.
   back would otherwise wait until someone reopened them. Every stored local update marks its doc
   dirty in the same transaction; the replicator pushes dirty docs and pulls docs whose server
   sequence number moved (so the device has everything offline), with compare-and-set so an edit
-  made during a sync is never marked synced.
+  made during a sync is never marked synced. A doc that is open is left to the live connection and
+  its sequence number is not recorded: a broadcast counted in it may still be in flight when the
+  doc closes, so the first pass after it closes pulls it (a cheap state-vector handshake).
+- **`SyncSocket` instead of the bare `HocuspocusProviderWebsocket`.** When a connection drops,
+  Hocuspocus 4.7 schedules `setTimeout(() => this.connect())`, and `connect()` sets
+  `shouldConnect` back to true. A socket destroyed (workspace switch, sign-out) or disconnected for
+  going offline before that timer fires reconnected anyway and retried forever (found through a
+  leaked timer in the crash test; tested in `client.test.ts` `SyncSocket`). `SyncSocket` ignores
+  `connect()` after `disconnect()`/`destroy()`; the provider reconnects with `resume()`. Worth
+  reporting upstream.
 - **Server doc names are `<workspaceId>/<docName>`**: membership of the workspace in the name is
   the authorization, and page IDs can't collide across workspaces.
 - **Auth**: the web app uses the httpOnly `SameSite=Lax` cookie (only accepted on WebSockets and
