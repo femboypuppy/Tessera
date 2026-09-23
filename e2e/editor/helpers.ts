@@ -48,7 +48,8 @@ export async function createPage(page: Page, title: string, { enter = true } = {
     .first()
     .click();
   await expect(titleField(page)).toBeFocused();
-  await expect(editor(page)).toBeVisible();
+  // The editor is a lazy chunk: the first page of a session waits for it to load.
+  await expect(editor(page)).toBeVisible({ timeout: 20_000 });
   await page.keyboard.type(title);
   if (enter) {
     await page.keyboard.press('Enter');
