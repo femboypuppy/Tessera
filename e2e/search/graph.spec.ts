@@ -35,7 +35,12 @@ test.describe('graph view', () => {
   test('renders the workspace and opens a page when its node is clicked', async ({ page }) => {
     await openWorkspace(page);
     const pages = await seed(page, 60, 5);
-    await openGraph(page);
+    // From the sidebar this time (the other specs use the palette).
+    const entry = page
+      .getByRole('navigation', { name: 'Sidebar' })
+      .getByRole('button', { name: 'Graph view' });
+    await entry.click();
+    await expect(entry).toHaveAttribute('aria-current', 'page');
     const graph = page.getByRole('img', { name: /Graph view: 60 pages/ });
     await expect(graph).toBeVisible();
     await expect(graph.locator('canvas').first()).toBeVisible();

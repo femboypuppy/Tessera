@@ -1,5 +1,10 @@
 import { COMMANDS, defineFeature, PANELS } from '@tessera/core';
-import { GraphViewRoute, LocalGraphPanel, openGraph } from '@tessera/search/graph';
+import {
+  GraphSidebarItem,
+  GraphViewRoute,
+  LocalGraphPanel,
+  openGraph,
+} from '@tessera/search/graph';
 import { t } from '@tessera/search/i18n';
 import { Network, Waypoints } from 'lucide-react';
 
@@ -11,6 +16,7 @@ import { Network, Waypoints } from 'lucide-react';
 export const graphFeature = defineFeature({
   id: 'graph',
   routes: [{ path: '/graph', component: GraphViewRoute }],
+  sidebarSections: [{ id: 'graph', position: 'top', component: GraphSidebarItem }],
   pageSidePanels: [
     {
       id: PANELS.localGraph,

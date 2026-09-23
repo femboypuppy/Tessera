@@ -29,6 +29,9 @@ describe('search, graph and backlinks features', () => {
       PANELS.localGraph,
     ]);
     expect(ctx.contributions.list('overlays').map((overlay) => overlay.id)).toEqual(['palette']);
+    expect(ctx.contributions.list('sidebarSections').map((section) => section.id)).toEqual([
+      'graph',
+    ]);
     expect(ctx.contributions.list('pageFooterSections').map((section) => section.id)).toEqual([
       'backlinks',
     ]);

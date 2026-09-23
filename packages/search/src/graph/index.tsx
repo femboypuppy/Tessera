@@ -5,6 +5,7 @@
 import { lazy } from 'react';
 
 export { openGraph, GRAPH_PATH } from './location';
+export { GraphSidebarItem } from './sidebar-item';
 
 /** The `/graph` route. */
 export const GraphViewRoute = lazy(() => import('./graph-view'));
