@@ -10,6 +10,7 @@ import {
   type IndexedDbOptions,
 } from '../idb/schema';
 import { StorageErrorEmitter, StoreClosedError, type StorageErrorInfo } from './storage-errors';
+import { markDirtyInTransaction } from './sync-state';
 import { compactUpdates, mergeUpdatesSafely } from './updates';
 
 export interface IndexedDbDocStoreOptions extends IndexedDbOptions {
@@ -19,6 +20,11 @@ export interface IndexedDbDocStoreOptions extends IndexedDbOptions {
   compactThreshold?: number;
   /** Delay before a background compaction runs. Default 1500 ms. */
   compactDelayMs?: number;
+  /**
+   * The workspace syncs with a server: every stored update also marks its doc as not yet
+   * acknowledged, in the same transaction, so the background sync can never miss it.
+   */
+  trackSync?: boolean;
 }
 
 interface UpdateRecord {
@@ -29,6 +35,8 @@ interface UpdateRecord {
 interface QueuedWrite {
   docName: string;
   update: Uint8Array;
+  /** Came from the server: nothing new for the server, so it doesn't mark the doc dirty. */
+  remote: boolean;
   resolve(): void;
   reject(error: Error): void;
 }
@@ -101,6 +109,7 @@ export class IndexedDbDocStore implements DocStore {
   private readonly source = instanceId();
   private readonly compactThreshold: number;
   private readonly compactDelayMs: number;
+  private readonly trackSync: boolean;
   private readonly errors = new StorageErrorEmitter();
 
   private queue: QueuedWrite[] = [];
@@ -122,6 +131,7 @@ export class IndexedDbDocStore implements DocStore {
     this.workspaceId = workspaceId;
     this.compactThreshold = options.compactThreshold ?? 400;
     this.compactDelayMs = options.compactDelayMs ?? 1500;
+    this.trackSync = options.trackSync === true;
     const factory = options.channel === undefined ? browserChannel : options.channel;
     this.channel = factory ? factory(`tessera:docs:${workspaceId}`) : null;
     if (this.channel) this.channel.onmessage = (event) => this.receive(event.data);
@@ -169,10 +179,19 @@ export class IndexedDbDocStore implements DocStore {
   }
 
   storeUpdate(docName: string, update: Uint8Array): Promise<void> {
+    return this.enqueue(docName, update, false);
+  }
+
+  /** Stores an update that came from the server (the background sync), without marking it dirty. */
+  storeRemoteUpdate(docName: string, update: Uint8Array): Promise<void> {
+    return this.enqueue(docName, update, true);
+  }
+
+  private enqueue(docName: string, update: Uint8Array, remote: boolean): Promise<void> {
     if (this.disposed) return Promise.reject(new StoreClosedError('The document store is closed'));
     return new Promise<void>((resolve, reject) => {
       // Copy: callers may reuse the buffer, and the copy is what goes to IndexedDB and other tabs.
-      this.queue.push({ docName, update: update.slice(), resolve, reject });
+      this.queue.push({ docName, update: update.slice(), remote, resolve, reject });
       this.schedulePump();
     });
   }
@@ -200,7 +219,9 @@ export class IndexedDbDocStore implements DocStore {
     this.compactTimers.delete(docName);
     await this.compactions.get(docName);
     const db = this.requireDb();
-    const transaction = db.transaction(STORES.updates, 'readwrite', { durability: 'strict' });
+    const transaction = db.transaction([STORES.updates, STORES.syncState], 'readwrite', {
+      durability: 'strict',
+    });
     const done = transactionDone(transaction);
     const request = transaction
       .objectStore(STORES.updates)
@@ -212,6 +233,7 @@ export class IndexedDbDocStore implements DocStore {
       cursor.delete();
       cursor.continue();
     };
+    transaction.objectStore(STORES.syncState).delete(docName);
     try {
       await done;
     } catch (error) {
@@ -334,12 +356,20 @@ export class IndexedDbDocStore implements DocStore {
   private async writeBatch(batch: QueuedWrite[]): Promise<void> {
     try {
       const db = this.requireDb();
-      const transaction = db.transaction(STORES.updates, 'readwrite', { durability: 'strict' });
+      const transaction = db.transaction(
+        this.trackSync ? [STORES.updates, STORES.syncState] : STORES.updates,
+        'readwrite',
+        { durability: 'strict' },
+      );
       const done = transactionDone(transaction);
       try {
         const store = transaction.objectStore(STORES.updates);
         for (const write of batch)
           store.add({ doc: write.docName, update: write.update } satisfies UpdateRecord);
+        if (this.trackSync) {
+          const local = batch.filter((write) => !write.remote).map((write) => write.docName);
+          if (local.length > 0) markDirtyInTransaction(transaction, local, Date.now());
+        }
       } catch (error) {
         // Never commit half a batch: every caller retries the whole batch.
         try {

@@ -8,6 +8,18 @@ import * as Y from 'yjs';
 import type { ServerConfig } from '../config';
 import { startServer, type StartServerOptions, type TesseraServer } from '../server';
 
+/**
+ * `ws` for the Hocuspocus provider in Node. The provider closes sockets that are still
+ * connecting after removing its listeners; `ws` then emits an `error` that browsers don't, so
+ * this polyfill always has a listener for it.
+ */
+export class NodeWebSocket extends WebSocket {
+  constructor(address: string, protocols?: string | string[], options?: WebSocket.ClientOptions) {
+    super(address, protocols, options);
+    this.on('error', () => undefined);
+  }
+}
+
 export const SETUP_CODE = 'TEST-SETUP-CODE';
 
 /** A test clock that tests can move forward. */
@@ -227,7 +239,7 @@ export function connectClient(
     options.socket ??
     new HocuspocusProviderWebsocket({
       url: wsUrl,
-      WebSocketPolyfill: WebSocket,
+      WebSocketPolyfill: NodeWebSocket,
       delay: 50,
       minDelay: 50,
       maxDelay: 500,

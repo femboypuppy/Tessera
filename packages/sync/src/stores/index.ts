@@ -17,3 +17,4 @@ export {
 export { StoreClosedError, type StorageErrorInfo } from './storage-errors';
 export { compactUpdates, mergeUpdatesSafely } from './updates';
 export { workspaceDatabaseName } from '../idb/schema';
+export { SyncStateStore, type OutboxItem, type SyncStateRecord } from './sync-state';

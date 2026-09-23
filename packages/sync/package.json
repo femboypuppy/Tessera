@@ -10,9 +10,10 @@
     ".": "./src/index.ts",
     "./stores": "./src/stores/index.ts",
     "./provider": "./src/provider/index.ts",
+    "./client": "./src/client/index.ts",
     "./activate": "./src/feature/activate.ts",
     "./ui": "./src/ui/entry.tsx",
-    "./i18n": "./src/i18n/index.ts"
+    "./i18n": "./src/i18n/registration.ts"
   },
   "scripts": {
     "build": "tsdown",
