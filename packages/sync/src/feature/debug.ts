@@ -4,7 +4,9 @@ import {
   isDocEmpty,
   readDocJSON,
   updateDocJSON,
+  writeDocJSON,
   type AppContext,
+  type DocJSON,
   type SyncStatusInfo,
 } from '@tessera/core';
 
@@ -19,6 +21,8 @@ export const DEBUG_SETTING = 'sync.debug';
 export interface SyncDebugHooks {
   readText(pageId: string): Promise<string>;
   appendParagraph(pageId: string, text: string): Promise<void>;
+  /** Replaces a page's content (validated like any write). */
+  writeDocJSON(pageId: string, json: DocJSON): Promise<void>;
   status(): SyncStatusInfo;
 }
 
@@ -47,6 +51,14 @@ export function installDebugHooks(ctx: AppContext): () => void {
           ...doc,
           content: isDocEmpty(doc) ? [build.p(text)] : [...doc.content, build.p(text)],
         }));
+      } finally {
+        handle.release();
+      }
+    },
+    async writeDocJSON(pageId, json) {
+      const handle = await ctx.loadPageDoc(pageId);
+      try {
+        writeDocJSON(handle.doc, json);
       } finally {
         handle.release();
       }

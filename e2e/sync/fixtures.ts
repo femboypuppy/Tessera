@@ -218,6 +218,7 @@ declare global {
     __tesseraSync?: {
       readText(pageId: string): Promise<string>;
       appendParagraph(pageId: string, text: string): Promise<void>;
+      writeDocJSON(pageId: string, json: unknown): Promise<void>;
       status(): { status: string };
     };
   }

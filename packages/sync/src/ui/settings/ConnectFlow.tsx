@@ -235,9 +235,15 @@ function ChooseStep({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-ui text-fg-muted">
-        {t('signedInAs', { name: me.user.name, email: me.user.email })}
-      </p>
+      <div>
+        <h4 className="text-sm font-semibold text-fg">{t('chooseTitle')}</h4>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-ui text-fg-muted">
+          <Server className="size-3.5" aria-hidden="true" />
+          {t('connectedTo', { server: displayServerUrl(server.serverUrl) })}
+          <span aria-hidden="true">·</span>
+          {t('signedInAs', { name: me.user.name, email: me.user.email })}
+        </p>
+      </div>
       {error ? <Callout tone="danger">{error}</Callout> : null}
       {!invited ? (
         <div className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center">
