@@ -42,6 +42,7 @@ export const en = {
   statusReadOnlyDetail: 'You can read this workspace. Changes you make here stay on this device.',
   syncStatusLabel: 'Sync status: {status}',
   lastSynced: 'Last synced {time}',
+  lastSyncLabel: 'Last sync',
   neverSynced: 'Not synced yet',
   justNow: 'just now',
   pendingChanges_one: '{count} change waiting to sync',
@@ -178,6 +179,13 @@ export const en = {
   signOutConfirm: 'Sign out of {server}?',
   otherWorkspaces: 'Other workspaces on this server',
   saving: 'Saving…',
+  storageSection: 'Storage on this device',
+  storageProtected: 'Protected: the browser won’t clear this data to free up space.',
+  storageNotProtected:
+    'When the disk is nearly full, the browser may clear stored data. Protect it so that never happens without asking you.',
+  protectStorage: 'Protect data on this device',
+  storageProtectDenied:
+    'The browser didn’t allow it. Bookmarking the app or installing it usually helps.',
   genericError: 'Something went wrong: {message}',
 
   // Onboarding

@@ -68,14 +68,37 @@ export function watchStorageHealth(ctx: AppContext, now: () => number = Date.now
 }
 
 /**
- * Asks the browser not to evict this origin's data under storage pressure. Chromium grants it
- * silently to engaged sites; Firefox may ask once. Never throws.
+ * Chromium decides persistence requests silently (by engagement); Firefox shows a permission
+ * prompt, which must never appear unasked on startup.
  */
-export async function requestPersistentStorage(): Promise<boolean> {
+function asksSilently(): boolean {
+  return typeof navigator !== 'undefined' && 'userAgentData' in navigator;
+}
+
+/** Whether this origin's storage is protected from eviction (null when unknown). */
+export async function isStoragePersisted(): Promise<boolean | null> {
+  try {
+    const storage = typeof navigator === 'undefined' ? undefined : navigator.storage;
+    if (!storage?.persisted) return null;
+    return await storage.persisted();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Asks the browser not to evict this origin's data under storage pressure. Without
+ * `interactive`, only where the browser decides without asking the person (Chromium); with it
+ * (a button the person pressed), everywhere. Never throws.
+ */
+export async function requestPersistentStorage(
+  options: { interactive: boolean } = { interactive: true },
+): Promise<boolean> {
   try {
     const storage = typeof navigator === 'undefined' ? undefined : navigator.storage;
     if (!storage?.persist) return false;
     if (await storage.persisted?.()) return true;
+    if (!options.interactive && !asksSilently()) return false;
     return await storage.persist();
   } catch {
     return false;

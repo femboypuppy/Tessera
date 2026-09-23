@@ -181,10 +181,10 @@ export function SyncStatusIndicator() {
               <dd className="truncate font-medium text-fg">{server}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-fg-muted">{t('statusSynced')}</dt>
+              <dt className="text-fg-muted">{t('lastSyncLabel')}</dt>
               <dd className="text-fg">
                 {status.lastSyncedAt
-                  ? t('lastSynced', { time: formatRelativeTime(status.lastSyncedAt, now) })
+                  ? formatRelativeTime(status.lastSyncedAt, now)
                   : t('neverSynced')}
               </dd>
             </div>

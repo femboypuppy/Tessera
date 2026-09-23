@@ -67,7 +67,8 @@ async function startHistory(
 export async function activateSync(ctx: AppContext): Promise<() => void> {
   const cleanups: Array<() => void> = [];
   cleanups.push(watchStorageHealth(ctx));
-  if (ctx.serviceSources.docStore === 'indexeddb') void requestPersistentStorage();
+  if (ctx.serviceSources.docStore === 'indexeddb')
+    void requestPersistentStorage({ interactive: false });
   const server = await startServerSync(ctx);
   cleanups.push(server.stop);
   const history = await startHistory(ctx, server.session);
