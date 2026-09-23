@@ -247,6 +247,10 @@ other client and everything converged.
 
 - **Offline cold start**: the app shell isn't cached (no service worker), so reloading while offline
   shows the browser's offline page; all data is in IndexedDB and appears on the next online load.
+- **Cross-tab latency is the durable-commit latency**: a tab broadcasts an update only after its
+  `durability: 'strict'` IndexedDB commit. Usually well under a second; once, on a machine whose
+  disk and CPU were saturated by other jobs, Firefox took over the e2e spec's 2 s (8 repeats
+  afterwards all passed).
   A service worker belongs to the shell (see follow-ups). The e2e offline test therefore doesn't
   reload while offline.
 - Viewers can still type locally (see contract change 1); their changes never reach the server.
