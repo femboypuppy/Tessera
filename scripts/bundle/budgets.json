@@ -1,0 +1,7 @@
+{
+  "$comment": "Bundle budgets from SPEC.md section 10. Sizes in bytes (1 kB = 1,000 bytes, like Vite). bootModules are dynamic imports apps/web/src/main.tsx always awaits before the first render, so they count as startup JS.",
+  "startup": {
+    "maxGzipBytes": 250000,
+    "bootModules": ["apps/web/src/features/index.ts"]
+  }
+}

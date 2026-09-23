@@ -1,0 +1,228 @@
+/**
+ * Policy checks for `.github/`: every workflow pins its actions to commit SHAs, grants the least
+ * permissions, has timeouts, avoids script injection, and the CI gate covers every required job.
+ * actionlint (scripts/ci/actionlint.ts) checks syntax and types; these check our own rules.
+ */
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
+import { loadWorkflows, type Workflow, type WorkflowJob } from './workflow';
+
+const ROOT = path.resolve(import.meta.dirname, '..', '..', '..', '..');
+const WORKFLOWS = loadWorkflows(path.join(ROOT, '.github', 'workflows'));
+const byName = (file: string): Workflow => {
+  const workflow = WORKFLOWS.find((candidate) => path.basename(candidate.file) === file);
+  if (!workflow) throw new Error(`Missing workflow ${file}`);
+  return workflow;
+};
+
+/** Every `uses:` line of every workflow, with its file. */
+const usesLines = WORKFLOWS.flatMap((workflow) =>
+  workflow.text
+    .split('\n')
+    .map((line) => /^\s*(?:-\s+)?uses:\s*(\S+)(.*)$/.exec(line))
+    .filter((match): match is RegExpExecArray => match !== null)
+    .map((match) => ({
+      file: path.basename(workflow.file),
+      ref: match[1] ?? '',
+      rest: match[2] ?? '',
+    })),
+);
+
+const steps = (job: WorkflowJob) => job.steps ?? [];
+
+describe('.github/workflows', () => {
+  it('has the workflows the project needs', () => {
+    expect(WORKFLOWS.map((workflow) => path.basename(workflow.file))).toEqual(
+      expect.arrayContaining([
+        'ci.yml',
+        'codeql.yml',
+        'desktop.yml',
+        'docker.yml',
+        'docs.yml',
+        'labeler.yml',
+        'release.yml',
+      ]),
+    );
+  });
+
+  it('pins every third-party action to a full commit SHA with a version comment', () => {
+    const remote = usesLines.filter((line) => !line.ref.startsWith('./'));
+    expect(remote.length).toBeGreaterThan(20);
+    for (const line of remote) {
+      expect(line.ref, `${line.file}: ${line.ref}`).toMatch(/^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/);
+      expect(line.rest, `${line.file}: ${line.ref} needs "# vX.Y.Z"`).toMatch(
+        /^\s+#\s+v\d+\.\d+\.\d+$/,
+      );
+    }
+  });
+
+  it('pins each action to the same commit everywhere', () => {
+    const pins = new Map<string, Set<string>>();
+    for (const line of usesLines.filter((entry) => !entry.ref.startsWith('./'))) {
+      const [action = '', sha = ''] = line.ref.split('@');
+      const repo = action.split('/').slice(0, 2).join('/');
+      pins.set(repo, new Set([...(pins.get(repo) ?? []), sha]));
+    }
+    for (const [repo, shas] of pins) expect([...shas], repo).toHaveLength(1);
+  });
+
+  it('defaults to read-only permissions and gives every job explicit permissions', () => {
+    for (const workflow of WORKFLOWS) {
+      const file = path.basename(workflow.file);
+      expect(workflow.permissions, file).toEqual({ contents: 'read' });
+      for (const [id, job] of Object.entries(workflow.jobs)) {
+        expect(job.permissions, `${file} → ${id}`).toBeDefined();
+      }
+    }
+  });
+
+  it('sets a timeout on every job that runs on a runner', () => {
+    for (const workflow of WORKFLOWS) {
+      for (const [id, job] of Object.entries(workflow.jobs)) {
+        if (job.uses) continue;
+        expect(job['timeout-minutes'], `${path.basename(workflow.file)} → ${id}`).toBeGreaterThan(
+          0,
+        );
+      }
+    }
+  });
+
+  it('never persists the checkout token', () => {
+    for (const workflow of WORKFLOWS) {
+      for (const [id, job] of Object.entries(workflow.jobs)) {
+        for (const step of steps(job).filter((entry) =>
+          entry.uses?.startsWith('actions/checkout@'),
+        )) {
+          expect(
+            step.with?.['persist-credentials'],
+            `${path.basename(workflow.file)} → ${id}`,
+          ).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('passes untrusted event data to scripts through env, never inline', () => {
+    for (const workflow of WORKFLOWS) {
+      for (const [id, job] of Object.entries(workflow.jobs)) {
+        for (const step of steps(job)) {
+          expect(step.run ?? '', `${path.basename(workflow.file)} → ${id}`).not.toMatch(
+            /\$\{\{\s*github\.(?:event|head_ref)/,
+          );
+        }
+      }
+    }
+  });
+
+  it('never checks out code in pull_request_target workflows', () => {
+    for (const workflow of WORKFLOWS) {
+      const triggers =
+        typeof workflow.on === 'object' && workflow.on !== null ? Object.keys(workflow.on) : [];
+      if (!triggers.includes('pull_request_target')) continue;
+      for (const job of Object.values(workflow.jobs)) {
+        expect(steps(job).some((step) => step.uses?.startsWith('actions/checkout@'))).toBe(false);
+      }
+    }
+  });
+
+  it('only runs scripts that exist', () => {
+    for (const workflow of WORKFLOWS) {
+      for (const match of workflow.text.matchAll(/(?:node|tsx)\s+(scripts\/[\w./-]+\.ts)/g)) {
+        expect(
+          existsSync(path.join(ROOT, match[1] ?? '')),
+          `${path.basename(workflow.file)}: ${match[1]}`,
+        ).toBe(true);
+      }
+    }
+  });
+});
+
+describe('ci.yml', () => {
+  const ci = byName('ci.yml');
+
+  it('cancels superseded runs and runs on pull requests and main', () => {
+    expect(ci.concurrency).toMatchObject({ 'cancel-in-progress': true });
+    expect(ci.on).toMatchObject({ pull_request: null, push: { branches: ['main'] } });
+  });
+
+  it('gates on every required job through the final "CI" job', () => {
+    const gate = ci.jobs.ci;
+    expect(gate?.if).toBe('always()');
+    const nonBlocking = new Set(['ci', 'audit', 'e2e-report', 'lighthouse']);
+    const required = Object.keys(ci.jobs).filter((id) => !nonBlocking.has(id));
+    expect([...(gate?.needs ?? [])].sort()).toEqual(required.sort());
+  });
+
+  it('runs e2e on Chromium and Firefox in shards', () => {
+    expect(ci.jobs.e2e?.strategy?.matrix).toEqual({
+      browser: ['chromium', 'firefox'],
+      shard: [1, 2],
+    });
+    const run = steps(ci.jobs.e2e ?? {}).find((step) => step.name === 'Playwright')?.run ?? '';
+    expect(run).toContain('--project=${{ matrix.browser }}');
+    expect(run).toContain('--shard=${{ matrix.shard }}/2');
+  });
+
+  it('calls the same root scripts contributors run', () => {
+    const runs = Object.values(ci.jobs).flatMap((job) => steps(job).map((step) => step.run ?? ''));
+    for (const command of [
+      'pnpm lint',
+      'pnpm typecheck',
+      'pnpm test:coverage',
+      'pnpm build',
+      'pnpm test:e2e',
+    ]) {
+      expect(
+        runs.some((run) => run.includes(command)),
+        command,
+      ).toBe(true);
+    }
+  });
+});
+
+describe('dependabot.yml and labeler.yml', () => {
+  it('updates npm weekly (grouped), actions monthly and cargo weekly', () => {
+    const config = parse(readFileSync(path.join(ROOT, '.github', 'dependabot.yml'), 'utf8')) as {
+      updates: Array<{
+        'package-ecosystem': string;
+        schedule: { interval: string };
+        groups?: object;
+      }>;
+    };
+    const find = (ecosystem: string) =>
+      config.updates.filter((update) => update['package-ecosystem'] === ecosystem);
+    expect(
+      find('npm').every((update) => update.schedule.interval === 'weekly' && update.groups),
+    ).toBe(true);
+    expect(find('npm')).not.toHaveLength(0);
+    expect(find('github-actions').map((update) => update.schedule.interval)).toEqual(['monthly']);
+    expect(find('cargo').map((update) => update.schedule.interval)).toEqual(['weekly']);
+  });
+
+  it('labels every area by path', () => {
+    const config = parse(readFileSync(path.join(ROOT, '.github', 'labeler.yml'), 'utf8')) as Record<
+      string,
+      Array<{ 'changed-files': Array<{ 'any-glob-to-any-file': string | string[] }> }>
+    >;
+    for (const area of [
+      'editor',
+      'sync',
+      'databases',
+      'search',
+      'plugins',
+      'desktop',
+      'import-export',
+      'ci',
+    ]) {
+      expect(Object.keys(config)).toContain(`area: ${area}`);
+    }
+    for (const [label, rules] of Object.entries(config)) {
+      const globs = rules.flatMap((rule) =>
+        rule['changed-files'].flatMap((entry) => entry['any-glob-to-any-file']),
+      );
+      expect(globs.length, label).toBeGreaterThan(0);
+    }
+  });
+});
