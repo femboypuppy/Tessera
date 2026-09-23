@@ -11,7 +11,6 @@ import {
   signIn,
   syncStatus,
   test,
-  uploadWorkspace,
   workspaceIdOf,
 } from './fixtures';
 
