@@ -24,19 +24,19 @@ afterEach(() => {
 });
 
 async function setup(options: { autoDelayMs?: number } = {}) {
-  const test = await createTestAppContext();
-  const store = await LocalVersionStore.open(test.workspace.id, { indexedDB: factory });
-  const history = new HistoryService(test.ctx, store, { autoDelayMs: options.autoDelayMs ?? 50 });
+  const app = await createTestAppContext();
+  const store = await LocalVersionStore.open(app.workspace.id, { indexedDB: factory });
+  const history = new HistoryService(app.ctx, store, { autoDelayMs: options.autoDelayMs ?? 50 });
   history.start();
-  const page = test.ctx.workspace.createPage({ title: 'Mission plan' });
+  const page = app.ctx.workspace.createPage({ title: 'Mission plan' });
   const write = async (...paragraphs: string[]) => {
-    const handle = await test.ctx.loadPageDoc(page.id);
+    const handle = await app.ctx.loadPageDoc(page.id);
     writeDocJSON(handle.doc, build.doc(...paragraphs.map((text) => build.p(text))));
     handle.release();
-    await test.flush();
+    await app.flush();
   };
   const read = async () => {
-    const handle = await test.ctx.loadPageDoc(page.id);
+    const handle = await app.ctx.loadPageDoc(page.id);
     try {
       return extractPlainText(readDocJSON(handle.doc));
     } finally {
@@ -44,7 +44,7 @@ async function setup(options: { autoDelayMs?: number } = {}) {
     }
   };
   return {
-    ...test,
+    ...app,
     store,
     history,
     page,
@@ -53,7 +53,7 @@ async function setup(options: { autoDelayMs?: number } = {}) {
     close: async () => {
       history.dispose();
       store.dispose();
-      await test.dispose();
+      await app.dispose();
     },
   };
 }
