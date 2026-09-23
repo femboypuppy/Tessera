@@ -25,9 +25,9 @@ import { isValidStoredValue } from '../query/cells';
  * imports, pasting many rows and the 10,000-row performance test need a bulk path. Until core
  * ships `createPages`/`addRows` (the request), this module writes exactly the structures those
  * helpers write (SPEC 4.3 and 4.5: the `pages` map of the workspace doc, the `rows` map of the
- * database doc), after validating every input the way they do. `bulk.test.ts` proves the result
- * reads back identically through core's readers. Replace the body with the core helpers when the
- * request lands; the signature stays.
+ * database doc), after validating every input the way they do. The "addRowsInBulk" tests in
+ * `model.test.ts` prove the result reads back identically through core's readers. Replace the
+ * body with the core helpers when the request lands; the signature stays.
  */
 
 /** One row to add. */

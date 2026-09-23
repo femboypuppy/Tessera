@@ -33,28 +33,410 @@ screenshots, a critical look, a commit.
 
 ## Built (what exists and where)
 
-(In progress.)
+Everything lives in `packages/db-views` (`@tessera/db-views`); `apps/web/src/features/databases`
+only registers it. Subpath exports keep the shell's startup bundle small: `.` (light: overlay
+store, sidebar button, `tCore` strings), `./query`, `./csv`, `./operations`, `./database-body`,
+`./row-properties`, `./linked-from`, `./inline-database`, `./actions`.
+
+**Query engine** (`src/query`: pure TypeScript, no React, no Yjs; reusable by search, plugins and
+exports through `@tessera/db-views/query`)
+
+- `cells.ts`: reads stored values with fast validators equivalent to core's zod schemas
+  (`cells.test.ts` proves the equivalence with fast-check); parsed dates are cached per value.
+- `filter.ts`: compiles a filter tree once (nested AND/OR, every operator of every property type,
+  inactive rules ignored) into a predicate. `filter-edit.ts`: immutable tree edits for the builder.
+- `dates.ts`: day keys, time zones (zone offsets cached by quarter hour, DST safe), ISO weeks,
+  relative dates ("today", "next 7 days", "this month", past or next N days, weeks, months, years),
+  ranges.
+- `sort.ts`: stable multi-level sorting with `Intl.Collator` (numeric), empty values last,
+  composite `Float64Array` keys for speed. `group.ts`: groups by option, checkbox, date bucket
+  (day, week, month, year), number, text or relation, with custom order and hidden, collapsed and
+  empty groups.
+- `summary.ts`: count all, empty, not empty, unique, percent empty and not empty, sum, average,
+  median, min, max, range, checked, unchecked, percent checked and unchecked, earliest date,
+  latest date, date range. `search.ts`: accent- and case-insensitive search over searchable cells.
+- `format.ts` (display text, and plain text for CSV and the clipboard), `parse.ts` (text to
+  values: numbers with currencies and percents, dates and ranges, booleans, URLs, emails, option
+  names), `convert.ts` (value conversion for type changes), `defaults.ts` (values a new row needs
+  to match the view's filter or its group), `run.ts` (`runQuery`: filter, search, sort, group,
+  summaries).
+- Tests: `src/query/*.test.ts`, 120 tests: 98.95% statements, 96.1% branches, 100% functions,
+  99.39% lines (`pnpm --filter @tessera/db-views test:coverage` fails below 95%).
+  `perf.test.ts`: filtering 10,000 rows < 50 ms; filtering, searching and sorting a whole view
+  < 100 ms.
+
+**Model** (`src/model`)
+
+- `store.ts`: `DatabaseStore`, an incremental snapshot of a database doc joined with the page
+  store (stable row objects; only changed rows are rebuilt), read through `useSyncExternalStore`.
+  Document state is never mirrored into React state.
+- `operations.ts`: create databases; add, duplicate and trash rows (row templates are copied into
+  new rows); write cells (titles rename the row page, relations stay two-way); paste text into
+  ranges; add, duplicate, retype (with conversion and undo) and delete properties and options;
+  views (setup for boards and calendars, visibility, order, widths).
+- `relations.ts`: two-way relations (both sides written together, unlinking, cleanup after a
+  permanent deletion). `back-references.ts`: the index behind "Linked from" on target pages.
+- `undo.ts`: `runUndoable` wraps a destructive action in a `Y.UndoManager` scoped to its own
+  origin; the toast's Undo reverts exactly that action for two minutes.
+- `csv-import.ts`: a database from a parsed CSV file. `bulk.ts`: bulk row creation (see Contract
+  change request 1).
+
+**UI** (`src/ui`: React, `@tessera/ui` components and tokens, Radix primitives, strings through
+`t()` from `src/i18n`)
+
+- `database-view.tsx`: loading, error, missing and trashed states, view tabs, toolbar, filter
+  chips and the active layout, for database pages and inline embeds.
+- `table/`: a virtualized ARIA grid (`aria-activedescendant`; 10,000 rows at 60 fps) with
+  spreadsheet keyboard navigation, range selection, copy, cut and paste (TSV and HTML),
+  Mod+Enter, the column header menu (rename, change type, hide, sort, filter, group, insert, move,
+  delete, edit options), drag to reorder and resize columns, a frozen first column, grouping, row
+  actions (open as page, side peek, add below, duplicate, delete) and the summary footer.
+- `cells/`: display and editors per type (text, number, select and multi-select with create by
+  typing, date and range with time and time zone, relation picker with search, checkbox, URL,
+  email, created and edited times).
+- `board/`, `calendar/`, `gallery/`, `list/`: the other layouts (drag and drop with dnd-kit, with
+  keyboard alternatives); `cards/card.tsx` is shared by board and gallery.
+- `toolbar/`: the filter builder, the sort builder, the properties panel and the filter chips.
+- `view-tabs.tsx`, `options-dialog.tsx`, `property-menu.tsx`, `row-properties.tsx` (properties
+  above a row page's body), `side-peek.tsx`, `linked-from.tsx`, `csv/import-dialog.tsx`,
+  `csv/export-item.tsx`, `database-picker.tsx` (linked views).
+
+**Tests**
+
+- Unit and component: 173 tests in `packages/db-views` (query, model, CSV, grid navigation and
+  clipboard, board and calendar logic) and 4 integration tests in
+  `apps/web/src/features/databases/databases.test.tsx` (registration; the slash item inserting an
+  inline database that is then edited in place; the missing-database state; relation cleanup).
+- e2e (`e2e/databases`, Chromium and Firefox): `table.spec.ts` (every property type, 20 rows,
+  value display, copy, filter, sort, keyboard editing, delete with undo), `views.spec.ts` (a board
+  drag changes the value, calendar reschedule and resize, "No date" tray), `csv.spec.ts` (export
+  compared with the view, import with inferred types), `inline.spec.ts` (needs the editor, see
+  Known gaps), `perf.spec.ts` (10,000 rows stay virtualized and scroll at 60 fps, Chromium).
+- Screenshots: `e2e/databases/databases.screenshots.ts`.
 
 ## How it plugs in (FeatureModule entries, services, extension points used)
 
-(In progress.)
+`apps/web/src/features/databases/index.ts` (`databasesFeature`):
+
+- `pageBodies.database`: `DatabaseBody` (lazy). It registers a focus handler, so Enter in the
+  page title moves focus into the active view.
+- `pageTopSections`: `databases.rowProperties` (order 0, row pages only) and
+  `databases.linkedFrom` (order 10, pages that relations point at).
+- `blockRenderers`: kind `database` (`InlineDatabase`, lazy). Embed attributes: `ref` = the
+  database page ID, `data` = `{ viewId }` (the view the embed shows). Slash items
+  `databases.inline` ("Database – inline": creates a database under the current page) and
+  `databases.linked` ("Linked view of database": opens a database picker).
+- `sidebarSections`: `databases.new` (top): "New database" and "Import CSV as database".
+- `overlays`: `databases.overlays`: side peek, CSV import dialog, database picker.
+- `commands`: `databases.newDatabase`, `databases.importCsv`, `databases.exportCsv` (database pages
+  only).
+- `activate`: on `page.deleted` (local only), removes dangling relation values; on
+  `database.changed`, refreshes the "Linked from" index; its cleanup resets the overlays.
+
+Also used: `ctx.workspace` (pages, `createDatabase`, `addDatabaseRow`, trash and restore),
+`loadDatabaseDoc` and `loadPageDoc`, core's database helpers, `ctx.settings.device`
+(`databases.view.<databaseId>`: the view a database page shows on this device),
+`ctx.services.assetStore` (card covers), `ctx.toast`, `ctx.confirm`, the `navigation.changed`
+event and `COMMANDS.focusTitle` (focus a new database's title), `ctx.navigate`.
 
 ## Decisions (and why)
 
-(In progress.)
+1. **Own grid instead of `@tanstack/react-table`** (listed in SPEC 13): the table needs an ARIA
+   grid with `aria-activedescendant`, range selection, a frozen column and a custom virtualized
+   body. react-table added nothing we used, so it was removed from `package.json`.
+   `@tanstack/react-virtual` does the virtualization.
+2. **Scrolling at 60 fps**: the virtualizer lives in `TableBody`, so a scroll re-renders only the
+   body, not the header (dnd-kit sortables), the footer or the menus. Rows are memoized with
+   primitive props, and their hover buttons mount only on the hovered row. Measured on the
+   production build while scrolling 7,200 px/s: median and p95 frame times of 16.7 ms (before:
+   33 ms; 67 ms on the dev build).
+3. **Fast cell validation** equivalent to core's zod schemas: zod per cell was too slow for
+   10,000 rows. Property-based tests keep the two in step.
+4. **Dates**: date-only values are calendar days; date-times are instants, shown and compared as
+   days in the viewer's time zone (or the value's own zone when it has one). Relative filters
+   resolve against today in the viewer's zone; weeks start on the view's setting (Monday by
+   default).
+5. **Sorting**: `Intl.Collator` with numeric collation in the display locale; empty values last
+   in both directions (as in Notion); ties keep the manual row order (stable).
+6. **Inactive rules are ignored**: a filter rule without a value yet (just added) doesn't hide
+   every row, and a group whose rules are all inactive is ignored. Chips mark such rules as
+   inactive.
+7. **Rows are pages**: values live in the database doc and only bodies in page docs, so views
+   never load row pages. Gallery content covers are the one exception: a card reads its row page
+   only once it scrolls into view, one at a time, cached by `updatedAt`.
+8. **Undo**: destructive actions (deleting rows, properties, options and views; type changes) run
+   in a `Y.UndoManager` with a unique origin, so the toast's Undo reverts that action only, even
+   after other edits. Deleting rows moves them to the trash (Undo restores them).
+9. **Relations**: two-way relations are written on both sides in one action. After a permanent
+   deletion only the client that deleted cleans up (the edits sync), so peers never race.
+   Trashed targets are hidden in cells and come back on restore, because their IDs are kept.
+10. **Active view per device** (`databases.view.<id>`), like a personal preference, rather than a
+    synced setting: two people can look at different views of the same database page. Inline
+    embeds keep their view in the block's `data`, so it travels with the page.
+11. **Full-width database pages** (a page prop set at creation), since tables need the room.
+12. **CSV**: papaparse parses (RFC 4180, delimiter detection, BOM). Inference: checkbox (yes/no
+    words), number (percent, or a single currency), date (day-first when a numeric date says so),
+    URL, email, multi-select (repeated comma-separated names), select (repeated short values, or
+    a few short labels in a small file), else text. Export writes plain text (option names,
+    `YYYY-MM-DD` dates, Yes/No, page titles) with a BOM so spreadsheet apps read UTF-8.
+13. **Clipboard**: copy writes TSV and an HTML table. Paste reads TSV (quoted cells), fills a
+    selected range from a single cell, adds rows when the block is taller than the table, creates
+    missing options and resolves relation titles. Titles are written first, so a paste can relate
+    rows that it names.
+14. **Week view** shows one week of day columns with the same bars as the month view (no hour
+    grid): databases track due dates and spans rather than hourly schedules.
+15. **Focus**: the active cell's outline shows only while focus is in the grid. Menus that open a
+    rename field schedule the focus after Radix finishes closing (`useAfterMenuClose`); otherwise
+    Radix takes focus back.
+16. **e2e clipboard**: specs paste and copy through synthetic `ClipboardEvent`s (parallel workers
+    share the system clipboard). Firefox gives untrusted events an empty `clipboardData`, so the
+    helper defines the property on the event instead.
+17. **The performance e2e measures in Chromium** (rAF frame times while scrolling; best of three
+    runs; median < 18 ms and p95 < 34 ms). Busy CI machines get some slack without hiding a real
+    regression (a table that re-renders on scroll measured 33 to 67 ms).
+18. **Dependency added**: `fast-check` 4.10.2 (MIT, dev only) for the property-based tests.
 
 ## Contract change requests (exact proposed diff to packages/core, and why)
 
-(In progress.)
+### CCR 1: bulk row creation
+
+**Why.** `createPage` rebuilds the page index and `addRow` re-reads every row on each call, so
+adding n rows is O(n²): 3,000 rows take about 18 s, and 10,000 take several minutes. CSV import
+(and the Notion and Obsidian importers), pasting many rows and the 10,000-row performance test
+need a bulk path.
+
+**Workaround in place:** `packages/db-views/src/model/bulk.ts` writes the same structures after
+the same validation (its tests in `model.test.ts` read the result back through core's readers).
+When this lands, replace the body of `addRowsInBulk` with a call to
+`ctx.workspace.addDatabaseRows`.
+
+```diff
+--- a/packages/core/src/model/pages.ts
++++ b/packages/core/src/model/pages.ts
+@@ after createPage()
++/**
++ * Creates many pages under one parent in one transaction, after its existing children and in
++ * input order. The page index is built once, so n pages cost O(n) (n `createPage` calls are
++ * O(n²)). Importers and database rows use it.
++ *
++ * @example
++ * createPages(wsDoc, databaseId, rows.map((row) => ({ title: row.name })), { userId });
++ */
++export function createPages(
++  ws: Y.Doc,
++  parentId: string | null,
++  inputs: readonly Omit<CreatePageInput, 'parentId' | 'position'>[],
++  options: MutationOptions = {},
++): PageMeta[] {
++  if (inputs.length === 0) return [];
++  const created: PageMeta[] = [];
++  ws.transact(() => {
++    const pages = pagesMapOf(ws);
++    const index = indexPages(ws);
++    assertParentUsable(index, parentId);
++    const siblings = index.children(parentId, { includeRows: true, includeTrashed: true });
++    const last = siblings.reduce<string | null>(
++      (max, page) => (max === null || page.order > max ? page.order : max),
++      null,
++    );
++    const orders = ordersBetween(last, null, inputs.length);
++    const now = options.now ?? Date.now();
++    inputs.forEach((input, i) => {
++      const id = input.id ?? newId();
++      if (!isValidId(id)) throw new ValidationError('Invalid page ID', [id]);
++      if (pages.has(id)) throw new InvalidOperationError(`Page "${id}" already exists`, { id });
++      const kind = input.kind ?? 'page';
++      if (!PAGE_KINDS.includes(kind)) throw new ValidationError('Invalid page kind', [kind]);
++      if (input.icon !== undefined && !isValidIcon(input.icon)) {
++        throw new ValidationError('Page icons must be a single emoji', [input.icon]);
++      }
++      if (input.cover !== undefined && !parsePageCover(input.cover)) {
++        throw new ValidationError('Invalid page cover');
++      }
++      const map = new Y.Map<unknown>();
++      map.set('kind', kind);
++      map.set('title', normalizeTitle(input.title ?? ''));
++      map.set('parentId', parentId);
++      map.set('order', orders[i]);
++      map.set('createdAt', input.createdAt ?? now);
++      map.set('updatedAt', input.updatedAt ?? input.createdAt ?? now);
++      if (options.userId) {
++        map.set('createdBy', options.userId);
++        map.set('updatedBy', options.userId);
++      }
++      if (input.icon) map.set('icon', input.icon);
++      if (input.cover) map.set('cover', { ...input.cover });
++      if (input.favorite) map.set('favorite', true);
++      pages.set(id, map);
++      const meta = readPageMeta(id, map);
++      if (meta) created.push(meta);
++    });
++  }, options.origin);
++  return created;
++}
+--- a/packages/core/src/database/database-doc.ts
++++ b/packages/core/src/database/database-doc.ts
+@@ after addRow()
++/** Throws if a row's values are not valid for the database's properties (writes nothing). */
++export function checkRowValues(db: Y.Doc, values: Record<string, JsonValue | null>): void {
++  for (const [propertyId, value] of Object.entries(values)) {
++    if (value !== null && value !== undefined) checkValue(db, propertyId, value);
++  }
++}
++
++/**
++ * Adds many row entries in one transaction, right after the row `after` (or at the end), in
++ * input order. Every value is validated before anything is written. O(n) for n rows.
++ *
++ * @example
++ * addRows(dbDoc, pages.map((page, i) => ({ id: page.id, values: csvValues[i] })), { userId });
++ */
++export function addRows(
++  db: Y.Doc,
++  inputs: readonly Omit<AddRowInput, 'position'>[],
++  options: MutationOptions & { after?: string | null } = {},
++): DatabaseRow[] {
++  if (inputs.length === 0) return [];
++  const ids = inputs.map((input) => input.id ?? newId());
++  db.transact(() => {
++    const rows = rowsOf(db);
++    inputs.forEach((input, i) => {
++      const id = ids[i] as string;
++      if (!isValidId(id)) throw new ValidationError('Invalid row ID', [id]);
++      if (rows.has(id)) throw new InvalidOperationError(`Row "${id}" already exists`);
++      checkRowValues(db, input.values ?? {});
++    });
++    const siblings = listRows(db);
++    const at = options.after ? siblings.findIndex((row) => row.id === options.after) : -1;
++    const before = at >= 0 ? (siblings[at]?.order ?? null) : (siblings.at(-1)?.order ?? null);
++    const after = at >= 0 ? (siblings[at + 1]?.order ?? null) : null;
++    const orders = ordersBetween(before, after, inputs.length);
++    inputs.forEach((input, i) => {
++      const map = new Y.Map<unknown>();
++      map.set('order', orders[i]);
++      map.set('values', new Y.Map<unknown>());
++      rows.set(ids[i] as string, map);
++      writeValues(db, map, input.values ?? {}, options);
++    });
++  }, options.origin);
++  return ids.map((id) => getRow(db, id)).filter((row): row is DatabaseRow => !!row);
++}
+--- a/packages/core/src/runtime/app-context.ts
++++ b/packages/core/src/runtime/app-context.ts
+@@ interface WorkspaceApi
+   /** Creates a row: its page (child of the database page) and its entry in the database doc. */
+   addDatabaseRow(databaseId: string, input?: AddDatabaseRowInput): Promise<PageMeta>;
++  /**
++   * Creates many rows at once (CSV import, paste, importers): their pages in one workspace
++   * transaction and their entries in one database transaction, after `after` or at the end.
++   * Validates everything before writing; on failure nothing is left behind.
++   */
++  addDatabaseRows(
++    databaseId: string,
++    inputs: readonly Omit<AddDatabaseRowInput, 'position'>[],
++    options?: { after?: string | null },
++  ): Promise<PageMeta[]>;
+ }
+--- a/packages/core/src/runtime/runtime.ts
++++ b/packages/core/src/runtime/runtime.ts
+@@ workspaceApi, after addDatabaseRow()
++    async addDatabaseRows(databaseId, inputs, rowOptions = {}) {
++      const database = workspaceApi.getPage(databaseId);
++      if (!database || database.kind !== 'database')
++        throw new NotFoundError('Database', databaseId);
++      if (inputs.length === 0) return [];
++      const [handle, helpers] = await Promise.all([
++        loadDatabaseDoc(databaseId),
++        loadDatabaseHelpers(),
++      ]);
++      let pages: PageMeta[] = [];
++      try {
++        // Validate the values first, so a bad value creates no pages.
++        for (const input of inputs) helpers.checkRowValues(handle.doc, input.values ?? {});
++        pages = createPages(
++          workspaceDoc,
++          databaseId,
++          inputs.map((input) =>
++            input.icon ? { title: input.title ?? '', icon: input.icon } : { title: input.title ?? '' },
++          ),
++          opts(),
++        );
++        const rowInputs = pages.map((page, i) => {
++          const values = inputs[i]?.values;
++          return values ? { id: page.id, values } : { id: page.id };
++        });
++        helpers.addRows(handle.doc, rowInputs, { ...opts(), after: rowOptions.after ?? null });
++        return pages;
++      } catch (error) {
++        for (const page of pages) deletePagePermanently(workspaceDoc, page.id, opts());
++        throw error;
++      } finally {
++        handle.release();
++      }
++    },
+```
+
+Plus: export `createPages`, `addRows` and `checkRowValues` from `packages/core/src/index.ts` (and
+from the module `loadDatabaseHelpers` loads), and tests like the "addRowsInBulk" ones in
+`packages/db-views/src/model/model.test.ts` (rows read back like `addDatabaseRow`'s, insertion
+after a row, validation before writing, 10,000 rows well under a second).
+
+No other core changes are needed.
 
 ## Known gaps and bugs
 
-(In progress.)
+- **Formula property (stretch): not built.** The type exists in core (`formula`), but it isn't in
+  the "add a property" menu, and formula cells show nothing.
+- **The inline database e2e runs only once the editor is merged.** `e2e/databases/inline.spec.ts`
+  skips itself, with a message saying why, when no feature renders `page` bodies (true on this
+  branch, where the editor is a stub). The same path (slash item → embed attributes → renderer →
+  editing inside the embed → view choice written to the block's data) is covered on this branch by
+  `apps/web/src/features/databases/databases.test.tsx`, which renders the embed the way the
+  editor's embed node view does (`ctx.blocks.resolve('database')`).
+- The 10,000-row performance e2e measures in Chromium only (frame timing is engine-specific).
+- Row hover buttons ("Open", row actions) are for the mouse; keyboard users have Alt+Enter (side
+  peek), the context-menu key or Shift+F10 (row actions) and the header menu. On touch screens the
+  buttons appear once a row is tapped.
+- Relation cleanup after a permanent deletion runs on the deleting client. If that client closes
+  in the few milliseconds before the cleanup runs, dangling IDs stay in the data; cells and
+  "Linked from" ignore pages that don't exist, so nothing shows.
+- Pressing Escape during a closing popover's exit animation (about 150 ms) reaches the closing
+  popover (Radix keeps it mounted while it animates), so a second press is needed to close the
+  next one.
 
 ## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)
 
-(In progress.)
+- **Editor (02):** embeds of kind `database` render through the block registry, so there is
+  nothing else to wire. After the merge, run `pnpm test:e2e e2e/databases/inline.spec.ts`; it
+  should stop skipping. The spec presses Enter in the title, types `/database` and picks
+  "Database – inline" (an option or a menu item).
+- **Architect:** apply CCR 1, then make `addRowsInBulk` call `ctx.workspace.addDatabaseRows`.
+- **Importers (08):** Notion databases can reuse `parseCsv` and `inferColumns` from
+  `@tessera/db-views/csv`, `importCsvAsDatabase` (`src/model/csv-import.ts`) and `parseCellText`
+  from `@tessera/db-views/query`. The markdown export can write each database as CSV with
+  `rowsToCsv` (the same format as "Export view as CSV").
+- **Search (05):** row titles are page titles, so they're already indexed. To index cell values,
+  use `cellToText` from `@tessera/db-views/query`.
+- **Plugins (06):** if plugins get read access to databases, `runQuery` from
+  `@tessera/db-views/query` evaluates a view's filters, sorts and groups exactly like the UI.
+- **CI (09):** run `pnpm --filter @tessera/db-views test:coverage` (it fails under 95% coverage
+  of the query engine). `e2e/databases/perf.spec.ts` takes about a minute (it imports 10,000
+  rows).
+- **Docs (10):** screenshots below. The grid's keyboard shortcuts are in its screen-reader hint
+  (`keyboardHint` in `packages/db-views/src/i18n/en.ts`).
 
 ## Screenshots (list of files)
 
-(In progress.)
+1440×900, light and dark, from `pnpm screenshots e2e/databases` (a product roadmap and a reading
+list):
+
+- `assets/screenshots/databases/table-light.png`, `table-dark.png`: the roadmap table sorted by
+  due date, with every stored property type and a sum in the footer.
+- `assets/screenshots/databases/board-light.png`, `board-dark.png`: the roadmap by status, cards
+  with owner, priority and due date.
+- `assets/screenshots/databases/calendar-light.png`, `calendar-dark.png`: the month, with single
+  days and ranges.
+- `assets/screenshots/databases/gallery-light.png`, `gallery-dark.png`: the reading list with
+  cover images, author, status and genres.
+- `assets/screenshots/databases/filter-builder-light.png`, `filter-builder-dark.png`: "Status is
+  not Done and (Priority is High or Estimate ≥ 8)".

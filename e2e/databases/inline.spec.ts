@@ -10,7 +10,7 @@ test('embeds an inline database in a page and edits it there', async ({ page }) 
   await openWorkspace(page);
   const diagnostics = await readDiagnostics(page);
   test.skip(
-    !diagnostics?.contributions.pageBodies.includes('page'),
+    !diagnostics?.contributions.pageBodies?.includes('page'),
     'The editor is not on this branch yet: no page body to type the slash command in.',
   );
 
