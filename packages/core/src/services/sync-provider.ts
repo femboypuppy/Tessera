@@ -89,7 +89,7 @@ export class LocalSyncProvider implements SyncProvider {
     return LOCAL_STATUS;
   }
 
-  onStatus(): () => void {
+  onStatus(_listener: (info: SyncStatusInfo) => void): () => void {
     return () => undefined;
   }
 }
