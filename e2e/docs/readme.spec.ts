@@ -12,7 +12,14 @@ import { readFileSync } from 'node:fs';
 /**
  * The README must render correctly on GitHub: every relative link and image resolves, or it is a
  * screenshot another agent has promised (those land at merge time).
+ *
+ * After the merge, SyntaxError: Invalid regular expression: /e2e/docs/gi:  at end of pattern
+
+[ELIFECYCLE] Command failed with exit code 1. also requires every promised
+ * screenshot to exist.
  */
+
+const STRICT = process.env.STRICT_SCREENSHOTS === '1';
 
 const DOCS = [
   'README.md',
@@ -49,7 +56,8 @@ for (const file of DOCS) {
       const screenshot = /^assets\/screenshots\/([a-z]+)\/([a-z0-9-]+)-(light|dark)\.png$/.exec(
         resolved,
       );
-      if (screenshot && promised.get(screenshot[1] ?? '')?.has(screenshot[2] ?? '')) continue;
+      const isPromised = promised.get(screenshot?.[1] ?? '')?.has(screenshot?.[2] ?? '');
+      if (!STRICT && isPromised) continue;
       missing.push(target);
     }
     expect(missing).toEqual([]);
