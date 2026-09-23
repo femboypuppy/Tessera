@@ -22,6 +22,8 @@ export interface Sandbox {
   /** The RPC port (to the plugin's worker, or to the UI frame's runtime). */
   port: RpcPort;
   frame: HTMLIFrameElement;
+  /** Tells a UI frame the app's color scheme (its outer frame's backdrop has to match it). */
+  setColorScheme(mode: 'light' | 'dark'): void;
   /** Removes the frame, which terminates its worker and everything in it. */
   destroy(): void;
 }
@@ -112,6 +114,9 @@ async function start(
   return {
     port: rpc.port1,
     frame,
+    setColorScheme(mode) {
+      if (!destroyed) control.port1.postMessage({ type: 'color-scheme', mode });
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;

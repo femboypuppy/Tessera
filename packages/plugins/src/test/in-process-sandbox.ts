@@ -25,6 +25,8 @@ export interface FakeSandbox {
   logs: string[];
   /** The UI frame's document (UI sandboxes only). */
   document?: Document;
+  /** The last color scheme the host sent to the frame. */
+  colorScheme?: 'light' | 'dark';
 }
 
 class FakeFontFace {
@@ -96,6 +98,9 @@ export function createInProcessSandboxes(modules: Map<string, PluginDefinition |
     const sandbox: Sandbox = {
       port: channel.port1 as unknown as RpcPort,
       frame: document.createElement('iframe'),
+      setColorScheme(mode) {
+        record.colorScheme = mode;
+      },
       destroy() {
         record.destroyed = true;
         handler = null;

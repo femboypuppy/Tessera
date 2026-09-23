@@ -239,10 +239,11 @@ describe('bootstraps', () => {
       });
   });
 
-  it('the outer UI frame nests a sandboxed frame and reports its navigations', async () => {
+  it('the outer UI frame nests a sandboxed frame, follows the color scheme and reports navigations', async () => {
     const listeners: Array<(event: unknown) => void> = [];
     const created: HTMLIFrameElement[] = [];
     const parentWindow = {};
+    const root = document.createElement('html');
     const context = realm({
       parent: parentWindow,
       addEventListener: (_type: string, listener: (event: unknown) => void) =>
@@ -250,6 +251,7 @@ describe('bootstraps', () => {
       removeEventListener: () => undefined,
       document: {
         body: document.body,
+        documentElement: root,
         createElement: (tag: string) => {
           const element = document.createElement(tag) as HTMLIFrameElement;
           Object.defineProperty(element, 'contentWindow', { value: { postMessage: vi.fn() } });
@@ -270,10 +272,11 @@ describe('bootstraps', () => {
         title: 'Mermaid diagram',
         runtimeSource: 'rt',
         code: 'c',
-        init: {},
+        init: { theme: { mode: 'dark' } },
       },
       ports: [rpc.port2, control.port2],
     });
+    expect(root.style.colorScheme).toBe('dark');
     const inner = created[0];
     expect(inner?.getAttribute('sandbox')).toBe('allow-scripts');
     expect(inner?.getAttribute('title')).toBe('Mermaid diagram');
@@ -283,10 +286,13 @@ describe('bootstraps', () => {
       .postMessage;
     await vi.waitFor(() => expect(post).toHaveBeenCalled());
     expect(post).toHaveBeenCalledWith(
-      { type: 'tessera:init', runtimeSource: 'rt', code: 'c', init: {} },
+      { type: 'tessera:init', runtimeSource: 'rt', code: 'c', init: { theme: { mode: 'dark' } } },
       '*',
       [rpc.port2],
     );
+    control.port1.postMessage({ type: 'color-scheme', mode: 'red' });
+    control.port1.postMessage({ type: 'color-scheme', mode: 'light' });
+    await vi.waitFor(() => expect(root.style.colorScheme).toBe('light'));
     inner?.dispatchEvent(new Event('load'));
     await vi.waitFor(() =>
       expect(controlMessages).toEqual([{ type: 'started' }, { type: 'navigation' }]),

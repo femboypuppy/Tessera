@@ -133,10 +133,19 @@ export async function renderBlock(ctx: BlockContext<DiagramData>): Promise<() =>
       showEmpty();
       return Promise.resolve();
     }
+    const label = `Mermaid diagram: ${code.split('\n')[0]?.trim() ?? ''}`;
+    // Redraws (theme changes, undo) keep the current diagram until the new one is ready, so the
+    // block never collapses and jumps while Mermaid lays out.
+    const existing = shell.querySelector<HTMLElement>(':scope > .mm-view');
+    const hasToolbar = shell.querySelector(':scope > .mm-toolbar') !== null;
+    if (existing && hasToolbar === !ctx.readOnly) {
+      existing.setAttribute('aria-label', label);
+      return draw(existing, code, null);
+    }
     const view = doc.createElement('div');
     view.className = 'mm-view';
     view.setAttribute('role', 'img');
-    view.setAttribute('aria-label', `Mermaid diagram: ${code.split('\n')[0]?.trim() ?? ''}`);
+    view.setAttribute('aria-label', label);
     shell.replaceChildren(view);
     if (!ctx.readOnly) {
       const toolbar = doc.createElement('div');

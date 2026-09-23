@@ -72,6 +72,16 @@ export function uiOuterBootstrap(): void {
     const [rpcPort, controlPort] = event.ports;
     if (!rpcPort || !controlPort) return;
     removeEventListener('message', onInit);
+    // Follow the app's color scheme. Browsers paint an opaque backdrop behind a frame whose color
+    // scheme differs from its embedder's, which would show at the rounded corners of a block.
+    const setColorScheme = (mode: unknown) => {
+      if (mode === 'light' || mode === 'dark') document.documentElement.style.colorScheme = mode;
+    };
+    setColorScheme((data.init as { theme?: { mode?: unknown } } | null | undefined)?.theme?.mode);
+    controlPort.onmessage = (message: MessageEvent) => {
+      const control = message.data as { type?: unknown; mode?: unknown } | null;
+      if (control?.type === 'color-scheme') setColorScheme(control.mode);
+    };
     const inner = document.createElement('iframe');
     inner.setAttribute('sandbox', 'allow-scripts');
     inner.setAttribute('title', String(data.title || 'Plugin'));

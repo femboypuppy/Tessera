@@ -75,8 +75,11 @@ export function runUi(env: UiEnv, kit: RuntimeKit): Promise<void> {
     ':where(input,select){height:32px;padding-block:0}',
     ':where(input,select,textarea):focus-visible{border-color:var(--tess-accent);outline:2px solid var(--tess-focus);outline-offset:0}',
     '.muted{color:var(--tess-fg-muted)}.subtle{color:var(--tess-fg-subtle)}',
-    '@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}',
-    'html[data-reduced-motion] *,html[data-reduced-motion] *::before,html[data-reduced-motion] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}',
+    // Transitions are switched off (0s), not shortened: with `transition-property: all` as the
+    // default, any non-zero duration turns every style change into a transition, and code that
+    // measures right after changing styles (Mermaid's layout, for one) reads the old values.
+    '@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:0s!important;transition-delay:0s!important}}',
+    'html[data-reduced-motion] *,html[data-reduced-motion] *::before,html[data-reduced-motion] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:0s!important;transition-delay:0s!important}',
   ].join('\n');
 
   const { document, init } = env;

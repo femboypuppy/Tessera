@@ -281,7 +281,7 @@ importers:
         version: 19.3.0(react@19.3.0)
 
   packages/create-tessera-plugin:
-    dependencies:
+    devDependencies:
       '@tessera/core':
         specifier: workspace:*
         version: link:../core

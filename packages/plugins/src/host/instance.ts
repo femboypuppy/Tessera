@@ -125,6 +125,8 @@ export class PluginInstance {
   private readonly panels = new Map<string, { registration: PanelRegistration; off: () => void }>();
   private readonly blocks = new Map<string, { registration: BlockRegistration; off: () => void }>();
   private readonly surfaces = new Set<SurfaceController>();
+  /** The frames of the open panels and blocks. */
+  private readonly uiSandboxes = new Set<Sandbox>();
   private heartbeat: ReturnType<typeof setTimeout> | null = null;
   private notifications: number[] = [];
   private readonly deniedToasts = new Set<string>();
@@ -674,6 +676,7 @@ export class PluginInstance {
   }
 
   pushTheme(theme: ThemeInfo): void {
+    for (const sandbox of this.uiSandboxes) sandbox.setColorScheme(theme.mode);
     for (const connection of this.connections) connection.endpoint.emit('theme.changed', { theme });
   }
 
@@ -740,6 +743,7 @@ export class PluginInstance {
           connection.endpoint.dispose();
           this.connections.delete(connection);
         }
+        if (sandbox) this.uiSandboxes.delete(sandbox);
         sandbox?.destroy();
         this.surfaces.delete(controller);
       },
@@ -779,6 +783,7 @@ export class PluginInstance {
         return;
       }
       sandbox = created;
+      this.uiSandboxes.add(created);
       pending = {};
       connection = this.connect(created.port, surface.kind, callbacks, (method, params) => {
         if (method === 'rendered') callbacks.onReady();

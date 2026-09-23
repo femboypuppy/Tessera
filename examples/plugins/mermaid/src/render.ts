@@ -125,7 +125,7 @@ export async function renderDiagram(
       theme: 'base',
       themeVariables: variables,
       fontFamily: typeof variables.fontFamily === 'string' ? variables.fontFamily : undefined,
-      // Tighter than the defaults, so left-to-right charts keep a readable size in a page.
+      // Tighter spacing than the defaults, so wide charts keep a readable size in a page.
       flowchart: { curve: 'basis', nodeSpacing: 28, rankSpacing: 36 },
     });
     configured = key;

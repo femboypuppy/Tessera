@@ -621,7 +621,7 @@ describe('plugin API through the sandbox runtime', () => {
     expect(frame?.destroyed).toBe(true);
   });
 
-  it('renders panels and follows the open page', async () => {
+  it('renders panels and follows the open page and the theme', async () => {
     const s = await setup();
     let panelContext: PanelContext | null = null;
     const pages: Array<string | null> = [];
@@ -661,6 +661,12 @@ describe('plugin API through the sandbox runtime', () => {
     expect(ctx?.pageId).toBe('a');
     controller?.update({ pageId: 'b' });
     await vi.waitFor(() => expect(pages).toEqual(['b']));
+    // A theme change reaches the plugin, and the frame's color scheme follows it.
+    instance?.pushTheme({ ...theme, mode: 'dark' });
+    expect(s.sandboxes.sandboxes.find((sandbox) => sandbox.kind === 'ui')?.colorScheme).toBe(
+      'dark',
+    );
+    await vi.waitFor(() => expect(ctx?.api.theme.get().mode).toBe('dark'));
     ctx?.close();
     await vi.waitFor(() => expect(closePanel).toHaveBeenCalled());
     controller?.destroy();
