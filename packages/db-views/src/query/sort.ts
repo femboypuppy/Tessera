@@ -74,7 +74,17 @@ export function sortKeyReader(
       };
     }
     case 'formula':
-      return () => null;
+      return (row) => {
+        const value = readCell(row, property);
+        if (typeof value === 'number') return value;
+        if (typeof value === 'boolean') return value ? 1 : 0;
+        if (typeof value === 'string') return value.trim() === '' ? null : value;
+        const date = readDateValue(value);
+        if (!date) return null;
+        return date.includeTime
+          ? Date.parse(date.start)
+          : startOfDayInstant(date.start, ctx.timeZone);
+      };
   }
 }
 

@@ -46,7 +46,8 @@ export const SUMMARY_KINDS_BY_TYPE: Readonly<Record<PropertyType, readonly Summa
   createdTime: DATES,
   updatedTime: DATES,
   checkbox: CHECKBOX,
-  formula: COMMON,
+  // Numeric kinds read the results that are numbers.
+  formula: NUMERIC,
 };
 
 /**

@@ -133,7 +133,8 @@ export function isValidStoredValue(type: StoredPropertyType, value: unknown): bo
  * Reads a cell like core's `getCellValue`: the title for `title`, epoch milliseconds for
  * `createdTime` and `updatedTime`, the stored value when it validates for the property's current
  * type, and null for empty or invalid values (they can appear after a type change and are left in
- * place so switching back restores them) and for `formula`.
+ * place so switching back restores them). Formula results come from `row.formulas` (see
+ * `withFormulaValues`).
  */
 export function readCell(row: QueryRow, property: PropertyDefinition): JsonValue {
   switch (property.type) {
@@ -143,8 +144,13 @@ export function readCell(row: QueryRow, property: PropertyDefinition): JsonValue
       return row.createdAt;
     case 'updatedTime':
       return row.updatedAt;
-    case 'formula':
-      return null;
+    case 'formula': {
+      const value = row.formulas?.[property.id];
+      if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
+        return value;
+      }
+      return readDateValue(value) as JsonValue;
+    }
     case 'date':
       return readDateValue(row.values[property.id]) as JsonValue;
     default: {

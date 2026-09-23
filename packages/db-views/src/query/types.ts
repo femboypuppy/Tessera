@@ -17,6 +17,11 @@ export interface QueryRow {
   trashed?: boolean;
   /** Rows whose page metadata has not arrived yet are dropped by {@link runQuery}. */
   missingPage?: boolean;
+  /**
+   * Formula results by property ID (numbers, text, booleans or date values), filled in by
+   * `withFormulaValues` (`runQuery` does it). Missing means empty.
+   */
+  formulas?: Readonly<Record<string, JsonValue>>;
 }
 
 /**

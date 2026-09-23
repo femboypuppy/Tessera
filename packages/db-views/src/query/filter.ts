@@ -13,6 +13,8 @@ import {
 import { readCell, readDateValue } from './cells';
 import {
   addDays,
+  dateSpan,
+  dayKeyOfInstant,
   parseDayKey,
   resolveDateOperand,
   resolveRangeOperand,
@@ -20,7 +22,9 @@ import {
   todayKey,
   type DayRange,
 } from './dates';
-import { lowerText } from './text';
+import { cleanNumber, dateToPlainText } from './format';
+import { parseBooleanText, parseDateText } from './parse';
+import { lowerText, sortCollator } from './text';
 import type { QueryContext, QueryRow } from './types';
 
 /** Decides whether a row passes. */
@@ -40,6 +44,8 @@ export type RowPredicate = (row: QueryRow) => boolean;
  * - Dates compare by calendar day in the viewer's zone. `is` and `is within` match when the value
  *   (a day, a range or an instant) overlaps the operand's days; before and after compare the
  *   value's start. A missing checkbox is unchecked, and `is empty` on a checkbox means unchecked.
+ * - Formula results are compared by their kind: numbers as numbers, checkboxes as true or false,
+ *   dates by calendar day and text as case-insensitive text (the condition's value is text).
  */
 
 const ANY_TYPE_OPERATORS: readonly FilterOperator[] = ['isEmpty', 'isNotEmpty'];
@@ -282,6 +288,89 @@ function compileDate(
   };
 }
 
+/** Plain text of a formula result, for `contains`. */
+function formulaText(value: unknown, ctx: QueryContext): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(cleanNumber(value));
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  const date = readDateValue(value);
+  return date ? dateToPlainText(date, ctx) : '';
+}
+
+function compileFormulaCondition(
+  property: PropertyDefinition,
+  operator: FilterOperator,
+  value: FilterValue | undefined,
+  ctx: QueryContext,
+): RowPredicate | null {
+  const read = (row: QueryRow) => readCell(row, property);
+  const empty = (row: QueryRow) => {
+    const cell = read(row);
+    return cell === null || cell === '';
+  };
+  if (operator === 'isEmpty') return empty;
+  if (operator === 'isNotEmpty') return (row) => !empty(row);
+  const text =
+    typeof value === 'string'
+      ? value.trim()
+      : typeof value === 'number' || typeof value === 'boolean'
+        ? String(value)
+        : '';
+  if (text === '') return null;
+  const number = asNumber(typeof value === 'boolean' ? undefined : value);
+  const bool = typeof value === 'boolean' ? value : parseBooleanText(text);
+  const parsedDate = parseDateText(text, ctx);
+  const day = parsedDate
+    ? parsedDate.includeTime
+      ? dayKeyOfInstant(Date.parse(parsedDate.start), ctx.timeZone)
+      : parsedDate.start
+    : null;
+  const needle = lowerText(text);
+  const collator = sortCollator(ctx.locale);
+  /** Negative, zero or positive like a comparator, or null when the two can't be compared. */
+  const order = (cell: unknown): number | null => {
+    if (typeof cell === 'number') return number === null ? null : cell - number;
+    if (typeof cell === 'string') return collator.compare(cell, text);
+    const date = readDateValue(cell);
+    if (!date || day === null) return null;
+    const span = dateSpan(date, ctx.timeZone);
+    if (span.startDay <= day && span.endDay >= day) return 0;
+    return span.startDay < day ? -1 : 1;
+  };
+  const equals = (cell: unknown): boolean => {
+    if (cell === null) return false;
+    if (typeof cell === 'boolean') return bool !== null && cell === bool;
+    if (typeof cell === 'number')
+      return number !== null && cleanNumber(cell) === cleanNumber(number);
+    if (typeof cell === 'string') return lowerText(cell) === needle;
+    return order(cell) === 0;
+  };
+  const compare = (check: (difference: number) => boolean) => (row: QueryRow) => {
+    const difference = order(read(row));
+    return difference !== null && check(difference);
+  };
+  switch (operator) {
+    case 'is':
+      return (row) => equals(read(row));
+    case 'isNot':
+      return (row) => !equals(read(row));
+    case 'contains':
+      return (row) => lowerText(formulaText(read(row), ctx)).includes(needle);
+    case 'doesNotContain':
+      return (row) => !lowerText(formulaText(read(row), ctx)).includes(needle);
+    case 'gt':
+      return compare((difference) => difference > 0);
+    case 'gte':
+      return compare((difference) => difference >= 0);
+    case 'lt':
+      return compare((difference) => difference < 0);
+    case 'lte':
+      return compare((difference) => difference <= 0);
+    default:
+      return null;
+  }
+}
+
 function dateReader(property: PropertyDefinition): (row: QueryRow) => DateCell | null {
   if (property.type === 'createdTime')
     return (row) => ({ days: false, start: row.createdAt, end: row.createdAt });
@@ -373,10 +462,7 @@ export function compileCondition(
       return (row) => checked(row) === value;
     }
     case 'formula':
-      // Formula values are computed; until a formula engine exists every cell is empty.
-      if (operator === 'isEmpty') return () => true;
-      if (operator === 'isNotEmpty') return () => false;
-      return null;
+      return compileFormulaCondition(property, operator, value, ctx);
   }
 }
 

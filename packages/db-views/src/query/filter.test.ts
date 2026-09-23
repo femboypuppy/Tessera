@@ -354,10 +354,12 @@ describe('checkbox and formula operators', () => {
     expect(run(rows, [done], group('and', cond('done', 'is', 'true')))).toHaveLength(3);
   });
 
-  it('treats formulas as empty until a formula engine exists', () => {
+  it('treats a formula without an expression as empty', () => {
+    // Formula results are covered in formula/rows.test.ts.
     expect(run(rows, [formula], group('and', cond('f', 'isEmpty')))).toHaveLength(3);
     expect(run(rows, [formula], group('and', cond('f', 'isNotEmpty')))).toHaveLength(0);
-    expect(run(rows, [formula], group('and', cond('f', 'is', 'x')))).toHaveLength(3);
+    expect(run(rows, [formula], group('and', cond('f', 'is', 'x')))).toHaveLength(0);
+    expect(run(rows, [formula], group('and', cond('f', 'isNot', 'x')))).toHaveLength(3);
   });
 });
 

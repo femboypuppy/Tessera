@@ -16,6 +16,7 @@ export const SEARCHABLE_TYPES: readonly PropertyType[] = [
   'multiSelect',
   'date',
   'relation',
+  'formula',
 ];
 
 /** A cache of folded row text; reuse it while the rows and properties stay the same. */

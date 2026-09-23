@@ -308,7 +308,13 @@ function formatCellText(
       return typeof value === 'number'
         ? dateToPlainText({ start: new Date(value).toISOString(), includeTime: true }, ctx)
         : '';
-    case 'formula':
-      return value === null ? '' : String(value);
+    case 'formula': {
+      if (typeof value === 'string') return value;
+      if (typeof value === 'number') return String(cleanNumber(value));
+      if (typeof value === 'boolean')
+        return value ? CHECKBOX_TEXT.checked : CHECKBOX_TEXT.unchecked;
+      const date = readDateValue(value);
+      return date ? dateToPlainText(date, ctx) : '';
+    }
   }
 }

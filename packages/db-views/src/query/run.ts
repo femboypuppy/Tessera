@@ -1,5 +1,6 @@
 import type { PropertyDefinition, ViewConfig } from '@tessera/core';
 import { compileFilter } from './filter';
+import { withFormulaValues } from './formula/rows';
 import { groupRows, type RowGroup } from './group';
 import { compileSearch, type SearchCache } from './search';
 import { sortRows } from './sort';
@@ -29,8 +30,9 @@ export interface QueryResult<R extends QueryRow = QueryRow> {
 }
 
 /**
- * Runs a view's query: drops rows whose page is trashed or missing, filters, searches, sorts
- * (stable, manual order last) and groups. Pure and framework-free: views, plugins and exporters
+ * Runs a view's query: drops rows whose page is trashed or missing, computes formulas, filters,
+ * searches, sorts (stable, manual order last) and groups. Result rows carry their formula values
+ * (`row.formulas`). Pure and framework-free: views, plugins and exporters
  * all call it with the same result.
  *
  * @example
@@ -43,7 +45,11 @@ export function runQuery<R extends QueryRow>(
   ctx: QueryContext,
   options: RunQueryOptions = {},
 ): QueryResult<R> {
-  const live = rows.filter((row) => !row.trashed && !row.missingPage);
+  const live = withFormulaValues(
+    rows.filter((row) => !row.trashed && !row.missingPage),
+    properties,
+    ctx,
+  );
   const filter = compileFilter(view.filter, properties, ctx);
   const search = options.search
     ? compileSearch(options.search, properties, ctx, options.searchCache)
