@@ -2,6 +2,7 @@ import type { BlockColor } from '@tessera/core';
 import type { Editor } from '@tiptap/core';
 import { Fragment, type Node as PMNode, type ResolvedPos, type Schema } from '@tiptap/pm/model';
 import { NodeSelection, Selection, TextSelection, type Transaction } from '@tiptap/pm/state';
+import { ownUndoStep } from '../extensions/history-guard';
 import { COLOR_TYPES } from '../schema/attributes';
 
 /** Block types a block can be turned into (the slash menu and the block menu's "Turn into"). */
@@ -314,7 +315,7 @@ export function turnIntoTransaction(
 export function turnInto(editor: Editor, pos: number, type: TurnIntoType): boolean {
   const tr = turnIntoTransaction(editor.state.tr, pos, type);
   if (!tr) return false;
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
   return true;
 }
 
@@ -349,7 +350,7 @@ export function duplicateBlock(editor: Editor, block: BlockRef): boolean {
   const selected = tr.doc.nodeAt(end);
   if (selected && NodeSelection.isSelectable(selected))
     tr.setSelection(NodeSelection.create(tr.doc, end));
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
   return true;
 }
 
@@ -368,14 +369,14 @@ export function deleteBlocks(editor: Editor, blocks: readonly BlockRef[]): boole
   }
   const anchor = Math.min(tr.mapping.map(sorted[sorted.length - 1]?.pos ?? 0), tr.doc.content.size);
   tr.setSelection(Selection.near(tr.doc.resolve(anchor), -1));
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
   return true;
 }
 
 /** Sets or clears a block's color (text or background). */
 export function setBlockColor(editor: Editor, block: BlockRef, color: BlockColor | null): boolean {
   if (!COLOR_TYPE_SET.has(block.node.type.name)) return false;
-  editor.view.dispatch(editor.state.tr.setNodeAttribute(block.pos, 'color', color));
+  editor.view.dispatch(ownUndoStep(editor.state.tr.setNodeAttribute(block.pos, 'color', color)));
   return true;
 }
 
@@ -479,7 +480,7 @@ export function moveBlock(editor: Editor, block: BlockRef, direction: 'up' | 'do
       tr.setSelection(Selection.near(tr.doc.resolve(pos)));
     }
   }
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
   return true;
 }
 
@@ -549,7 +550,7 @@ export function insertParagraphAfter(editor: Editor, block: BlockRef): boolean {
   if (!node) return false;
   const tr = editor.state.tr.insert(end, node);
   tr.setSelection(TextSelection.create(tr.doc, end + (node.isTextblock ? 1 : 2)));
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
   editor.view.focus();
   return true;
 }
@@ -602,6 +603,6 @@ export function insertBlocks(editor: Editor, at: number, blocks: PMNode[]): bool
       tr.setSelection(TextSelection.create(tr.doc, insertedEnd - 1));
     }
   }
-  editor.view.dispatch(tr.scrollIntoView());
+  editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
   return true;
 }

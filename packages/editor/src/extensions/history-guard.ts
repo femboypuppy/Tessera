@@ -1,9 +1,24 @@
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import { ySyncPluginKey, yUndoPluginKey } from '@tiptap/y-tiptap';
 
 export const historyGuardKey = new PluginKey('tesseraHistoryGuard');
 export const historyKeysKey = new PluginKey('tesseraHistoryKeys');
+
+/** Transaction meta: the change is an undo step of its own (see {@link ownUndoStep}). */
+export const UNDO_STEP = 'tesseraUndoStep';
+
+/**
+ * Marks a block operation (delete, move, duplicate, turn into, insert…) as an undo step of its
+ * own. The Yjs undo manager merges every change made within half a second into one step, so
+ * without this, deleting blocks right after typing would undo the typing too.
+ */
+export function ownUndoStep(tr: Transaction): Transaction {
+  return tr.setMeta(UNDO_STEP, true);
+}
+
+/** ProseMirror's own UI events that are separate steps too. */
+const STEP_EVENTS = new Set(['paste', 'drop', 'cut']);
 
 /**
  * Undo and redo keys, ahead of every other keymap: Mod+Z undoes, Mod+Y and Mod+Shift+Z redo, and
@@ -64,10 +79,14 @@ interface BindingLike {
 interface UndoManagerLike {
   on(event: 'stack-item-popped', listener: () => void): void;
   off(event: 'stack-item-popped', listener: () => void): void;
+  stopCapturing(): void;
 }
 
 /**
- * Keeps undo and redo reliable on top of `@tiptap/y-tiptap` 3.0.9: after an undo or redo step,
+ * Undo steps and a y-tiptap fix. Block operations (see {@link ownUndoStep}) and pastes, drops and
+ * cuts become undo steps of their own: the undo manager stops capturing before them and after them.
+ *
+ * It also keeps undo and redo reliable on top of `@tiptap/y-tiptap` 3.0.9: after an undo or redo step,
  * y-tiptap keeps that step's saved selection for the *next* Yjs transaction, including absolute
  * positions from an older document. Resolving those against the current document can throw
  * (RangeError), which drops the update and leaves ProseMirror out of sync with Yjs (a redo that
@@ -81,8 +100,24 @@ export const HistoryGuard = Extension.create({
 
   addProseMirrorPlugins() {
     return [
-      new Plugin({
+      new Plugin<boolean>({
         key: historyGuardKey,
+        state: {
+          // Whether the last local change was an undo step of its own.
+          init: () => false,
+          apply(tr, previous, oldState) {
+            // Remote changes and undo/redo themselves never add undo steps.
+            if (!tr.docChanged || tr.getMeta(ySyncPluginKey) !== undefined) return previous;
+            const step =
+              tr.getMeta(UNDO_STEP) === true || STEP_EVENTS.has(String(tr.getMeta('uiEvent')));
+            if (step || previous) {
+              const undo = yUndoPluginKey.getState(oldState) as
+                { undoManager?: UndoManagerLike } | undefined;
+              undo?.undoManager?.stopCapturing();
+            }
+            return step;
+          },
+        },
         view: (view) => {
           const undoManager = (
             yUndoPluginKey.getState(view.state) as { undoManager?: UndoManagerLike } | undefined

@@ -19,6 +19,7 @@ import {
   type BlockRef,
 } from '../actions/blocks';
 import type { EditorController } from '../react/controller';
+import { ownUndoStep } from './history-guard';
 
 /**
  * A selection of consecutive sibling blocks (Shift+↑/↓ from a selected block). It covers whole
@@ -219,7 +220,7 @@ export function blockSelection(controller: EditorController) {
             if (!paragraph) return false;
             const tr = editor.state.tr.insert(after, paragraph);
             tr.setSelection(TextSelection.create(tr.doc, after + 1));
-            editor.view.dispatch(tr.scrollIntoView());
+            editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
             return true;
           }
           // Back to editing, at the end of the block's first line.
@@ -237,7 +238,7 @@ export function blockSelection(controller: EditorController) {
             end,
             Fragment.fromArray(blocks.map((block) => block.node)),
           );
-          editor.view.dispatch(tr.scrollIntoView());
+          editor.view.dispatch(ownUndoStep(tr).scrollIntoView());
           return true;
         },
         'Mod-Shift-ArrowUp': () => {

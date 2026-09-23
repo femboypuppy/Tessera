@@ -10,6 +10,7 @@ import { kitchenSinkDoc } from '@tessera/core/testing';
 import { yUndoPluginKey } from '@tiptap/y-tiptap';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { deleteBlocks, duplicateBlock, moveBlock } from './actions/blocks';
 import { blockTexts, createTestEditor, linkDocs, pressKey, typeText } from './test-utils';
 
 const cleanups: Array<() => void> = [];
@@ -140,6 +141,46 @@ describe('undo and redo across structural changes', () => {
       expect(blockTexts(editor)).toEqual(['paragraph:Head', 'paragraph:x']);
       expect(readDocJSON(doc).content).toHaveLength(2);
     }
+  });
+
+  it('makes block operations undo steps of their own, even right after typing', () => {
+    const { editor } = setup({ content: b.doc(b.paragraph('Ignition'), b.paragraph('Orbit')) });
+    editor.commands.focus('end');
+    typeText(editor, ' reached');
+    // Within the undo manager's half-second capture window: without separate steps, one undo
+    // would revert the typing as well.
+    const second = () => ({
+      pos: editor.state.doc.child(0).nodeSize,
+      node: editor.state.doc.child(1),
+    });
+    duplicateBlock(editor, second());
+    expect(blockTexts(editor)).toEqual([
+      'paragraph:Ignition',
+      'paragraph:Orbit reached',
+      'paragraph:Orbit reached',
+    ]);
+    moveBlock(editor, second(), 'up');
+    deleteBlocks(editor, [{ pos: 0, node: editor.state.doc.child(0) }]);
+    expect(blockTexts(editor)).toEqual(['paragraph:Ignition', 'paragraph:Orbit reached']);
+    typeText(editor, '!');
+    editor.commands.undo();
+    expect(blockTexts(editor)).toEqual(['paragraph:Ignition', 'paragraph:Orbit reached']);
+    editor.commands.undo();
+    expect(blockTexts(editor)).toEqual([
+      'paragraph:Orbit reached',
+      'paragraph:Ignition',
+      'paragraph:Orbit reached',
+    ]);
+    editor.commands.undo();
+    expect(blockTexts(editor)).toEqual([
+      'paragraph:Ignition',
+      'paragraph:Orbit reached',
+      'paragraph:Orbit reached',
+    ]);
+    editor.commands.undo();
+    expect(blockTexts(editor)).toEqual(['paragraph:Ignition', 'paragraph:Orbit reached']);
+    editor.commands.undo();
+    expect(blockTexts(editor)).toEqual(['paragraph:Ignition', 'paragraph:Orbit']);
   });
 
   it('keeps undo keys away from the browser when there is nothing to undo', () => {
