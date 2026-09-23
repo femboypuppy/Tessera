@@ -1,8 +1,14 @@
 import { defineFeature, defineService, SERVICE_PRIORITY } from '@tessera/core';
+import {
+  CORE_MARKDOWN_ID,
+  createMarkdownImporter,
+  createNotionImporter,
+  createObsidianImporter,
+} from '@tessera/importers';
 
 /**
- * Markdown, import & export (Agent 08). Registers the remark `MarkdownCodec` (priority 50);
- * logic lives in `@tessera/markdown` and `@tessera/importers`.
+ * Markdown, import & export (Agent 08). Registers the remark `MarkdownCodec` (priority 50) and the
+ * importers; logic lives in `@tessera/markdown` and `@tessera/importers`.
  *
  * Keep this file thin: registration only, heavy code behind dynamic `import()`.
  */
@@ -16,5 +22,12 @@ export const importExportFeature = defineFeature({
       // unified and remark load here, in the service's async `create`, not in the startup bundle.
       create: async () => (await import('@tessera/markdown')).createMarkdownCodec(),
     }),
+  ],
+  importers: [
+    createNotionImporter(),
+    createObsidianImporter(),
+    createMarkdownImporter(),
+    // Replaces core's basic markdown importer for anyone who asks for it by ID.
+    createMarkdownImporter(CORE_MARKDOWN_ID),
   ],
 });

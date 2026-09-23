@@ -5,9 +5,12 @@
   "description": "Tessera importers and exporters: Notion, Obsidian, markdown folders, zip archives and JSON backups.",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/worker/dom-shim.ts"
+  ],
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./ui": "./src/ui/index.ts"
   },
   "scripts": {
     "build": "tsdown",
@@ -18,13 +21,26 @@
   "dependencies": {
     "@tessera/core": "workspace:*",
     "@tessera/markdown": "workspace:*",
+    "@tessera/ui": "workspace:*",
+    "character-entities": "2.0.2",
     "fflate": "0.8.3",
+    "lucide-react": "1.47.0",
     "papaparse": "5.7.0",
+    "react-router": "8.4.0",
     "yaml": "2.9.1",
-    "yjs": "13.6.32"
+    "yjs": "13.6.32",
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/papaparse": "5.5.2",
-    "fast-check": "4.10.2"
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "fast-check": "4.10.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }

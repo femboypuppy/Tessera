@@ -25,7 +25,7 @@ import type {
 } from 'mdast';
 import { gfmAutolinkLiteralFromMarkdown } from 'mdast-util-gfm-autolink-literal';
 import { toString } from 'mdast-util-to-string';
-import { parseCalloutMarker } from './callouts';
+import { CALLOUT_TYPES, parseCalloutMarker } from './callouts';
 import {
   ASSET_URL_PREFIX,
   EMBED_FENCE_LANGUAGE,
@@ -812,6 +812,12 @@ function convertFlow(
         out.push(convertTable(node, ctx));
         break;
       case 'html': {
+        if (/^<aside[\s>]/i.test(node.value.trim())) {
+          const { callout, consumed } = convertAside(nodes, index, ctx);
+          out.push(callout);
+          index += consumed - 1;
+          break;
+        }
         if (/^<details[\s>]/i.test(node.value.trim())) {
           const { toggle, consumed } = convertToggle(nodes, index, ctx);
           out.push(toggle);
@@ -1057,8 +1063,64 @@ function countMatches(value: string, pattern: RegExp): number {
   return value.match(pattern)?.length ?? 0;
 }
 
-const DETAILS_OPEN = /<details(?=[\s>])/gi;
-const DETAILS_CLOSE = /<\/details\s*>/gi;
+/**
+ * Collects an HTML container written around markdown (`<details>…</details>`,
+ * `<aside>…</aside>`): the markdown after the opening tag in the first HTML block (`rest`),
+ * the blocks up to the matching closing tag, and markdown before that tag. Nested containers of
+ * the same kind are matched by depth; without a closing tag the container runs to the end of its
+ * parent.
+ */
+function collectContainer(
+  nodes: readonly RootContent[],
+  start: number,
+  tag: string,
+  rest: string,
+  ctx: Context,
+): { body: AnyNodeJSON[]; consumed: number } {
+  const open = new RegExp(`<${tag}(?=[\\s>])`, 'gi');
+  const close = new RegExp(`</${tag}\\s*>`, 'gi');
+  const trailingClose = new RegExp(`</${tag}\\s*>\\s*$`, 'i');
+  const body: AnyNodeJSON[] = [];
+  const parseNested = (markdown: string) => {
+    if (markdown.trim() && ctx.depth < 20) {
+      ctx.depth += 1;
+      body.push(
+        ...withSource(
+          ctx,
+          markdown,
+          () => convertFlow(ctx.parseMarkdown(markdown).children, ctx, 'other').blocks,
+        ),
+      );
+      ctx.depth -= 1;
+    }
+  };
+  // Everything in one HTML block: `<details><summary>A</summary>Body</details>`.
+  let depth = 1 + countMatches(rest, open) - countMatches(rest, close);
+  if (depth <= 0) {
+    parseNested(rest.replace(trailingClose, ''));
+    return { body, consumed: 1 };
+  }
+  parseNested(rest);
+  const inner: RootContent[] = [];
+  let index = start + 1;
+  for (; index < nodes.length; index += 1) {
+    const node = nodes[index];
+    if (!node) continue;
+    if (node.type === 'html') {
+      const opens = countMatches(node.value, open);
+      const closes = countMatches(node.value, close);
+      if (depth + opens - closes <= 0 && closes > 0) {
+        body.push(...convertFlow(inner, ctx, 'other').blocks);
+        parseNested(node.value.replace(trailingClose, ''));
+        return { body, consumed: index - start + 1 };
+      }
+      depth += opens - closes;
+    }
+    inner.push(node);
+  }
+  body.push(...convertFlow(inner, ctx, 'other').blocks);
+  return { body, consumed: index - start };
+}
 
 function convertToggle(
   nodes: readonly RootContent[],
@@ -1079,12 +1141,14 @@ function convertToggle(
   }
   let rest = source.slice(tag?.[0].length ?? 0);
   let summaryMarkdown = '';
-  let consumedExtra = 0;
+  let nodesForBody: readonly RootContent[] = nodes;
+  let bodyStart = start;
   const summary = /^\s*<summary[^>]*>([\s\S]*?)<\/summary\s*>/i.exec(rest);
   if (summary) {
     summaryMarkdown = summary[1] ?? '';
     rest = rest.slice(summary[0].length);
   } else {
+    // `<details>` and `<summary>` in separate HTML blocks.
     const next = nodes[start + 1];
     const nextSummary =
       next?.type === 'html'
@@ -1093,66 +1157,50 @@ function convertToggle(
     if (nextSummary) {
       summaryMarkdown = nextSummary[1] ?? '';
       rest = `${rest}\n${nextSummary[2] ?? ''}`;
-      consumedExtra = 1;
+      nodesForBody = [...nodes.slice(0, start + 1), ...nodes.slice(start + 2)];
+      bodyStart = start;
     }
   }
   const summaryInline = summaryMarkdown.trim() ? inlineOfMarkdown(summaryMarkdown, ctx) : [];
   const summaryNode: AnyNodeJSON = { type: 'toggleSummary' };
   if (summaryInline.length) summaryNode.content = summaryInline;
-  const body: AnyNodeJSON[] = [];
-  const parseNested = (markdown: string) => {
-    if (markdown.trim() && ctx.depth < 20) {
-      ctx.depth += 1;
-      body.push(
-        ...withSource(
-          ctx,
-          markdown,
-          () => convertFlow(ctx.parseMarkdown(markdown).children, ctx, 'other').blocks,
-        ),
-      );
-      ctx.depth -= 1;
-    }
-  };
-  // Everything in one HTML block: `<details><summary>A</summary>Body</details>`.
-  let depth = 1 + countMatches(rest, DETAILS_OPEN) - countMatches(rest, DETAILS_CLOSE);
-  if (depth <= 0) {
-    parseNested(rest.replace(/<\/details\s*>\s*$/i, ''));
-    return {
-      toggle: { type: 'toggle', attrs, content: [summaryNode, ...body] },
-      consumed: 1 + consumedExtra,
-    };
-  }
-  parseNested(rest);
-  const inner: RootContent[] = [];
-  let index = start + 1 + consumedExtra;
-  for (; index < nodes.length; index += 1) {
-    const node = nodes[index];
-    if (!node) continue;
-    if (node.type === 'html') {
-      const opens = countMatches(node.value, DETAILS_OPEN);
-      const closes = countMatches(node.value, DETAILS_CLOSE);
-      if (depth + opens - closes <= 0 && closes > 0) {
-        const before = node.value.replace(/<\/details\s*>\s*$/i, '');
-        body.push(...convertFlow(inner, ctx, 'other').blocks);
-        parseNested(before);
-        return {
-          toggle: { type: 'toggle', attrs, content: [summaryNode, ...body] },
-          consumed: index - start + 1,
-        };
-      }
-      depth += opens - closes;
-    }
-    inner.push(node);
-  }
-  // No closing tag: the toggle runs to the end of its container.
-  body.push(...convertFlow(inner, ctx, 'other').blocks);
+  const { body, consumed } = collectContainer(nodesForBody, bodyStart, 'details', rest, ctx);
   return {
     toggle: { type: 'toggle', attrs, content: [summaryNode, ...body] },
-    consumed: index - start,
+    consumed: consumed + (nodesForBody === nodes ? 0 : 1),
   };
 }
 
-/** Runs a conversion of nested markdown, whose node positions point into . */
+/** Notion exports callouts as `<aside>` with the icon first: they become callouts again. */
+function convertAside(
+  nodes: readonly RootContent[],
+  start: number,
+  ctx: Context,
+): { callout: AnyNodeJSON; consumed: number } {
+  const source = (nodes[start] as Html).value.trim();
+  const tag = /^<aside[^>]*>/i.exec(source);
+  let rest = source.slice(tag?.[0].length ?? 0).replace(/^\s+/, '');
+  let emoji: string | null = '💡';
+  const first = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u.exec(
+    rest,
+  );
+  if (first?.[1]) {
+    emoji = first[1];
+    rest = rest.slice(first[0].length);
+  }
+  const { body, consumed } = collectContainer(nodes, start, 'aside', rest, ctx);
+  const tone = CALLOUT_TYPES.find((entry) => entry.emoji === emoji)?.tone ?? 'default';
+  return {
+    callout: {
+      type: 'callout',
+      attrs: { emoji, tone },
+      content: body.length ? body : [paragraph([])],
+    },
+    consumed,
+  };
+}
+
+/** Runs a conversion of nested markdown, whose node positions point into `source`. */
 function withSource<T>(ctx: Context, source: string, run: () => T): T {
   const previous = ctx.source;
   ctx.source = source;

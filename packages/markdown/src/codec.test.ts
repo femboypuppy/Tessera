@@ -193,6 +193,25 @@ describe('parse: Obsidian syntax', () => {
     });
   });
 
+  it('turns Notion <aside> callouts back into callouts', () => {
+    const [callout, after] = blocks('<aside>\n⚠️ Launch day is **soon**.\n\n</aside>\n\nAfter');
+    expect(callout).toMatchObject({
+      type: 'callout',
+      attrs: { emoji: '⚠️', tone: 'warning' },
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { text: 'Launch day is ' },
+            { text: 'soon', marks: [{ type: 'bold' }] },
+            { text: '.' },
+          ],
+        },
+      ],
+    });
+    expect(after).toMatchObject({ type: 'paragraph', content: [{ text: 'After' }] });
+  });
+
   it('turns single line breaks into hard breaks, as Obsidian renders them', () => {
     expect(inline('one\ntwo')).toEqual([
       { type: 'text', text: 'one' },
@@ -320,7 +339,7 @@ describe('parse: markdown', () => {
   });
 
   it('handles a byte order mark and Windows line endings', () => {
-    expect(inline('﻿Hello\r\nWorld')).toEqual([
+    expect(inline('\uFEFFHello\r\nWorld')).toEqual([
       { type: 'text', text: 'Hello' },
       { type: 'hardBreak' },
       { type: 'text', text: 'World' },
