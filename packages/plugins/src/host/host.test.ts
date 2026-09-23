@@ -344,11 +344,12 @@ describe('plugin lifecycle', () => {
     expect(s.app.ctx.commands.has('plugins.word-count/spin')).toBe(false);
     expect(s.app.ctx.commands.has('plugins.other/fine')).toBe(true);
     expect(s.host.instance('other')?.status).toBe('running');
-    expect(s.app.shell.toasts.at(-1)).toMatchObject({ variant: 'error' });
+    const toast = s.app.shell.toasts.at(-1);
+    expect(toast).toMatchObject({ variant: 'error', action: { label: 'Restart' } });
     expect(s.consoles.entries('word-count').at(-1)?.message).toMatch(/stopped responding/);
-    // It can be restarted.
+    // It can be restarted from the notification.
     worker.frozen = false;
-    await s.host.restart('word-count');
+    toast?.action?.onClick();
     await s.running();
   }, 20_000);
 

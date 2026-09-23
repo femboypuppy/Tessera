@@ -374,7 +374,15 @@ export class PluginInstance {
     this.log('error', message);
     this.teardown();
     this.setStatus('crashed', message);
-    this.deps.ctx.toast({ title: message, variant: 'error' });
+    this.deps.ctx.toast({
+      title: message,
+      variant: 'error',
+      action: {
+        label: t('restart'),
+        onClick: () =>
+          void this.restart().catch((error: unknown) => this.log('error', errorMessage(error))),
+      },
+    });
   }
 
   /** The plugin failed to load or activate. */

@@ -1,4 +1,9 @@
-import { pluginBlockKind, type JsonValue, type PluginPermission } from '@tessera/core';
+import {
+  pluginBlockKind,
+  type DocJSON,
+  type JsonValue,
+  type PluginPermission,
+} from '@tessera/core';
 import { useAppContext } from '@tessera/core/react';
 import {
   Badge,
@@ -27,6 +32,7 @@ import { SurfaceFrame } from '../SurfaceFrame';
 import { usePluginConsoleVersion } from './console-hooks';
 import { ConsoleView } from './ConsoleView';
 import { PermissionSummary, PluginIcon, StatusLabel } from './parts';
+import { ReadmeView } from './ReadmeView';
 import { SettingsForm } from './SettingsForm';
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -217,16 +223,27 @@ function Contributions({
 }
 
 function About({ plugin, manager }: { plugin: InstalledPlugin; manager: PluginManager }) {
+  const ctx = useAppContext();
   const [usage, setUsage] = useState<{ keys: number; bytes: number } | null>(null);
+  const [readme, setReadme] = useState<DocJSON | null>(null);
   useEffect(() => {
     let active = true;
     void manager.storageUsage(plugin.id).then((value) => {
       if (active) setUsage(value);
     });
+    void manager.getCode(plugin.id).then((code) => {
+      if (!active || !code?.readme) return;
+      try {
+        setReadme(ctx.services.markdownCodec.parse(code.readme).doc);
+      } catch {
+        // A README the codec can't read is left out; the plugin itself is fine.
+        setReadme(null);
+      }
+    });
     return () => {
       active = false;
     };
-  }, [manager, plugin.id, plugin.updatedAt]);
+  }, [ctx, manager, plugin.id, plugin.updatedAt]);
   const { manifest } = plugin;
   return (
     <div className="flex flex-col gap-4">
@@ -261,6 +278,12 @@ function About({ plugin, manager }: { plugin: InstalledPlugin; manager: PluginMa
             </Button>
           ) : null}
         </div>
+      ) : null}
+      {readme ? (
+        <section className="border-t border-border pt-4">
+          <h4 className="mb-2 text-ui font-medium text-fg-muted">{t('aboutReadme')}</h4>
+          <ReadmeView doc={readme} pluginName={manifest.name} />
+        </section>
       ) : null}
     </div>
   );

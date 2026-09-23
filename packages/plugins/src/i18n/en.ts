@@ -92,6 +92,7 @@ export const en = {
   aboutApi: 'Plugin API',
   aboutStorage: 'Storage on this device',
   aboutId: 'ID',
+  aboutReadme: 'README',
   homepage: 'Homepage',
   repository: 'Source code',
   readme: 'Read me',
