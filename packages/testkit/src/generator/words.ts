@@ -358,9 +358,9 @@ export const TOPICS: readonly Topic[] = [
     sentences: [
       'The {noun} in {proper} leaves at {time} and fills up fast.',
       '{person} recommends booking the {noun} at least {number} days ahead.',
-      'An {adj} plan leaves room for the {noun2} nobody mentions in guides.',
+      '{adj} plans leave room for the {noun2} nobody mentions in guides.',
       'Skip the {noun} on {weekday}; it closes early.',
-      'We walked {number} kilometres on the {noun} and loved every one.',
+      'We walked {number} kilometres on the way to the {noun} and loved every one.',
     ],
   },
 ];
@@ -449,7 +449,7 @@ export const TASKS: readonly string[] = [
   'Draft the {noun} proposal',
   'Ask {person} about the {noun}',
   'Review the {noun} with {person2}',
-  'Book time to {verb} the {noun}',
+  'Set aside time to {verb} the {noun}',
   'Write up what we learned about the {noun}',
   'Compare the {noun} with the {noun2}',
   'Share the {noun} notes with the team',
