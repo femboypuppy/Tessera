@@ -158,6 +158,7 @@ export const en = {
     'An interactive map of links between pages. Use the search box to focus a page; press Enter to open it.',
   localGraphDepth: 'Depth {depth}',
   localGraphEmpty: 'No links yet',
+  localGraphNoPage: 'Open a page to see the pages around it.',
   localGraphEmptyHint: 'Pages linked to or from this one appear here.',
   openInGraph: 'Open in graph view',
   moreOther: 'Other',

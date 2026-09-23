@@ -29,7 +29,6 @@ export const backlinksFeature = defineFeature({
       title: t('backlinks'),
       icon: Link2,
       order: 10,
-      when: (page) => page !== null,
       component: BacklinksPanel,
     },
   ],

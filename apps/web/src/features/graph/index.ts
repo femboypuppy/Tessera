@@ -17,7 +17,6 @@ export const graphFeature = defineFeature({
       title: t('localGraph'),
       icon: Waypoints,
       order: 20,
-      when: (page) => page !== null,
       component: LocalGraphPanel,
     },
   ],

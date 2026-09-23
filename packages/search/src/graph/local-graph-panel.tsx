@@ -77,7 +77,7 @@ export default function LocalGraphPanel({ pageId }: SidePanelProps) {
   useGraphTestHooks(canvas, running);
 
   if (!pageId) {
-    return <EmptyState icon={<Waypoints />} title={t('noPageOpen')} className="py-10" />;
+    return <EmptyState icon={<Waypoints />} title={t('localGraphNoPage')} className="py-10" />;
   }
   return (
     <div className="flex h-full min-h-[22rem] flex-col">

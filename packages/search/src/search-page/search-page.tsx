@@ -473,7 +473,7 @@ export default function SearchPage() {
           placeholder={t('searchPlaceholder')}
           autoComplete="off"
           spellCheck={false}
-          className="h-10 pr-9 pl-9 text-[15px]"
+          className="h-10 pr-9 pl-9 text-[15px] [&::-webkit-search-cancel-button]:appearance-none"
         />
         {input ? (
           <IconButton
