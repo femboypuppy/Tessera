@@ -166,6 +166,14 @@ diagnostics).
 
 ## Known gaps and bugs
 
+- **`main` was rewritten after this branch started** (same tree, new author email, new hashes,
+  no common ancestor). To keep `git merge --no-ff feat/ci` working, `feat/ci` records the new
+  `main` as a parent with an `ours` merge (`3a846f7`): nothing changes in the tree (`main` equals
+  the old branch point exactly), and `git merge-tree main feat/ci` is clean. Other branches
+  started from the old `main` need the same (or `git rebase --onto main a30f580`). A pull request
+  from such a branch would show the original history, whose "add prompts" commit fails the
+  commit-message check; merging locally, as the merge plan does, avoids that.
+
 - **Journeys 2–8 skip** until their features merge. Their steps follow the feature agents' own
   strings (their `src/i18n/en.ts` as of this writing); after the merge, adjust selectors in
   `e2e/support/journeys.ts` where the final UI differs.
@@ -180,6 +188,13 @@ diagnostics).
   from memory, not an IndexedDB read. A persisted variant belongs after the sync merge.
 - **Large generated databases** (over 400 rows) may interleave manual row order between chunks
   (still deterministic).
+- **Verified on Linux**: `ci.yml` ran through `scripts/ci/local.ts` in a `node:24.15.0-bookworm`
+  container (fresh clone, `pnpm install --frozen-lockfile`, browsers with system deps): lint,
+  actionlint + shellcheck, typecheck, build with the bundle budget and JS per route, e2e in
+  Chromium and Firefox (2 shards each, merged report), Lighthouse (`/`: 100/100/100/91,
+  `/dev/ui`: 97/96/100/91 for performance, accessibility, best practices, SEO) and the audit all
+  passed; the unit job then failed only on the two Architect jsdom timeouts above, which led to
+  `--testTimeout=20000` in CI (see Follow-ups 3).
 - **Workflows that only run on GitHub** (desktop, docker, docs deploy, release, CodeQL, labeler,
   Dependabot) were verified with actionlint (+ shellcheck) and the policy test, not executed.
   `desktop.yml` expects `@tauri-apps/cli` in `apps/desktop` (it is) and Agent 07's
