@@ -7,13 +7,17 @@ import { createPage, createWorkspace, editor, outline, setDoc, type NodeJSON } f
  *
  * Typing latency is the editor's processing of each keystroke: every handler that runs for the
  * key's events (keydown, keypress, beforeinput, input and keyup), measured from a capture listener
- * to a bubble listener on the window. That covers ProseMirror's keymaps, reading the typed text
+ * to a bubble listener on the window, plus the mutation observer work the typed text causes (some
+ * browsers run it after the input event). That covers ProseMirror's keymaps, reading the typed text
  * from the DOM, the transaction, plugins and decorations, the view update, the Yjs update, React
- * updates, and any layout they force. The test also reports the end-to-end time (keydown to
- * finished layout) next to the browser's own floor: the same keystrokes typed into a bare
- * contenteditable with an identical DOM. On long pages that floor (text insertion, the selection
- * sync that walks the whole editable for the IME, layout and paint) is most of the end-to-end time,
- * and no editor built on one contenteditable can go below it.
+ * updates, and any layout they force. The budget is held in Chromium, the reference browser;
+ * Firefox records its numbers (see HANDOFF/editor.md).
+ *
+ * The test also reports the end-to-end time (keydown to finished layout) next to the browser's own
+ * floor: the same keystrokes typed into a bare contenteditable with an identical DOM. On long pages
+ * that floor (text insertion, the selection sync that walks the whole editable for the IME, layout
+ * and paint) is most of the end-to-end time, and no editor built on one contenteditable can go
+ * below it.
  *
  * Dragging is measured the same way: the editor's work per frame (its pointer handlers and its
  * animation frame callback, which finds the drop target and moves the indicator and the ghost)

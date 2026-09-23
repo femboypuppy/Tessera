@@ -162,6 +162,7 @@ None. Everything the editor needed was in the contract: `PageBodyProps` (focus h
 - **Touch:** dragging blocks by touch isn't supported. On touch screens the handle opens the block menu, which has Move up and Move down. Phone width is tested: the handle is a tap target and the toolbar fits.
 - **Bookmark cards** show a title, description and host from the embed's data, or the URL. The linked site is never contacted: there is no link-preview endpoint and the app is offline-first.
 - **Remote cursors** are unit-tested against Yjs awareness, not against Agent 03's real provider (see *Follow-ups*).
+- **ProseMirror's focus heuristic (for e2e authors):** if the caret moves to the very start of the document within 200 ms of the editor gaining focus, with no click in between, ProseMirror assumes the browser reset the selection and puts its own selection back. Only machine-speed input gets there that fast. Tests that press Home right after focusing an empty page should type a first line (see `markdown-shortcuts.spec.ts`).
 - **Screen readers:** the editor is a labelled multiline textbox, and menus are listboxes with `aria-activedescendant`, a labelled toolbar and Radix menus. This is checked with Playwright role queries, not with a real screen reader.
 
 ## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)

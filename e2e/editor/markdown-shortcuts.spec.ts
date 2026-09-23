@@ -109,18 +109,27 @@ test('Backspace at the start of a heading or list item turns it back into text',
 }) => {
   await createWorkspace(page);
   await createPage(page, 'Undo shortcuts');
+  // A first line, so Home never lands at the very start of the document within 200 ms of the
+  // editor gaining focus: ProseMirror takes that for the browser resetting the selection on focus
+  // and puts the caret back (only machine-speed typing gets there that fast).
+  await page.keyboard.type('Notes');
+  await page.keyboard.press('Enter');
   await page.keyboard.type('# Title');
-  await expect.poll(() => outline(page)).toEqual(['heading:Title']);
+  await expect.poll(() => outline(page)).toEqual(['paragraph:Notes', 'heading:Title']);
   await page.keyboard.press('Home');
   await expect.poll(() => caret(page)).toEqual({ text: 'Title', offset: 0 });
   await page.keyboard.press('Backspace');
-  await expect.poll(() => outline(page)).toEqual(['paragraph:Title']);
+  await expect.poll(() => outline(page)).toEqual(['paragraph:Notes', 'paragraph:Title']);
   await page.keyboard.press('End');
   await page.keyboard.press('Enter');
   await page.keyboard.type('- item');
-  await expect.poll(() => outline(page)).toEqual(['paragraph:Title', 'bulletList:item']);
+  await expect
+    .poll(() => outline(page))
+    .toEqual(['paragraph:Notes', 'paragraph:Title', 'bulletList:item']);
   await page.keyboard.press('Home');
   await expect.poll(() => caret(page)).toEqual({ text: 'item', offset: 0 });
   await page.keyboard.press('Backspace');
-  await expect.poll(() => outline(page)).toEqual(['paragraph:Title', 'paragraph:item']);
+  await expect
+    .poll(() => outline(page))
+    .toEqual(['paragraph:Notes', 'paragraph:Title', 'paragraph:item']);
 });
