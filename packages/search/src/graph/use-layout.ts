@@ -30,15 +30,29 @@ export function useGraphLayout(
       return undefined;
     }
     setRunning(true);
+    // Apply at most one set of positions per frame: ticks can arrive faster than the screen draws.
+    let latest: Float32Array | null = null;
+    let finished = false;
+    let frame: number | null = null;
+    const flush = () => {
+      frame = null;
+      if (latest) applyPositions(graph, latest);
+      latest = null;
+      if (finished) setRunning(false);
+    };
     current.start(
       layoutInput(graph, fixedKey ? fixedKey.split(',') : []),
       (positions, done) => {
-        applyPositions(graph, positions);
-        if (done) setRunning(false);
+        latest = positions;
+        finished = done;
+        frame ??= requestAnimationFrame(flush);
       },
       layout.current,
     );
-    return () => current.stop();
+    return () => {
+      current.stop();
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
   }, [graph, fixedKey, options.run]);
   return running;
 }

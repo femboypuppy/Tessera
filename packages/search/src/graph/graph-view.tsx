@@ -476,6 +476,7 @@ export default function GraphView() {
           onNodeClick={open}
           onError={() => setFailed(true)}
           labelThreshold={graph.order > 1500 ? 9 : 8}
+          large={graph.order > 3000 || graph.size > 6000}
           label={`${t('graphTitle')}: ${t('graphStats', { nodes: graph.order, edges: graph.size })}`}
           describedBy={hintId}
           className="absolute inset-0"

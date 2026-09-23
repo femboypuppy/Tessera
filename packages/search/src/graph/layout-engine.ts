@@ -80,7 +80,7 @@ export class LayoutEngine {
       barnesHutOptimize: order > 600,
       barnesHutTheta: 0.6,
     };
-    this.maxIterations = options.maxIterations ?? (order > 5000 ? 400 : order > 1500 ? 700 : 1200);
+    this.maxIterations = options.maxIterations ?? (order > 5000 ? 260 : order > 1500 ? 600 : 1200);
     this.threshold = options.settleThreshold ?? 0.00035;
   }
 

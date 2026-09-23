@@ -9,6 +9,9 @@ import { isGraphLinkIndex } from '../services/guards';
  * (the core stub) it is derived from `edges()` and the page tree, without tags.
  */
 export async function loadGraph(ctx: AppContext): Promise<GraphSnapshot> {
+  // Performance runs replace the workspace's graph with a large synthetic one (test hooks only).
+  const stress = (globalThis as { __tesseraGraphStress?: GraphSnapshot }).__tesseraGraphStress;
+  if (stress) return stress;
   const index = ctx.services.linkIndex;
   if (isGraphLinkIndex(index)) return index.graph();
   return fromEdges(ctx, await index.edges());

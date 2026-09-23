@@ -51,6 +51,8 @@ export interface GraphCanvasProps {
   labelThreshold?: number;
   /** Space kept around the graph, in pixels (labels extend to the right of nodes). */
   padding?: number;
+  /** Large graphs hide edges and labels while the camera moves, so panning stays fluid. */
+  large?: boolean;
   className?: string;
   style?: CSSProperties;
   label: string;
@@ -76,8 +78,15 @@ function roundRect(
   context.closePath();
 }
 
-function settingsFor(theme: GraphTheme, labelThreshold: number, padding: number): SigmaSettings {
+function settingsFor(
+  theme: GraphTheme,
+  labelThreshold: number,
+  padding: number,
+  large: boolean,
+): SigmaSettings {
   return {
+    hideEdgesOnMove: large,
+    hideLabelsOnMove: large,
     labelFont: theme.font,
     labelSize: 12,
     labelWeight: '500',
@@ -156,6 +165,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     onError,
     labelThreshold = 7,
     padding = 40,
+    large = false,
     className,
     style,
     label,
@@ -177,9 +187,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   const initialGraph = useRef(graph);
   const initialThreshold = useRef(labelThreshold);
   const initialPadding = useRef(padding);
+  const initialLarge = useRef(large);
+  const largeRef = useRef(large);
   useEffect(() => {
     clickRef.current = onNodeClick;
     errorRef.current = onError;
+    largeRef.current = large;
     motion.current = reduceMotion;
   });
 
@@ -201,7 +214,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     let renderer: Sigma<NodeAttributes, EdgeAttributes>;
     try {
       renderer = new Sigma<NodeAttributes, EdgeAttributes>(initialGraph.current, element, {
-        ...settingsFor(themeRef.current, initialThreshold.current, initialPadding.current),
+        ...settingsFor(
+          themeRef.current,
+          initialThreshold.current,
+          initialPadding.current,
+          initialLarge.current,
+        ),
         nodeReducer: (node, data) => {
           if (!active) return data;
           if (node === active) return { ...data, zIndex: 2, forceLabel: true, highlighted: true };
@@ -230,20 +248,45 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     }
     highlight.current = () => {
       const current = renderer.getGraph();
-      active = hovered.current ?? focusedRef.current;
-      if (active && !current.hasNode(active)) active = null;
+      const next = dragging ? focusedRef.current : (hovered.current ?? focusedRef.current);
+      const nextActive = next && current.hasNode(next) ? next : null;
+      if (nextActive === active && nextActive === null) return;
+      active = nextActive;
       near = active ? new Set(current.neighbors(active)) : new Set();
       renderer.refresh({ skipIndexation: true });
+    };
+    // Highlighting redraws every node and edge. On large graphs it waits until the pointer rests
+    // on a node, so sweeping across the graph never stalls; it never runs while dragging.
+    let dragging = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      if (!largeRef.current) {
+        highlight.current();
+        return;
+      }
+      timer = setTimeout(() => {
+        timer = null;
+        highlight.current();
+      }, 140);
     };
     renderer.on('enterNode', ({ node }) => {
       hovered.current = node;
       element.style.cursor = 'pointer';
-      highlight.current();
+      if (!dragging) schedule();
     });
     renderer.on('leaveNode', () => {
       hovered.current = null;
       element.style.cursor = '';
-      highlight.current();
+      if (!dragging) schedule();
+    });
+    renderer.on('downStage', () => {
+      dragging = true;
+    });
+    renderer.on('upStage', () => {
+      dragging = false;
+      schedule();
     });
     renderer.on('clickNode', ({ node }) => clickRef.current(node));
     sigma.current = renderer;
@@ -257,6 +300,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           });
     observer?.observe(element);
     return () => {
+      if (timer) clearTimeout(timer);
       observer?.disconnect();
       renderer.kill();
       sigma.current = null;
@@ -277,9 +321,9 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     dimmed.current.clear();
     const renderer = sigma.current;
     if (!renderer) return;
-    renderer.setSettings(settingsFor(theme, labelThreshold, padding));
+    renderer.setSettings(settingsFor(theme, labelThreshold, padding, large));
     renderer.refresh();
-  }, [theme, labelThreshold, padding]);
+  }, [theme, labelThreshold, padding, large]);
 
   useEffect(() => {
     focusedRef.current = focused;
