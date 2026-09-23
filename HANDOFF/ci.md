@@ -93,6 +93,13 @@ Commit messages are Conventional (`build(deps): …`, `ci(deps): …`). No stale
   **30 ms** on 5,000 pages with the naive stub index (budget 50 ms); import of 1,993 files with
   core's basic importer: 81 s in one 83 s main-thread block (the budget wants a worker); palette,
   large page, typing and graph skip until their features merge.
+- Pre-commit hook on one staged file: **8.4–10 s** wall at 75–80 % CPU on this machine (i5-10400F,
+  shared with eight agents), where ESLint is about 5 s: 4.9 s of CPU, nearly all of it loading
+  `typescript-eslint` (2.2 s), `jsx-a11y` (1.1 s) and `react-hooks` (0.5 s); linting the file
+  itself takes 0.2 s. Prettier is 0.5 s, lint-staged's backup and restaging about 1.5 s. Not
+  measured idle: CPU times here run about 2× their idle cost (all-core clock 3.2 GHz against a
+  4.3 GHz single-core boost, shared cores), so expect about 4 s. If contributors find it slow,
+  drop the ESLint line from `lint-staged.config.mjs` (CI still lints) or run it through a daemon.
 
 ## How it plugs in (FeatureModule entries, services, extension points used)
 
