@@ -48,6 +48,7 @@ import {
   pageUrl,
   trashWithUndo,
   createPageAndOpen,
+  useViewOnly,
 } from '../page-helpers';
 import { useUiStore } from '../ui-store';
 
@@ -117,11 +118,21 @@ function usePageActions(page: PageMeta, parentId: string | null, onExpand: (id: 
   const ctx = useAppContext();
   const navigate = useNavigate();
   const snapshot = usePages();
+  const viewOnly = useViewOnly();
   const siblings = snapshot.children(parentId);
   const index = siblings.findIndex((sibling) => sibling.id === page.id);
   const previous = index > 0 ? siblings[index - 1] : undefined;
   const move = (target: MoveTarget) => attempt(() => ctx.workspace.movePage(page.id, target));
+  const copyLink = () => {
+    void navigator.clipboard
+      ?.writeText(pageUrl(page.id))
+      .then(() => ctx.toast({ title: t('linkCopied') }));
+  };
+  // A viewer's changes would never reach the server: only reading actions remain.
+  if (viewOnly) return { viewOnly, copyLink } as const;
   return {
+    viewOnly,
+    copyLink,
     addChild: () => {
       onExpand(page.id);
       createPageAndOpen(ctx, navigate, page.id);
@@ -133,11 +144,6 @@ function usePageActions(page: PageMeta, parentId: string | null, onExpand: (id: 
             void ctx.workspace.duplicatePage(page.id).then((copy) => ctx.navigate(copy.id));
           }
         : null,
-    copyLink: () => {
-      void navigator.clipboard
-        ?.writeText(pageUrl(page.id))
-        .then(() => ctx.toast({ title: t('linkCopied') }));
-    },
     moveUp: index > 0 ? () => move({ parentId, position: { index: index - 1 } }) : null,
     moveDown:
       index >= 0 && index < siblings.length - 1
@@ -168,6 +174,13 @@ function MenuItems({
   Item: typeof DropdownMenuItem | typeof ContextMenuItem;
   Separator: typeof DropdownMenuSeparator | typeof ContextMenuSeparator;
 }) {
+  if (actions.viewOnly) {
+    return (
+      <Item icon={<Link2 />} onSelect={actions.copyLink}>
+        {t('copyLink')}
+      </Item>
+    );
+  }
   return (
     <>
       <Item icon={<Plus />} onSelect={actions.addChild}>
@@ -282,7 +295,7 @@ function TreeRow({
           tabIndex={focused ? 0 : -1}
           data-page-id={page.id}
           data-active={active || undefined}
-          draggable
+          draggable={!actions.viewOnly}
           onDragStart={(event) => dragHandlers.onDragStart(event, row)}
           onDragOver={(event) => dragHandlers.onDragOver(event, row)}
           onDrop={(event) => dragHandlers.onDrop(event, row)}
@@ -346,18 +359,20 @@ function TreeRow({
                 />
               </DropdownMenuContent>
             </DropdownMenu>
-            <button
-              type="button"
-              tabIndex={-1}
-              aria-label={t('newSubpage')}
-              onClick={(event) => {
-                event.stopPropagation();
-                actions.addChild();
-              }}
-              className="inline-flex size-5 items-center justify-center rounded-sm text-fg-subtle hover:bg-active hover:text-fg"
-            >
-              <Plus className="size-3.5" aria-hidden="true" />
-            </button>
+            {actions.viewOnly ? null : (
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label={t('newSubpage')}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  actions.addChild();
+                }}
+                className="inline-flex size-5 items-center justify-center rounded-sm text-fg-subtle hover:bg-active hover:text-fg"
+              >
+                <Plus className="size-3.5" aria-hidden="true" />
+              </button>
+            )}
           </span>
         </div>
       </ContextMenuTrigger>
@@ -391,6 +406,7 @@ export function PageTree() {
   const refocus = useRef(false);
   const expandTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const treeRef = useRef<HTMLDivElement>(null);
+  const viewOnly = useViewOnly();
 
   const tree = snapshot.tree();
   const rows = useMemo(() => flatten(tree, expanded), [tree, expanded]);
@@ -447,7 +463,7 @@ export function PageTree() {
     const move = (target: MoveTarget) => {
       if (attempt(() => ctx.workspace.movePage(row.page.id, target))) focusRow(row.page.id);
     };
-    if (event.altKey && event.shiftKey) {
+    if (event.altKey && event.shiftKey && !viewOnly) {
       const siblings = snapshot.children(row.parentId);
       const at = siblings.findIndex((page) => page.id === row.page.id);
       const handled: Record<string, (() => void) | undefined> = {

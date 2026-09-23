@@ -34,6 +34,16 @@ export interface AssetStore {
   ): Promise<{ assetId: string; url: string }>;
   get(assetId: string): Promise<Blob | null>;
   getUrl(assetId: string): Promise<string | null>;
+  /**
+   * A URL held until `release()`, for long sessions with many images: object URLs are revoked once
+   * nobody holds them. Stores without it keep `getUrl` URLs for the whole session.
+   *
+   * @example
+   * const lease = await store.retainUrl?.(assetId);
+   * img.src = lease?.url ?? '';
+   * // on unmount: lease?.release();
+   */
+  retainUrl?(assetId: string): Promise<{ url: string; release(): void } | null>;
   getInfo?(assetId: string): Promise<AssetInfo | null>;
   delete(assetId: string): Promise<void>;
   list?(): Promise<AssetInfo[]>;

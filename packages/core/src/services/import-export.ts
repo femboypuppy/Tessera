@@ -267,7 +267,12 @@ export interface Exporter {
 
 /** A list of items with unique IDs, subscribable. */
 export interface ListRegistry<T extends { id: string }> {
-  register(item: T): () => void;
+  /**
+   * Adds an item; a later item with the same ID replaces it (with a warning, unless the earlier
+   * one was registered as `replaceable`, like core's stubs). Returns a function that removes it;
+   * removing a replacement brings back the replaceable item it replaced.
+   */
+  register(item: T, options?: { replaceable?: boolean }): () => void;
   get(id: string): T | undefined;
   list(): T[];
   subscribe(listener: () => void): () => void;
@@ -276,21 +281,31 @@ export interface ListRegistry<T extends { id: string }> {
 /** Creates a {@link ListRegistry}. A later registration with the same ID replaces the earlier one. */
 export function createListRegistry<T extends { id: string }>(): ListRegistry<T> {
   const items = new Map<string, T>();
+  const replaceable = new Map<string, T>();
   const listeners = new Set<() => void>();
   const notify = () => {
     for (const listener of [...listeners]) listener();
   };
   return {
-    register(item) {
-      if (items.has(item.id))
+    register(item, options = {}) {
+      const previous = items.get(item.id);
+      if (previous && replaceable.get(item.id) !== previous)
         console.warn(`[registry] "${item.id}" was registered twice; the last one wins`);
+      if (options.replaceable) replaceable.set(item.id, item);
       items.set(item.id, item);
       notify();
       return () => {
-        if (items.get(item.id) === item) {
-          items.delete(item.id);
-          notify();
+        if (items.get(item.id) !== item) {
+          if (replaceable.get(item.id) === item) replaceable.delete(item.id);
+          return;
         }
+        const fallback = replaceable.get(item.id);
+        if (fallback && fallback !== item) items.set(item.id, fallback);
+        else {
+          items.delete(item.id);
+          replaceable.delete(item.id);
+        }
+        notify();
       };
     },
     get: (id) => items.get(id),

@@ -1,7 +1,11 @@
 import {
   createAppRuntime,
   defineFeature,
+  defineService,
+  LocalSyncProvider,
   MemorySettingsStore,
+  SERVICE_PRIORITY,
+  type SyncStatusInfo,
   type AppContext,
   type AppRuntime,
   type FeatureModule,
@@ -207,6 +211,72 @@ describe('feature extension points', () => {
     expect(await screen.findByText('Quick capture')).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Sidebar' })).not.toBeInTheDocument();
     expect(screen.getByText('Palette host')).toBeInTheDocument();
+  });
+
+  it('makes pages read-only for viewers', async () => {
+    const user = userEvent.setup();
+    let ctx: AppContext | null = null;
+    class ViewerSyncProvider extends LocalSyncProvider {
+      override getStatus(): SyncStatusInfo {
+        return { status: 'synced', readOnly: true };
+      }
+    }
+    await useFeatures([
+      defineFeature({
+        id: 'viewer',
+        services: [
+          defineService({
+            provides: 'syncProvider',
+            id: 'viewer',
+            priority: SERVICE_PRIORITY.browser,
+            create: () => new ViewerSyncProvider(),
+          }),
+        ],
+        activate: (context) => {
+          ctx = context;
+          context.workspace.createPage({ title: 'Shared plan' });
+        },
+      }),
+    ]);
+    render(<App runtime={runtime} />);
+    await user.click(await screen.findByRole('button', { name: 'Create an empty workspace' }));
+    const sidebar = await screen.findByRole('navigation', { name: 'Sidebar' });
+    await user.click(await within(sidebar).findByRole('treeitem', { name: 'Shared plan' }));
+    const title = await screen.findByRole('textbox', { name: 'Page title' });
+    expect(title).toHaveAttribute('readonly');
+    expect(within(sidebar).queryByRole('button', { name: 'New page' })).not.toBeInTheDocument();
+    expect(within(sidebar).getByRole('treeitem', { name: 'Shared plan' })).toHaveAttribute(
+      'draggable',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Add to favorites' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Page actions' }));
+    expect(await screen.findByRole('menuitem', { name: 'Copy link' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Move to trash' })).not.toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    const app = ctx as AppContext | null;
+    expect(app?.commands.available().map((command) => command.id)).not.toContain('shell.newPage');
+  });
+
+  it('lists feature items in the workspace menu', async () => {
+    const user = userEvent.setup();
+    const ran: string[] = [];
+    await useFeatures([
+      defineFeature({
+        id: 'desktop',
+        workspaceMenuItems: [
+          {
+            id: 'open-folder',
+            title: 'Open folder…',
+            run: (context) => void ran.push(context.workspace.info.name),
+          },
+        ],
+      }),
+    ]);
+    await createWorkspace(user, 'Orbit Lab');
+    await user.click(screen.getByRole('button', { name: 'Switch workspace' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Open folder…' }));
+    await waitFor(() => expect(ran).toEqual(['Orbit Lab']));
   });
 
   it('switches to another workspace and reopens the current one on request', async () => {

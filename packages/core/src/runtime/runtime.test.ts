@@ -127,6 +127,94 @@ describe('workspace session', () => {
     await dispose();
   });
 
+  it('creates many rows at once, in order, and leaves nothing behind on invalid values', async () => {
+    const { ctx, dispose } = await createTestAppContext();
+    const seen = record(ctx);
+    const { page } = await ctx.workspace.createDatabase({
+      title: 'Reading list',
+      titlePropertyName: 'Name',
+      viewName: 'Table',
+    });
+    const db = await ctx.loadDatabaseDoc(page.id);
+    const first = await ctx.workspace.addDatabaseRow(page.id, { title: 'First' });
+    const last = await ctx.workspace.addDatabaseRow(page.id, { title: 'Last' });
+    const rows = await ctx.workspace.addDatabaseRows(
+      page.id,
+      [{ title: 'Dune', icon: '📙' }, { title: 'Emma' }],
+      { after: first.id },
+    );
+    expect(rows.map((row) => [row.title, row.parentId])).toEqual([
+      ['Dune', page.id],
+      ['Emma', page.id],
+    ]);
+    expect(rows[0]?.icon).toBe('📙');
+    const snapshot = ctx.workspace.pages.getSnapshot();
+    expect(rows.every((row) => snapshot.isRow(row.id))).toBe(true);
+    expect(listRows(db.doc).map((row) => row.id)).toEqual([
+      first.id,
+      rows[0]?.id,
+      rows[1]?.id,
+      last.id,
+    ]);
+    expect(seen.filter(([type]) => type === 'page.created')).toHaveLength(5);
+
+    const before = ctx.workspace.pages.getSnapshot().children(page.id, { includeRows: true });
+    await expect(
+      ctx.workspace.addDatabaseRows(page.id, [{ title: 'Fine' }, { values: { missing: 1 } }]),
+    ).rejects.toThrow(NotFoundError);
+    expect(ctx.workspace.pages.getSnapshot().children(page.id, { includeRows: true })).toEqual(
+      before,
+    );
+    expect(listRows(db.doc)).toHaveLength(4);
+    await expect(ctx.workspace.addDatabaseRows(first.id, [{ title: 'x' }])).rejects.toThrow(
+      NotFoundError,
+    );
+    expect(await ctx.workspace.addDatabaseRows(page.id, [])).toEqual([]);
+    db.release();
+    await dispose();
+  });
+
+  it('resolves the credential store like any app service', async () => {
+    const { ctx, runtime, dispose } = await createTestAppContext();
+    expect(ctx.serviceSources.credentialStore).toBe('memory');
+    await ctx.services.credentialStore.set('https://notes.example.com/sync', 'secret');
+    expect(await ctx.services.credentialStore.get('https://notes.example.com')).toBe('secret');
+    expect((await ctx.services.credentialStore.list()).map((entry) => entry.server)).toEqual([
+      'https://notes.example.com',
+    ]);
+    await ctx.services.credentialStore.delete('https://notes.example.com/');
+    expect(await ctx.services.credentialStore.list()).toEqual([]);
+    expect(runtime.credentialStore).toBe(ctx.services.credentialStore);
+    await dispose();
+
+    const keychain = {
+      get: vi.fn(async () => 'from-keychain'),
+      set: vi.fn(async () => undefined),
+      delete: vi.fn(async () => undefined),
+      list: vi.fn(async () => []),
+    };
+    const desktop = await createTestAppContext({
+      features: [
+        defineFeature({
+          id: 'desktop',
+          services: [
+            defineService({
+              provides: 'credentialStore',
+              id: 'keychain',
+              priority: SERVICE_PRIORITY.desktop,
+              create: () => keychain,
+            }) as AnyServiceRegistration,
+          ],
+        }),
+      ],
+    });
+    expect(desktop.ctx.serviceSources.credentialStore).toBe('keychain');
+    expect(await desktop.ctx.services.credentialStore.get('https://a.example')).toBe(
+      'from-keychain',
+    );
+    await desktop.dispose();
+  });
+
   it('deletes pages permanently with their docs and row entries', async () => {
     const { ctx, flush, runtime, dispose } = await createTestAppContext();
     const seen = record(ctx);
@@ -163,6 +251,7 @@ describe('workspace session', () => {
     expect(runtime.appServiceSources).toEqual({
       workspaceRegistry: 'memory',
       markdownCodec: 'basic',
+      credentialStore: 'memory',
     });
     await dispose();
   });
@@ -273,6 +362,7 @@ describe('features', () => {
       pageBodies: { page: Body },
       pageFooterSections: [{ id: 'demo-footer', component: Body }],
       overlays: [{ id: 'demo-overlay', component: Body }],
+      workspaceMenuItems: [{ id: 'demo-open', title: 'Open folder', run }],
       pageSidePanels: [
         { id: 'demo-panel', title: 'Demo', order: 2, component: Body },
         { id: 'first', title: 'First', order: 1, component: Body },
@@ -291,6 +381,9 @@ describe('features', () => {
     ]);
     expect(ctx.contributions.list('pageFooterSections').map((c) => c.id)).toEqual(['demo-footer']);
     expect(ctx.contributions.list('overlays').map((c) => c.id)).toEqual(['demo-overlay']);
+    expect(ctx.contributions.list('workspaceMenuItems').map((c) => [c.id, c.featureId])).toEqual([
+      ['demo-open', 'demo'],
+    ]);
     expect(ctx.contributions.list('pageBodies').map((r) => r.kind)).toEqual(['page']);
     expect(ctx.contributions.list('pageSidePanels').map((p) => p.id)).toEqual([
       'first',

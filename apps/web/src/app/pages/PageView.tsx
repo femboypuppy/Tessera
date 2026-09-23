@@ -5,8 +5,8 @@ import { Blocks, FileQuestion, RotateCcw, Trash2 } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { t } from '../../i18n';
-import type { NavigationTarget } from '../bridge';
-import { displayTitle } from '../page-helpers';
+import { targetFromHash, type NavigationTarget } from '../bridge';
+import { displayTitle, useViewOnly } from '../page-helpers';
 import { PageCoverBand, PageHeader, focusPageTitle } from './PageHeader';
 
 export { focusPageTitle };
@@ -143,6 +143,9 @@ export function PageView() {
   const display = useDisplayProps(pageId);
   const bodyFocus = useRef<((position: 'start' | 'end') => void) | null>(null);
   const state = location.state as { focusTitle?: boolean; target?: NavigationTarget } | null;
+  const viewOnly = useViewOnly();
+  // "Copy link" on a block makes `/p/<pageId>#block-<blockId>`; navigations pass a state target.
+  const target = state?.target ?? targetFromHash(location.hash);
 
   const registerFocusHandler = useCallback((handler: (position: 'start' | 'end') => void) => {
     bodyFocus.current = handler;
@@ -173,7 +176,7 @@ export function PageView() {
   }
 
   const trashed = snapshot.isTrashed(page.id);
-  const readOnly = trashed;
+  const readOnly = trashed || viewOnly;
   const sections = topSections.filter((section) => !section.when || section.when(page, ctx));
   const footers = footerSections.filter((section) => !section.when || section.when(page, ctx));
 
@@ -209,14 +212,16 @@ export function PageView() {
               resetKeys={[page.id]}
               className="mt-4"
             >
-              <Section pageId={page.id} page={page} readOnly={readOnly} />
+              <Suspense fallback={null}>
+                <Section pageId={page.id} page={page} readOnly={readOnly} />
+              </Suspense>
             </FeatureBoundary>
           );
         })}
         <PageBody
           page={page}
           readOnly={readOnly}
-          target={state?.target ?? null}
+          target={target}
           registerFocusHandler={registerFocusHandler}
         />
         {footers.map((section) => {
@@ -228,7 +233,9 @@ export function PageView() {
               resetKeys={[page.id]}
               className="mt-10"
             >
-              <Section pageId={page.id} page={page} readOnly={readOnly} />
+              <Suspense fallback={null}>
+                <Section pageId={page.id} page={page} readOnly={readOnly} />
+              </Suspense>
             </FeatureBoundary>
           );
         })}

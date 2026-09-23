@@ -49,6 +49,8 @@ function useShellCommands(ctx: AppContext) {
         title: t('cmdNewPage'),
         group: 'page',
         shortcut: ['Mod+N', 'Mod+Alt+N'],
+        // Viewers can't create pages: the server refuses their changes.
+        when: () => ctx.services.syncProvider.getStatus().readOnly !== true,
         run: ({ args }) => {
           const parentId = (args as { parentId?: string | null } | undefined)?.parentId ?? null;
           createPageAndOpen(ctx, navigate, parentId);

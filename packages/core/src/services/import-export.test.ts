@@ -6,6 +6,7 @@ import { createTestAppContext } from '../testing/index';
 import {
   createBasicMarkdownExporter,
   createBasicMarkdownImporter,
+  createExporterRegistry,
   createImporterRegistry,
   importFileFromBlob,
   importFileFromText,
@@ -138,6 +139,27 @@ describe('importer registry', () => {
       ['high', 0.9],
       ['low', 0.2],
     ]);
+  });
+});
+
+describe('list registries', () => {
+  it('replaces replaceable items quietly and brings them back when the replacement goes', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const registry = createExporterRegistry();
+    const stub = { id: 'markdown-basic', label: 'Stub', scopes: ['page' as const], run: vi.fn() };
+    const real = { id: 'markdown-basic', label: 'Real', scopes: ['page' as const], run: vi.fn() };
+    registry.register(stub, { replaceable: true });
+    const off = registry.register(real);
+    expect(warn).not.toHaveBeenCalled();
+    expect(registry.get('markdown-basic')?.label).toBe('Real');
+    off();
+    expect(registry.get('markdown-basic')?.label).toBe('Stub');
+    const again = registry.register({ ...real, label: 'Again' });
+    registry.register({ ...real, label: 'Twice' });
+    expect(warn).toHaveBeenCalledTimes(1);
+    again();
+    expect(registry.get('markdown-basic')?.label).toBe('Twice');
+    warn.mockRestore();
   });
 });
 

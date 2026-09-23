@@ -6,6 +6,7 @@ import type { PageIndex } from '../model/page-index';
 import type { MutationOptions } from '../model/pages';
 import {
   compareOrdered,
+  isValidOrderKey,
   orderAfterAll,
   orderForIndex,
   ordersBetween,
@@ -783,6 +784,83 @@ export function addRow(
   const row = getRow(db, id);
   if (!row) throw new InvalidOperationError('Failed to create row');
   return row;
+}
+
+/**
+ * Throws if a row's values are not valid for the database's properties (writes nothing): unknown
+ * properties, computed types, values of the wrong shape and unknown select options.
+ *
+ * @example
+ * checkRowValues(dbDoc, { [statusId]: todoOptionId });
+ */
+export function checkRowValues(db: Y.Doc, values: Record<string, JsonValue | null>): void {
+  for (const [propertyId, value] of Object.entries(values)) {
+    if (value !== null && value !== undefined) checkValue(db, propertyId, value);
+  }
+}
+
+/** Input for {@link addRows}: an {@link AddRowInput} without `position`. */
+export type AddRowsInput = Omit<AddRowInput, 'position'>;
+
+/**
+ * Adds many row entries in one transaction, in input order, right after the row `after` (or at
+ * the end). Every ID and value is validated before anything is written, and n rows cost O(n)
+ * (n {@link addRow} calls re-read every row each time). Create the row pages first
+ * (`createPages` with the database page as parent), or use `AppContext.workspace.addDatabaseRows`,
+ * which does both.
+ *
+ * @example
+ * addRows(dbDoc, pages.map((page, i) => ({ id: page.id, values: csvValues[i] })), { userId });
+ */
+export function addRows(
+  db: Y.Doc,
+  inputs: readonly AddRowsInput[],
+  options: MutationOptions & { after?: string | null } = {},
+): DatabaseRow[] {
+  if (inputs.length === 0) return [];
+  const ids = inputs.map((input) => input.id ?? newId());
+  db.transact(() => {
+    const rows = rowsOf(db);
+    const seen = new Set<string>();
+    inputs.forEach((input, i) => {
+      const id = ids[i] as string;
+      if (!isValidId(id)) throw new ValidationError('Invalid row ID', [id]);
+      if (rows.has(id) || seen.has(id))
+        throw new InvalidOperationError(`Row "${id}" already exists`);
+      seen.add(id);
+      checkRowValues(db, input.values ?? {});
+    });
+    const siblings = listRows(db);
+    const anchor = options.after ?? null;
+    const at = anchor === null ? -1 : siblings.findIndex((row) => row.id === anchor);
+    if (anchor !== null && at < 0) throw new NotFoundError('Row', anchor);
+    const before = at >= 0 ? (siblings[at]?.order ?? null) : lastRowOrder(siblings);
+    const after = at >= 0 ? (siblings[at + 1]?.order ?? null) : null;
+    let orders: string[];
+    try {
+      orders = ordersBetween(before, after, inputs.length);
+    } catch {
+      // Tied or malformed neighbours (concurrent inserts): append after every row instead.
+      orders = ordersBetween(lastRowOrder(siblings), null, inputs.length);
+    }
+    inputs.forEach((input, i) => {
+      const map = new Y.Map<unknown>();
+      map.set('order', orders[i]);
+      map.set('values', new Y.Map<unknown>());
+      rows.set(ids[i] as string, map);
+      writeValues(db, map, input.values ?? {}, options);
+    });
+  }, options.origin);
+  return ids.map((id) => getRow(db, id)).filter((row): row is DatabaseRow => row !== undefined);
+}
+
+/** The largest valid order key among rows, or null. */
+function lastRowOrder(rows: readonly DatabaseRow[]): string | null {
+  let last: string | null = null;
+  for (const row of rows) {
+    if (isValidOrderKey(row.order) && (last === null || row.order > last)) last = row.order;
+  }
+  return last;
 }
 
 /**

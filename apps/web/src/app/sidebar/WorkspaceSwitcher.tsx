@@ -17,6 +17,7 @@ import {
   Field,
   Input,
 } from '@tessera/ui';
+import { useAppContext, useContributions } from '@tessera/core/react';
 import { ChevronsUpDown, Plus, Settings } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
@@ -96,6 +97,8 @@ export function WorkspaceSwitcher() {
   const control = useWorkspaceControl();
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
+  const ctx = useAppContext();
+  const menuItems = useContributions('workspaceMenuItems');
   const current = control.current;
   return (
     <>
@@ -130,6 +133,29 @@ export function WorkspaceSwitcher() {
           <DropdownMenuItem icon={<Plus />} onSelect={() => setCreating(true)}>
             {t('newWorkspace')}
           </DropdownMenuItem>
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <DropdownMenuItem
+                key={`${item.featureId}:${item.id}`}
+                icon={Icon ? <Icon /> : undefined}
+                onSelect={() => {
+                  Promise.resolve()
+                    .then(() => item.run(ctx))
+                    .catch((error: unknown) =>
+                      ctx.toast({
+                        variant: 'error',
+                        title: t('actionFailed', {
+                          message: error instanceof Error ? error.message : String(error),
+                        }),
+                      }),
+                    );
+                }}
+              >
+                {item.title}
+              </DropdownMenuItem>
+            );
+          })}
           <DropdownMenuItem icon={<Settings />} onSelect={() => void navigate('/settings')}>
             {t('settings')}
           </DropdownMenuItem>

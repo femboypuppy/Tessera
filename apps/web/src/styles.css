@@ -6,3 +6,5 @@
  * so a new package is picked up without editing this file.
  */
 @source '../../../packages/*/src/**/*.{ts,tsx}';
+/* The desktop app's UI lives in apps/desktop (SPEC 9.1), outside packages/. */
+@source '../../desktop/src/**/*.{ts,tsx}';

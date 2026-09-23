@@ -125,6 +125,20 @@ export interface WorkspaceApi {
   ): Promise<{ page: PageMeta; titlePropertyId: string; viewId: string }>;
   /** Creates a row: its page (child of the database page) and its entry in the database doc. */
   addDatabaseRow(databaseId: string, input?: AddDatabaseRowInput): Promise<PageMeta>;
+  /**
+   * Creates many rows at once (CSV import, paste, importers): their pages in one workspace
+   * transaction and their entries in one database transaction, in input order, after the row
+   * `after` or at the end. Everything is validated before anything is written; on a failure no
+   * row is left behind. n rows cost O(n), where n `addDatabaseRow` calls cost O(n²).
+   *
+   * @example
+   * const rows = await ctx.workspace.addDatabaseRows(databaseId, [{ title: 'Dune' }, { title: 'Emma' }]);
+   */
+  addDatabaseRows(
+    databaseId: string,
+    inputs: readonly Omit<AddDatabaseRowInput, 'position'>[],
+    options?: { after?: string | null },
+  ): Promise<PageMeta[]>;
 }
 
 /**

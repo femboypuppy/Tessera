@@ -145,6 +145,21 @@ export interface OverlayContribution {
 }
 
 /**
+ * An item of the sidebar's workspace menu, under "New workspace" (the desktop app's "Open
+ * folder…"). `run` gets the current session's context.
+ *
+ * @example
+ * workspaceMenuItems: [{ id: 'open-folder', title: t('openFolder'), icon: FolderOpen, run: (ctx) => ctx.commands.execute('desktop.openFolder') }],
+ */
+export interface WorkspaceMenuItemContribution {
+  id: string;
+  title: string;
+  icon?: IconComponent;
+  order?: number;
+  run(ctx: AppContext): void | Promise<void>;
+}
+
+/**
  * Behavior added to the editor by other features (keymaps, decorations, ProseMirror plugins).
  * `create` returns a TipTap `Extension` built with the editor's `@tiptap/core` version. It must not
  * add nodes or marks: the schema is fixed by `@tessera/core`.
@@ -170,6 +185,7 @@ export interface ContributionMap {
   onboardingActions: OnboardingActionContribution;
   editorExtensions: EditorExtensionContribution;
   overlays: OverlayContribution;
+  workspaceMenuItems: WorkspaceMenuItemContribution;
 }
 
 export type ContributionKind = keyof ContributionMap;
@@ -284,6 +300,7 @@ export interface FeatureModule {
   settingsPanels?: SettingsPanelContribution[];
   onboardingActions?: OnboardingActionContribution[];
   overlays?: OverlayContribution[];
+  workspaceMenuItems?: WorkspaceMenuItemContribution[];
   importers?: Importer[];
   exporters?: Exporter[];
   services?: AnyServiceRegistration[];

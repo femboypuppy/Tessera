@@ -8,6 +8,23 @@ export interface NavigationTarget {
   blockId?: string;
 }
 
+const BLOCK_HASH = /^#block-([A-Za-z0-9-]{1,64})$/;
+
+/**
+ * The scroll target of a page URL's hash (what `ctx.navigate` writes and "Copy link" copies):
+ * `#block-<blockId>` for a block, `#<heading-slug>` for a heading, or null.
+ */
+export function targetFromHash(hash: string): NavigationTarget | null {
+  const blockId = BLOCK_HASH.exec(hash)?.[1];
+  if (blockId) return { blockId };
+  if (hash.length < 2) return null;
+  try {
+    return { heading: decodeURIComponent(hash.slice(1)) };
+  } catch {
+    return null;
+  }
+}
+
 type NavigateFn = (to: string, options?: { replace?: boolean; state?: unknown }) => void;
 
 /**

@@ -43,6 +43,7 @@ const KINDS = {
   onboardingActions: true,
   editorExtensions: true,
   overlays: true,
+  workspaceMenuItems: true,
 } satisfies Record<ContributionKind, true>;
 
 function contributionName(item: { id?: string; path?: string; kind?: string }): string {

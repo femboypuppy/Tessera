@@ -22,7 +22,7 @@ import { Copy, Link2, Menu, MoreHorizontal, PanelLeft, Star, StarOff, Trash2 } f
 import { Fragment } from 'react';
 import { useLocation } from 'react-router';
 import { t } from '../i18n';
-import { displayTitle, PageIcon, pageUrl, trashWithUndo } from './page-helpers';
+import { displayTitle, PageIcon, pageUrl, trashWithUndo, useViewOnly } from './page-helpers';
 import { useUiStore } from './ui-store';
 
 function Crumb({ page, current, ctx }: { page: PageMeta; current: boolean; ctx: AppContext }) {
@@ -72,7 +72,7 @@ function Breadcrumbs({ page }: { page: PageMeta }) {
   );
 }
 
-function PageMenu({ page }: { page: PageMeta }) {
+function PageMenu({ page, viewOnly }: { page: PageMeta; viewOnly: boolean }) {
   const ctx = useAppContext();
   return (
     <DropdownMenu>
@@ -80,12 +80,14 @@ function PageMenu({ page }: { page: PageMeta }) {
         <IconButton label={t('pageActions')} icon={<MoreHorizontal />} tooltip={false} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem
-          icon={page.favorite ? <StarOff /> : <Star />}
-          onSelect={() => ctx.workspace.setFavorite(page.id, !page.favorite)}
-        >
-          {page.favorite ? t('removeFromFavorites') : t('addToFavorites')}
-        </DropdownMenuItem>
+        {viewOnly ? null : (
+          <DropdownMenuItem
+            icon={page.favorite ? <StarOff /> : <Star />}
+            onSelect={() => ctx.workspace.setFavorite(page.id, !page.favorite)}
+          >
+            {page.favorite ? t('removeFromFavorites') : t('addToFavorites')}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           icon={<Link2 />}
           onSelect={() => {
@@ -96,7 +98,7 @@ function PageMenu({ page }: { page: PageMeta }) {
         >
           {t('copyLink')}
         </DropdownMenuItem>
-        {page.kind === 'page' && !ctx.workspace.pages.getSnapshot().isRow(page.id) ? (
+        {!viewOnly && page.kind === 'page' && !ctx.workspace.pages.getSnapshot().isRow(page.id) ? (
           <DropdownMenuItem
             icon={<Copy />}
             onSelect={() => {
@@ -106,14 +108,18 @@ function PageMenu({ page }: { page: PageMeta }) {
             {t('duplicate')}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          icon={<Trash2 />}
-          destructive
-          onSelect={() => trashWithUndo(ctx, page.id)}
-        >
-          {t('moveToTrash')}
-        </DropdownMenuItem>
+        {viewOnly ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              icon={<Trash2 />}
+              destructive
+              onSelect={() => trashWithUndo(ctx, page.id)}
+            >
+              {t('moveToTrash')}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -192,8 +198,10 @@ export function TopBar() {
   const sidebarOpen = useUiStore((state) => state.sidebarOpen);
   const pageId = useUiStore((state) => state.currentPageId);
   const page = usePage(pageId);
-  // Pages in the trash (directly or through an ancestor) are read-only.
-  const readOnly = usePages().isTrashed(pageId ?? '');
+  // Pages in the trash (directly or through an ancestor) are read-only, and so is everything for
+  // a viewer (the server refuses their changes).
+  const viewOnly = useViewOnly();
+  const readOnly = usePages().isTrashed(pageId ?? '') || viewOnly;
   const items = useContributions('topBarItems');
   const headerActions = useContributions('pageHeaderActions');
   const showToggle = compact || !sidebarOpen;
@@ -248,6 +256,7 @@ export function TopBar() {
         {page ? (
           <>
             <IconButton
+              disabled={viewOnly}
               label={page.favorite ? t('removeFromFavorites') : t('addToFavorites')}
               icon={<Star className={cn(page.favorite && 'fill-current text-warning')} />}
               aria-pressed={page.favorite === true}
@@ -256,7 +265,7 @@ export function TopBar() {
               onClick={() => ctx.workspace.setFavorite(page.id, !page.favorite)}
             />
             <PanelToggles page={page} />
-            <PageMenu page={page} />
+            <PageMenu page={page} viewOnly={viewOnly} />
           </>
         ) : null}
       </div>

@@ -17,6 +17,8 @@ export interface Backlink {
   /** Path of that block in the source document, and the link's inline offset. */
   path: number[];
   offset: number;
+  /** Block ID of the containing block (or its nearest container), or null: scroll targets. */
+  blockId: string | null;
 }
 
 /**
@@ -114,6 +116,7 @@ export class NaiveLinkIndex implements LinkIndex {
           blockText: link.blockText,
           path: link.path,
           offset: link.offset,
+          blockId: link.blockId,
         });
       }
     }

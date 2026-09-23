@@ -7,6 +7,7 @@ import type { PlatformInfo } from '../runtime/platform';
 import type { SettingsStore } from '../runtime/settings';
 import type { CurrentUser } from '../runtime/user';
 import type { AssetStore } from './asset-store';
+import type { CredentialStore } from './credential-store';
 import type { DocStore } from './doc-store';
 import type { LinkIndex } from './link-index';
 import type { MarkdownCodec } from './markdown-codec';
@@ -31,6 +32,7 @@ export const SERVICE_PRIORITY = {
 export interface ServiceMap {
   workspaceRegistry: WorkspaceRegistry;
   markdownCodec: MarkdownCodec;
+  credentialStore: CredentialStore;
   docStore: DocStore;
   assetStore: AssetStore;
   syncProvider: SyncProvider;
@@ -49,6 +51,7 @@ export type ServiceKey = keyof ServiceMap;
 export const SERVICE_PHASES = {
   workspaceRegistry: 'app',
   markdownCodec: 'app',
+  credentialStore: 'app',
   docStore: 'storage',
   assetStore: 'storage',
   syncProvider: 'storage',
@@ -68,7 +71,7 @@ export interface AppServiceContext {
 /** Context for `storage` services: the workspace being opened. */
 export interface StorageServiceContext extends AppServiceContext {
   workspace: WorkspaceInfo;
-  app: Pick<ServiceMap, 'workspaceRegistry' | 'markdownCodec'>;
+  app: Pick<ServiceMap, 'workspaceRegistry' | 'markdownCodec' | 'credentialStore'>;
   currentUser: CurrentUser;
   events: EventBus;
 }

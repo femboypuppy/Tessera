@@ -1,7 +1,14 @@
 import * as Y from 'yjs';
 import { InvalidOperationError, NotFoundError, ValidationError } from '../errors';
 import { isValidId, newId } from '../ids';
-import { compareOrdered, orderAfterAll, orderForIndex, type ListPosition } from '../order';
+import {
+  compareOrdered,
+  isValidOrderKey,
+  orderAfterAll,
+  orderForIndex,
+  ordersBetween,
+  type ListPosition,
+} from '../order';
 import { createPageIndex, type PageIndex } from './page-index';
 import {
   isValidIcon,
@@ -247,6 +254,96 @@ export function createPage(
   options: MutationOptions = {},
 ): PageMeta {
   const id = input.id ?? newId();
+  const kind = validateNewPage(id, input);
+  const parentId = input.parentId ?? null;
+
+  let created: PageMeta | undefined;
+  ws.transact(() => {
+    const pages = pagesMapOf(ws);
+    if (pages.has(id)) throw new InvalidOperationError(`Page "${id}" already exists`, { id });
+    const index = indexPages(ws);
+    assertParentUsable(index, parentId);
+    const order = placeAmongSiblings(ws, index, parentId, input.position ?? 'end', null);
+    const map = newPageMap(kind, parentId, order, input, options);
+    pages.set(id, map);
+    created = readPageMeta(id, map) ?? undefined;
+  }, options.origin);
+  if (!created) throw new InvalidOperationError('Failed to create page');
+  return created;
+}
+
+/** Input for {@link createPages}: a {@link CreatePageInput} without `position`. */
+export type CreatePagesInput = Omit<CreatePageInput, 'position'>;
+
+/**
+ * Creates many pages in one transaction and indexes the workspace once, so n pages cost O(n)
+ * where n {@link createPage} calls cost O(n²) (each one re-indexes every page). Importers and bulk
+ * database rows use it. Pages are created in input order, each after its parent's existing
+ * children (trashed pages and rows included), so an input can be the parent of a later one.
+ * Every input is validated before the first write: on an error nothing is created.
+ *
+ * @example
+ * const [folder, note] = createPages(wsDoc, [
+ *   { id: folderId, title: 'Vault' },
+ *   { title: 'First note', parentId: folderId },
+ * ], { userId });
+ */
+export function createPages(
+  ws: Y.Doc,
+  inputs: readonly CreatePagesInput[],
+  options: MutationOptions = {},
+): PageMeta[] {
+  if (inputs.length === 0) return [];
+  const created: PageMeta[] = [];
+  ws.transact(() => {
+    const pages = pagesMapOf(ws);
+    const index = indexPages(ws);
+    // Validate everything first: Yjs cannot roll back a half-applied transaction.
+    const planned: Array<{
+      id: string;
+      kind: PageKind;
+      parentId: string | null;
+      input: CreatePagesInput;
+    }> = [];
+    const batch = new Set<string>();
+    const counts = new Map<string | null, number>();
+    for (const input of inputs) {
+      const id = input.id ?? newId();
+      const kind = validateNewPage(id, input);
+      const parentId = input.parentId ?? null;
+      if (pages.has(id) || batch.has(id))
+        throw new InvalidOperationError(`Page "${id}" already exists`, { id });
+      // A parent is an existing page, or an input earlier in the list (so no cycles can form).
+      if (parentId === null || !batch.has(parentId)) assertParentUsable(index, parentId);
+      batch.add(id);
+      counts.set(parentId, (counts.get(parentId) ?? 0) + 1);
+      planned.push({ id, kind, parentId, input });
+    }
+    const orders = new Map<string | null, string[]>();
+    for (const [parentId, count] of counts) {
+      const last =
+        parentId !== null && batch.has(parentId)
+          ? null
+          : lastOrderAmong(index.children(parentId, { includeRows: true, includeTrashed: true }));
+      orders.set(parentId, ordersBetween(last, null, count));
+    }
+    const used = new Map<string | null, number>();
+    for (const { id, kind, parentId, input } of planned) {
+      const at = used.get(parentId) ?? 0;
+      used.set(parentId, at + 1);
+      const order = orders.get(parentId)?.[at];
+      if (order === undefined) throw new InvalidOperationError('Failed to order the new pages');
+      const map = newPageMap(kind, parentId, order, input, options);
+      pages.set(id, map);
+      const meta = readPageMeta(id, map);
+      if (meta) created.push(meta);
+    }
+  }, options.origin);
+  return created;
+}
+
+/** Checks a new page's input (not its parent) and returns its kind. */
+function validateNewPage(id: string, input: CreatePagesInput): PageKind {
   if (!isValidId(id)) throw new ValidationError('Invalid page ID', [id]);
   const kind = input.kind ?? 'page';
   if (!PAGE_KINDS.includes(kind)) throw new ValidationError('Invalid page kind', [String(kind)]);
@@ -256,36 +353,45 @@ export function createPage(
   if (input.cover !== undefined && !parsePageCover(input.cover)) {
     throw new ValidationError('Invalid page cover');
   }
-  const parentId = input.parentId ?? null;
-  if (parentId === id) throw new InvalidOperationError('A page cannot be its own parent');
+  if ((input.parentId ?? null) === id)
+    throw new InvalidOperationError('A page cannot be its own parent');
+  return kind;
+}
 
-  let created: PageMeta | undefined;
-  ws.transact(() => {
-    const pages = pagesMapOf(ws);
-    if (pages.has(id)) throw new InvalidOperationError(`Page "${id}" already exists`, { id });
-    const index = indexPages(ws);
-    assertParentUsable(index, parentId);
-    const now = options.now ?? Date.now();
-    const order = placeAmongSiblings(ws, index, parentId, input.position ?? 'end', null);
-    const map = new Y.Map<unknown>();
-    map.set('kind', kind);
-    map.set('title', normalizeTitle(input.title ?? ''));
-    map.set('parentId', parentId);
-    map.set('order', order);
-    map.set('createdAt', input.createdAt ?? now);
-    map.set('updatedAt', input.updatedAt ?? input.createdAt ?? now);
-    if (options.userId) {
-      map.set('createdBy', options.userId);
-      map.set('updatedBy', options.userId);
-    }
-    if (input.icon) map.set('icon', input.icon);
-    if (input.cover) map.set('cover', { ...input.cover });
-    if (input.favorite) map.set('favorite', true);
-    pages.set(id, map);
-    created = readPageMeta(id, map) ?? undefined;
-  }, options.origin);
-  if (!created) throw new InvalidOperationError('Failed to create page');
-  return created;
+/** The Y.Map of a new page (validated input). */
+function newPageMap(
+  kind: PageKind,
+  parentId: string | null,
+  order: string,
+  input: CreatePagesInput,
+  options: MutationOptions,
+): Y.Map<unknown> {
+  const now = options.now ?? Date.now();
+  const map = new Y.Map<unknown>();
+  map.set('kind', kind);
+  map.set('title', normalizeTitle(input.title ?? ''));
+  map.set('parentId', parentId);
+  map.set('order', order);
+  map.set('createdAt', input.createdAt ?? now);
+  map.set('updatedAt', input.updatedAt ?? input.createdAt ?? now);
+  if (options.userId) {
+    map.set('createdBy', options.userId);
+    map.set('updatedBy', options.userId);
+  }
+  if (input.icon) map.set('icon', input.icon);
+  if (input.cover) map.set('cover', { ...input.cover });
+  if (input.favorite) map.set('favorite', true);
+  return map;
+}
+
+/** The largest valid order key among siblings, or null when there is none. */
+function lastOrderAmong(siblings: readonly PageMeta[]): string | null {
+  let last: string | null = null;
+  for (const sibling of siblings) {
+    if (isValidOrderKey(sibling.order) && (last === null || sibling.order > last))
+      last = sibling.order;
+  }
+  return last;
 }
 
 function touch(map: Y.Map<unknown>, options: MutationOptions): void {

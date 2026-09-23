@@ -16,7 +16,7 @@ import { ChevronsLeft, Plus, Search, Settings, SquarePen, Trash2 } from 'lucide-
 import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { t } from '../../i18n';
-import { displayTitle, PageIcon, createPageAndOpen } from '../page-helpers';
+import { displayTitle, PageIcon, createPageAndOpen, useViewOnly } from '../page-helpers';
 import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH, useUiStore } from '../ui-store';
 import { PageTree } from './PageTree';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
@@ -126,6 +126,7 @@ export function Sidebar({ resizable = false }: { resizable?: boolean }) {
   const commands = useCommands();
   const hasPalette = commands.some((command) => command.id === COMMANDS.openPalette);
   const isApple = ctx.platform.isApple;
+  const viewOnly = useViewOnly();
   const closeSidebar = () => {
     if (resizable) {
       useUiStore.getState().setSidebarOpen(false);
@@ -158,12 +159,14 @@ export function Sidebar({ resizable = false }: { resizable?: boolean }) {
               onClick={() => void ctx.commands.execute(COMMANDS.openPalette, { source: 'menu' })}
             />
           ) : null}
-          <SidebarItem
-            icon={<SquarePen />}
-            label={t('newPage')}
-            shortcut={formatShortcut('Mod+Alt+N', isApple)}
-            onClick={() => createPageAndOpen(ctx, navigate)}
-          />
+          {viewOnly ? null : (
+            <SidebarItem
+              icon={<SquarePen />}
+              label={t('newPage')}
+              shortcut={formatShortcut('Mod+Alt+N', isApple)}
+              onClick={() => createPageAndOpen(ctx, navigate)}
+            />
+          )}
         </SidebarHeader>
         <SidebarContent>
           <ContributedSections position="top" />
@@ -171,12 +174,14 @@ export function Sidebar({ resizable = false }: { resizable?: boolean }) {
           <SidebarSection
             title={t('pages')}
             action={
-              <IconButton
-                size="sm"
-                label={t('newPage')}
-                icon={<Plus />}
-                onClick={() => createPageAndOpen(ctx, navigate)}
-              />
+              viewOnly ? undefined : (
+                <IconButton
+                  size="sm"
+                  label={t('newPage')}
+                  icon={<Plus />}
+                  onClick={() => createPageAndOpen(ctx, navigate)}
+                />
+              )
             }
           >
             <PageTree />

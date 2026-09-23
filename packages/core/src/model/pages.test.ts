@@ -4,6 +4,7 @@ import { InvalidOperationError, NotFoundError, ValidationError } from '../errors
 import { createPageIndex } from './page-index';
 import {
   createPage,
+  createPages,
   deletePagePermanently,
   emptyTrash,
   getAncestors,
@@ -106,6 +107,90 @@ describe('createPage', () => {
       cover: { kind: 'preset', value: 'aurora' },
       favorite: true,
     });
+  });
+});
+
+describe('createPages', () => {
+  it('creates pages in order after the existing children, trashed pages included', () => {
+    const ws = new Y.Doc();
+    const parent = createPage(ws, { title: 'Vault' });
+    createPage(ws, { title: 'Existing', parentId: parent.id });
+    const old = createPage(ws, { title: 'Old', parentId: parent.id });
+    trashPage(ws, old.id);
+    const created = createPages(
+      ws,
+      [
+        { title: 'One', parentId: parent.id },
+        { title: 'Two', parentId: parent.id, icon: '📘', favorite: true },
+        { title: 'Top' },
+      ],
+      { now: 5000, userId: 'u1' },
+    );
+    expect(titles(created)).toEqual(['One', 'Two', 'Top']);
+    expect(created[1]).toMatchObject({
+      icon: '📘',
+      favorite: true,
+      createdAt: 5000,
+      createdBy: 'u1',
+    });
+    expect(titles(getChildren(ws, parent.id))).toEqual(['Existing', 'One', 'Two']);
+    restorePage(ws, old.id);
+    // A restored page keeps its place before the pages created after it.
+    expect(titles(getChildren(ws, parent.id))).toEqual(['Existing', 'Old', 'One', 'Two']);
+    expect(titles(getChildren(ws, null))).toEqual(['Vault', 'Top']);
+  });
+
+  it('nests inputs under earlier inputs and keeps source timestamps', () => {
+    const ws = new Y.Doc();
+    const [root, child, grandchild] = createPages(ws, [
+      { id: 'root', title: 'Import' },
+      { id: 'child', title: 'Folder', parentId: 'root', createdAt: 10, updatedAt: 20 },
+      { title: 'Note', parentId: 'child' },
+    ]);
+    expect(root?.parentId).toBeNull();
+    expect(child).toMatchObject({ parentId: 'root', createdAt: 10, updatedAt: 20 });
+    expect(grandchild?.parentId).toBe('child');
+    expect(titles(getAncestors(ws, grandchild?.id ?? ''))).toEqual(['Import', 'Folder']);
+  });
+
+  it('validates every input before writing anything', () => {
+    const ws = new Y.Doc();
+    const existing = createPage(ws, { title: 'Existing' });
+    const trashed = createPage(ws, { title: 'Trashed' });
+    trashPage(ws, trashed.id);
+    const attempts: Array<[Parameters<typeof createPages>[1], unknown]> = [
+      [[{ title: 'Fine' }, { id: 'bad id!' }], ValidationError],
+      [[{ title: 'Fine' }, { icon: 'not an emoji' }], ValidationError],
+      [[{ title: 'Fine' }, { id: existing.id }], InvalidOperationError],
+      [[{ id: 'twice' }, { id: 'twice' }], InvalidOperationError],
+      [[{ title: 'Fine' }, { parentId: 'missing' }], NotFoundError],
+      [[{ title: 'Fine' }, { parentId: trashed.id }], InvalidOperationError],
+      // A parent must come earlier in the list, so no cycle can form.
+      [[{ id: 'a', parentId: 'b' }, { id: 'b' }], NotFoundError],
+      [[{ id: 'self', parentId: 'self' }], InvalidOperationError],
+    ];
+    for (const [inputs, error] of attempts) {
+      expect(() => createPages(ws, inputs)).toThrow(error as ErrorConstructor);
+      expect(listPages(ws)).toHaveLength(2);
+    }
+    expect(createPages(ws, [])).toEqual([]);
+  });
+
+  it('is one transaction and stays linear for thousands of pages', () => {
+    const ws = new Y.Doc();
+    let transactions = 0;
+    ws.on('afterTransaction', () => (transactions += 1));
+    const started = performance.now();
+    const created = createPages(
+      ws,
+      Array.from({ length: 5000 }, (_, i) => ({ title: `Note ${i}` })),
+    );
+    expect(performance.now() - started).toBeLessThan(2000);
+    expect(transactions).toBe(1);
+    expect(created).toHaveLength(5000);
+    const children = getChildren(ws, null);
+    expect(children[0]?.title).toBe('Note 0');
+    expect(children[4999]?.title).toBe('Note 4999');
   });
 });
 

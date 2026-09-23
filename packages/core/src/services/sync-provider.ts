@@ -23,6 +23,11 @@ export interface SyncStatusInfo {
   lastSyncedAt?: number | null;
   /** Local updates not yet acknowledged by the server. */
   pendingUpdates?: number;
+  /**
+   * The server gave this device a read-only connection (the viewer role): the shell makes pages
+   * read-only, because edits would stay on this device.
+   */
+  readOnly?: boolean;
 }
 
 /**

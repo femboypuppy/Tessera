@@ -130,6 +130,7 @@ describe('resolveService', () => {
     expect(SERVICE_PHASES).toEqual({
       workspaceRegistry: 'app',
       markdownCodec: 'app',
+      credentialStore: 'app',
       docStore: 'storage',
       assetStore: 'storage',
       syncProvider: 'storage',

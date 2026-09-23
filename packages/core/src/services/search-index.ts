@@ -45,6 +45,10 @@ export interface SearchHit {
   titleHighlights: HighlightRange[];
   /** A short excerpt around the best body match, with highlights into `snippet.text`. */
   snippet?: { text: string; highlights: HighlightRange[] };
+  /** Text of the heading that matched best, for `ctx.navigate(pageId, { heading })`. */
+  heading?: string;
+  /** Block ID of the block that matched best, for `ctx.navigate(pageId, { blockId })`. */
+  blockId?: string;
 }
 
 /** Results of a query. */

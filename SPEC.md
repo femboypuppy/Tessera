@@ -191,7 +191,8 @@ Rules:
   confirmation.
 
 Workspace helpers (pure functions over a `Y.Doc`, also bound to the session as `ctx.workspace`):
-`createPage`, `renamePage`, `movePage`, `setIcon`, `setCover`, `setFavorite`, `touchPage`,
+`createPage`, `createPages` (many pages in one transaction with one page index: O(n) instead of
+n × O(n); importers use it), `renamePage`, `movePage`, `setIcon`, `setCover`, `setFavorite`, `touchPage`,
 `trashPage`, `restorePage`, `deletePagePermanently`, `emptyTrash`, `getPage`, `requirePage`,
 `listPages`, `getChildren`, `getAncestors`, `getDescendants`, `isPageTrashed`, `isDatabaseRow`,
 `listTrash`, `indexPages`, `observePages`. `createPageIndex(pages)` builds the queryable index
@@ -258,7 +259,8 @@ Database helpers (all transactional, validate before writing, tested): `initData
 `getDatabaseMeta`, `setRowTemplate`, `listProperties`, `getProperty`, `getTitleProperty`,
 `addProperty`, `updateProperty`, `deleteProperty`, `moveProperty`, `findSelectOption`,
 `addSelectOption`, `updateSelectOption`, `deleteSelectOption`, `moveSelectOption`, `listRows`,
-`getRow`, `countRows`, `addRow`, `setRowValue`, `setRowValues`, `deleteRow`, `moveRow`,
+`getRow`, `countRows`, `addRow`, `addRows` (many rows in one transaction, validated first),
+`checkRowValues`, `setRowValue`, `setRowValues`, `deleteRow`, `moveRow`,
 `resolveRows`, `getCellValue`, `listViews`, `getView`, `addView`, `updateView`, `deleteView`,
 `duplicateView`, `moveView`, `observeDatabase`. Deleting a property also removes it from every
 view's filter, sorts, grouping and property list.
@@ -270,6 +272,8 @@ const { page, titlePropertyId, viewId } = await ctx.workspace.createDatabase({
   title: t('db-views:readingList'), titlePropertyName: t('db-views:name'), viewName: t('db-views:table'),
 });
 const row = await ctx.workspace.addDatabaseRow(page.id, { title: 'Dune', values: { [statusId]: optionId } });
+// Many rows (CSV import, paste): one workspace and one database transaction, nothing left on error.
+const rows = await ctx.workspace.addDatabaseRows(page.id, csvRows, { after: row.id });
 ```
 
 ### 4.6 Settings
@@ -421,7 +425,7 @@ What every feature receives (`activate(ctx)`, `useAppContext()`):
 
 | Member | Purpose |
 |---|---|
-| `workspace` | `WorkspaceApi`: `info`, `doc`, `pages` (reactive `PagesStore`), `getPage`, `createPage`, `renamePage`, `movePage`, `setIcon`, `setCover`, `setFavorite`, `trashPage`, `restorePage`, `deletePagePermanently`, `emptyTrash`, `duplicatePage`, `createDatabase`, `addDatabaseRow`. |
+| `workspace` | `WorkspaceApi`: `info`, `doc`, `pages` (reactive `PagesStore`), `getPage`, `createPage`, `renamePage`, `movePage`, `setIcon`, `setCover`, `setFavorite`, `trashPage`, `restorePage`, `deletePagePermanently`, `emptyTrash`, `duplicatePage`, `createDatabase`, `addDatabaseRow`, `addDatabaseRows`. |
 | `acquirePageDoc(id)`, `acquireDatabaseDoc(id)` | Ref-counted `DocHandle` leases. Always `release()`. |
 | `loadPageDoc(id)`, `loadDatabaseDoc(id)` | Acquire and wait until loaded. |
 | `services`, `serviceSources` | The resolved services and which implementation each one is. |
@@ -471,6 +475,7 @@ feature ID.
 | `settingsPanels` | Settings, at `/settings/<id>`. | none |
 | `onboardingActions` | The first-run screen ("Import from Notion", "Open demo workspace"). The shell creates the workspace, opens it, then calls `run(ctx)`. | `run(ctx)` |
 | `overlays` | Always mounted, for UI that commands open: the command palette, the import and export dialogs. Render nothing until opened (your own store holds the open state) and lazy-load the content. | none |
+| `workspaceMenuItems` | The sidebar's workspace menu, under "New workspace" (the desktop app's "Open folder…"). | `run(ctx)` |
 | `importers`, `exporters` | `ctx.importers`, `ctx.exporters`. | |
 | `services` | Service resolution ([6.4](#64-services-and-priorities)). | |
 | `activate(ctx)` | Runs per workspace session after services resolve; may return a cleanup. Register runtime contributions here with `ctx.contributions.register(kind, item, featureId)`. If it throws, everything the feature registered, statically or through `ctx` during `activate` (commands, blocks, contributions, importers, exporters, event handlers), is removed. | `AppContext` |
@@ -506,6 +511,7 @@ and load them with `lazy()` or `import()`.
 |---|---|---|---|---|
 | `workspaceRegistry` | app | `MemoryWorkspaceRegistry` | IndexedDB (50), Tauri (100) | 03, 07 |
 | `markdownCodec` | app | `BasicMarkdownCodec` (paragraphs and headings) | remark codec (50) | 08 |
+| `credentialStore` | app | `MemoryCredentialStore` (browsers sign in with cookies) | IndexedDB (50), OS keychain (100) | 03, 07 |
 | `docStore` | storage | `MemoryDocStore` | IndexedDB (50), Tauri SQLite (100) | 03, 07 |
 | `assetStore` | storage | `MemoryAssetStore` (object URLs) | IndexedDB (50), Tauri files (100) | 03, 07 |
 | `syncProvider` | storage | `LocalSyncProvider` (local only, awareness without network) | Hocuspocus (50, available only when `workspace.serverUrl` is set) | 03 |
@@ -516,7 +522,8 @@ and load them with `lazy()` or `import()`.
 registrations from the highest priority down (equal priorities keep feature load order), skips
 those whose `isAvailable` returns false or throws and those whose `create` throws, and falls back
 to the stub. `ctx.serviceSources` shows the winner. Phases decide what `create` receives:
-`app` gets `{ platform, settings }`; `storage` adds `{ workspace, app, currentUser, events }`;
+`app` gets `{ platform, settings }`; `storage` adds `{ workspace, app, currentUser, events }`
+(`app` holds the workspace registry, the codec and the credential store);
 `index` adds `{ storage, workspaceDoc, pages, loadPageDoc, loadDatabaseDoc }`. The stubs of the
 markdown codec and the indexes load on demand, so they never weigh on the startup bundle.
 
@@ -543,7 +550,8 @@ const state = await docStore.load('page:abc'); // Y.applyUpdate(fresh, state!)
 ```
 
 **`AssetStore`**: `put(blob, { name?, mimeType? }) → { assetId, url }`, `get(id) → Blob | null`,
-`getUrl(id)`, `delete(id)`, optional `getInfo(id)`, `list()`, `dispose()`. Asset IDs match
+`getUrl(id)` (valid for the session), `delete(id)`, optional `retainUrl(id) → { url, release() }`
+(object URLs are revoked once nobody holds them), `getInfo(id)`, `list()`, `dispose()`. Asset IDs match
 `ASSET_ID_PATTERN`. Images reference `assetId`, never a URL, so they work offline and across devices.
 
 ```ts
@@ -554,12 +562,17 @@ editor.commands.insertContent({ type: 'image', attrs: { assetId, alt: '' } });
 **`SyncProvider`**: `connect(docName, ydoc) → SyncHandle`, aggregate `getStatus()` and
 `onStatus(listener)`. A `SyncHandle` has `getStatus()`, `onStatus()`, `awareness`, `whenSynced()`
 and `destroy()`. Statuses: `local`, `offline`, `connecting`, `syncing`, `synced`, `error`
-(`SyncStatusInfo` adds `error`, `lastSyncedAt`, `pendingUpdates`). The `DocManager` calls `connect`
+(`SyncStatusInfo` adds `error`, `lastSyncedAt`, `pendingUpdates` and `readOnly`: the server gave
+this device a viewer's read-only connection, so the shell makes pages and the page tree read-only). The `DocManager` calls `connect`
 for every loaded doc; nothing else does. Never persist awareness.
 
 ```ts
 const status = useSyncStatus(handle?.sync); // { status: 'synced', lastSyncedAt: … }
 ```
+
+**`CredentialStore`**: `get(server)`, `set(server, token)`, `delete(server)`, `list() → { server, savedAt }[]`,
+keyed by server origin. Only the desktop app needs tokens (browsers use httpOnly cookies); it keeps
+them in the OS keychain.
 
 **`WorkspaceRegistry`**: `list()` (most recent first), `get(id)`, `create({ name, icon?, serverUrl?, path?, id? })`,
 `open(id)` (marks it opened), `rename`, `update(id, patch)`, `remove(id)`, `subscribe(listener)`.
@@ -568,14 +581,15 @@ const status = useSyncStatus(handle?.sync); // { status: 'synced', lastSyncedAt:
 **`SearchIndex`**: `upsert(pageId)`, `remove(pageId)`, `query(q, options) → { hits, total }`,
 optional `rebuild()`. Options: `limit`, `offset`, `kinds`, `withinPageId` (`in:`), `tags` (`tag:`),
 `hasTasks` (`is:task`), `includeRows`, `signal`. A hit has `pageId`, `title`, `kind`, `score`,
-`matchedIn`, `titleHighlights` and an optional `snippet { text, highlights }` (ranges into the text).
+`matchedIn`, `titleHighlights`, an optional `snippet { text, highlights }` (ranges into the text) and
+optional `heading` and `blockId` for `ctx.navigate` to scroll to the match.
 The index keeps itself current from `EventBus` events; trashed pages disappear immediately.
 
 ```ts
 const { hits } = await ctx.services.searchIndex.query('apollo tag:space', { limit: 10 });
 ```
 
-**`LinkIndex`**: `backlinks(pageId)` (with the containing block's text), `outgoing(pageId)`,
+**`LinkIndex`**: `backlinks(pageId)` (with the containing block's text and `blockId`), `outgoing(pageId)`,
 `unlinkedMentions(pageId)` (title and aliases as plain text, word boundaries, case-insensitive),
 `edges()` for the graph, `subscribe(listener)`.
 
@@ -596,6 +610,8 @@ const md = ctx.services.markdownCodec.serialize(readDocJSON(handle.doc), { linkS
 ```
 
 **`Importer`**: `{ id, label, description?, accept?, acceptsDirectories?, detect(files) → 0..1, run(files, context, onProgress, signal) → ImportReport }`.
+Registering an importer or exporter under an existing ID replaces it; core registers its stubs as
+`replaceable`, so replacing them logs nothing, and removing the replacement brings the stub back.
 Files are `ImportFile`s with normalized paths (`normalizeImportPath` rejects `..` and absolute
 paths). `ImportContext` gives `workspace`, `loadPageDoc`, `loadDatabaseDoc`, `assets`, `codec`,
 `rootTitle` and `parentId`: imports land under a new top-level page. The report has counts,
@@ -757,8 +773,10 @@ await dispose();
 - **Errors.** Each contribution renders inside a `FeatureBoundary`; a crash shows "Something went
   wrong here" with Try again, and the rest of the app keeps working. A fatal boot error shows a full
   screen with the details.
-- **Storage in the skeleton.** Until the sync feature merges, the web app uses the in-memory stubs:
-  data lives for the browser session only, and a reload starts at onboarding.
+- **Viewers.** When the sync provider reports `readOnly` (the viewer role), pages, the title, the page
+  menu, favorites, the page tree and "New page" are read-only.
+- **Links to places.** `/p/<pageId>#block-<blockId>` and `/p/<pageId>#<heading-slug>` (what
+  `ctx.navigate` writes and "Copy link" copies) open the page scrolled to that block or heading.
 
 ## 8. Design system (`packages/ui`)
 
@@ -774,7 +792,8 @@ await dispose();
   `text-fg-subtle`, `border-border`, `bg-accent`, `text-accent-text`, `bg-danger`,
   `bg-tag-blue-bg`, `text-tag-blue-fg`, `shadow-popover`, `animate-pop-in`, `duration-fast`,
   `text-ui` (13 px), `text-2xs`, and so on. The `dark:` variant follows `data-theme`. Classes used
-  anywhere in `packages/*/src` are generated (`@source` glob in `apps/web/src/styles.css`). Never
+  anywhere in `packages/*/src` and `apps/desktop/src` are generated (`@source` globs in
+  `apps/web/src/styles.css`). Never
   hard-code colors.
 - **Components** (Radix-based, keyboard accessible, both themes): `Button`, `IconButton` (tooltip
   and shortcut), `Input`, `Textarea`, `Label`, `Field`, `Select`, `Checkbox`, `Switch`, `RadioGroup`,
@@ -966,3 +985,8 @@ branch builds on its own.
   `pageFooterSections` (backlinks footer), `layout: 'bare'` routes (quick capture) and
   `ctx.switchWorkspace` (workspace folders, connecting to a server).
 - The current user's ID is a live device setting, so signing in can switch it to the account ID.
+- Added at merge time from the agents' contract change requests (`HANDOFF/integration.md`):
+  `createPages`, `addRows`, `checkRowValues` and `ctx.workspace.addDatabaseRows` (bulk creation),
+  the `credentialStore` service, `AssetStore.retainUrl`, `SyncStatusInfo.readOnly` (read-only
+  viewers), `SearchHit.heading`/`blockId`, `Backlink.blockId`, the `workspaceMenuItems`
+  contribution, and replaceable registrations for core's stub importer and exporter.

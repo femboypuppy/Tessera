@@ -6,7 +6,9 @@ import { createPage, listPages, trashPage } from '../model/pages';
 import {
   addProperty,
   addRow,
+  addRows,
   addSelectOption,
+  checkRowValues,
   addView,
   countRows,
   deleteProperty,
@@ -375,6 +377,68 @@ describe('rows', () => {
     expect(cell(createdProp.id)).toBe(100);
     expect(cell(updatedProp.id)).toBe(200);
     expect(cell(formula.id)).toBeNull();
+  });
+});
+
+describe('addRows and checkRowValues', () => {
+  it('adds rows in input order at the end or after a row, with validated values', () => {
+    const { db } = setup();
+    const status = addProperty(db, {
+      name: 'Status',
+      type: 'select',
+      options: [{ id: 'todo', name: 'Todo' }],
+    });
+    addRow(db, { id: 'first' });
+    addRow(db, { id: 'last' });
+    const added = addRows(db, [{ id: 'a', values: { [status.id]: 'todo' } }, { id: 'b' }], {
+      after: 'first',
+      now: 7,
+      userId: 'u2',
+    });
+    expect(added.map((row) => row.id)).toEqual(['a', 'b']);
+    expect(added[0]).toMatchObject({ values: { [status.id]: 'todo' }, valuesUpdatedBy: 'u2' });
+    expect(listRows(db).map((row) => row.id)).toEqual(['first', 'a', 'b', 'last']);
+    addRows(db, [{ id: 'end' }]);
+    expect(listRows(db).at(-1)?.id).toBe('end');
+    expect(addRows(db, [])).toEqual([]);
+  });
+
+  it('writes nothing when any row is invalid', () => {
+    const { db, titlePropertyId } = setup();
+    const points = addProperty(db, { name: 'Points', type: 'number' });
+    addRow(db, { id: 'taken' });
+    const attempts: Array<[Parameters<typeof addRows>[1], unknown]> = [
+      [[{ id: 'ok' }, { id: 'bad id!' }], ValidationError],
+      [[{ id: 'ok' }, { id: 'taken' }], InvalidOperationError],
+      [[{ id: 'dup' }, { id: 'dup' }], InvalidOperationError],
+      [[{ id: 'ok' }, { values: { [points.id]: 'many' } }], ValidationError],
+      [[{ id: 'ok' }, { values: { missing: 1 } }], NotFoundError],
+      [[{ id: 'ok' }, { values: { [titlePropertyId]: 'Title' } }], InvalidOperationError],
+    ];
+    for (const [inputs, error] of attempts) {
+      expect(() => addRows(db, inputs)).toThrow(error as ErrorConstructor);
+      expect(countRows(db)).toBe(1);
+    }
+    expect(() => addRows(db, [{ id: 'ok' }], { after: 'nowhere' })).toThrow(NotFoundError);
+    expect(() => checkRowValues(db, { [points.id]: 3, other: null })).not.toThrow();
+    expect(() => checkRowValues(db, { [points.id]: 'x' })).toThrow(ValidationError);
+  });
+
+  it('adds 10,000 rows in one transaction, fast', () => {
+    const { db } = setup();
+    const points = addProperty(db, { name: 'Points', type: 'number' });
+    let transactions = 0;
+    db.on('afterTransaction', () => (transactions += 1));
+    const started = performance.now();
+    addRows(
+      db,
+      Array.from({ length: 10_000 }, (_, i) => ({ id: `row-${i}`, values: { [points.id]: i } })),
+    );
+    expect(performance.now() - started).toBeLessThan(5000);
+    expect(transactions).toBe(1);
+    const rows = listRows(db);
+    expect(rows).toHaveLength(10_000);
+    expect(rows[9999]).toMatchObject({ id: 'row-9999', values: { [points.id]: 9999 } });
   });
 });
 

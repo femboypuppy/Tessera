@@ -31,7 +31,10 @@ async function setup() {
     test,
     notes.id,
     b.doc(
-      b.paragraph('We followed the ', b.pageLink(apollo.id), ' closely.'),
+      {
+        ...b.paragraph('We followed the ', b.pageLink(apollo.id), ' closely.'),
+        attrs: { blockId: 'followed' },
+      },
       b.paragraph('The Apollo program changed everything; so did Project Apollo.'),
       b.taskList(b.taskItem(false, 'Review the landing footage')),
     ),
@@ -107,9 +110,9 @@ describe('NaiveLinkIndex', () => {
     const { test, apollo, gemini, notes } = await setup();
     const links = test.ctx.services.linkIndex;
     const backlinks = await links.backlinks(apollo.id);
-    expect(backlinks.map((link) => [link.sourcePageId, link.blockText])).toEqual([
-      [gemini.id, 'Links to  and to itself '],
-      [notes.id, 'We followed the  closely.'],
+    expect(backlinks.map((link) => [link.sourcePageId, link.blockText, link.blockId])).toEqual([
+      [gemini.id, 'Links to  and to itself ', null],
+      [notes.id, 'We followed the  closely.', 'followed'],
     ]);
     expect(await links.backlinks(gemini.id)).toEqual([]);
     expect((await links.outgoing(gemini.id)).map((link) => link.targetPageId)).toEqual([

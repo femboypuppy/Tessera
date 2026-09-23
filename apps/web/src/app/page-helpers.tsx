@@ -1,4 +1,5 @@
 import type { AppContext, PageMeta } from '@tessera/core';
+import { useAppContext, useSyncStatus } from '@tessera/core/react';
 import { cn, toast } from '@tessera/ui';
 import { Database, FileText } from 'lucide-react';
 import type { NavigateFunction } from 'react-router';
@@ -33,6 +34,15 @@ export function PageIcon({
   }
   const Icon = page.kind === 'database' ? Database : FileText;
   return <Icon aria-hidden="true" className={cn('size-4 shrink-0 text-fg-subtle', className)} />;
+}
+
+/**
+ * True when the server gave this device a read-only connection (the viewer role). Edits would
+ * stay on this device, so the shell makes pages read-only and hides actions that change the tree.
+ */
+export function useViewOnly(): boolean {
+  const ctx = useAppContext();
+  return useSyncStatus(ctx.services.syncProvider).readOnly === true;
 }
 
 /** Moves a page to the trash and offers Undo in a toast. */

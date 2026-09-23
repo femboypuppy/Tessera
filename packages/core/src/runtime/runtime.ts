@@ -8,6 +8,7 @@ import { getPageProps, setPageProps } from '../model/page-doc';
 import type { PageMeta } from '../model/page-meta';
 import {
   createPage,
+  createPages,
   deletePagePermanently,
   emptyTrash,
   getPage,
@@ -19,6 +20,7 @@ import {
   setIcon,
   touchPage,
   trashPage,
+  type CreatePagesInput,
   type MutationOptions,
 } from '../model/pages';
 import { MemoryAssetBackend, MemoryAssetStore } from '../services/asset-store';
@@ -110,6 +112,7 @@ export interface AppRuntime {
   readonly deviceSettings: SettingsStore;
   readonly workspaceRegistry: ServiceMap['workspaceRegistry'];
   readonly markdownCodec: ServiceMap['markdownCodec'];
+  readonly credentialStore: ServiceMap['credentialStore'];
   /** Which implementation each app service resolved to. */
   readonly appServiceSources: Readonly<Partial<Record<ServiceKey, string>>>;
   getCurrentUser(): CurrentUser;
@@ -208,6 +211,17 @@ export async function createAppRuntime(options: AppRuntimeOptions): Promise<AppR
     },
     { onError: onServiceError },
   );
+  const credentials = await resolveService(
+    'credentialStore',
+    registrations,
+    appContext,
+    {
+      id: 'memory',
+      create: async () =>
+        new (await import('../services/credential-store')).MemoryCredentialStore(),
+    },
+    { onError: onServiceError },
+  );
 
   const sessions = new Set<WorkspaceSession>();
 
@@ -217,7 +231,12 @@ export async function createAppRuntime(options: AppRuntimeOptions): Promise<AppR
     deviceSettings,
     workspaceRegistry: registry.service,
     markdownCodec: codec.service,
-    appServiceSources: { workspaceRegistry: registry.source, markdownCodec: codec.source },
+    credentialStore: credentials.service,
+    appServiceSources: {
+      workspaceRegistry: registry.source,
+      markdownCodec: codec.source,
+      credentialStore: credentials.source,
+    },
     getCurrentUser,
     updateCurrentUser(patch) {
       if (patch.name !== undefined)
@@ -293,11 +312,11 @@ function scopeContext(context: AppContext, offs: Array<() => void>): AppContext 
     },
     importers: {
       ...context.importers,
-      register: (importer) => track(context.importers.register(importer)),
+      register: (importer, options) => track(context.importers.register(importer, options)),
     },
     exporters: {
       ...context.exporters,
-      register: (exporter) => track(context.exporters.register(exporter)),
+      register: (exporter, options) => track(context.exporters.register(exporter, options)),
     },
     events: {
       ...context.events,
@@ -336,7 +355,11 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
     platform: runtime.platform,
     settings: runtime.deviceSettings,
     workspace,
-    app: { workspaceRegistry: runtime.workspaceRegistry, markdownCodec: runtime.markdownCodec },
+    app: {
+      workspaceRegistry: runtime.workspaceRegistry,
+      markdownCodec: runtime.markdownCodec,
+      credentialStore: runtime.credentialStore,
+    },
     currentUser: runtime.getCurrentUser(),
     events,
   };
@@ -505,6 +528,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
   const services: ServiceMap = {
     workspaceRegistry: runtime.workspaceRegistry,
     markdownCodec: runtime.markdownCodec,
+    credentialStore: runtime.credentialStore,
     docStore: docStore.service,
     assetStore: assetStore.service,
     syncProvider: syncProvider.service,
@@ -653,6 +677,48 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       }
       return page;
     },
+    async addDatabaseRows(databaseId, rowInputs, rowOptions = {}) {
+      const database = workspaceApi.getPage(databaseId);
+      if (!database || database.kind !== 'database')
+        throw new NotFoundError('Database', databaseId);
+      if (rowInputs.length === 0) return [];
+      const [handle, helpers] = await Promise.all([
+        loadDatabaseDoc(databaseId),
+        loadDatabaseHelpers(),
+      ]);
+      let created: PageMeta[] = [];
+      try {
+        // Values first, so a bad value creates no pages.
+        for (const input of rowInputs) helpers.checkRowValues(handle.doc, input.values ?? {});
+        created = createPages(
+          workspaceDoc,
+          rowInputs.map((input) => {
+            const pageInput: CreatePagesInput = { title: input.title ?? '', parentId: databaseId };
+            if (input.icon) pageInput.icon = input.icon;
+            return pageInput;
+          }),
+          opts(),
+        );
+        helpers.addRows(
+          handle.doc,
+          created.map((page, i) => {
+            const values = rowInputs[i]?.values;
+            return values ? { id: page.id, values } : { id: page.id };
+          }),
+          { ...opts(), after: rowOptions.after ?? null },
+        );
+        return created;
+      } catch (error) {
+        if (created.length) {
+          workspaceDoc.transact(() => {
+            for (const page of created) deletePagePermanently(workspaceDoc, page.id, opts());
+          });
+        }
+        throw error;
+      } finally {
+        handle.release();
+      }
+    },
   };
 
   // 6. Registries and context.
@@ -716,8 +782,9 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
   ctx = context;
 
   // 7. Features: static contributions, then activation.
-  importers.register(createBasicMarkdownImporter());
-  exporters.register(createBasicMarkdownExporter());
+  // Core's stubs: a feature registering the same ID replaces them quietly.
+  importers.register(createBasicMarkdownImporter(), { replaceable: true });
+  exporters.register(createBasicMarkdownExporter(), { replaceable: true });
   const registrationsByFeature = new Map<string, Array<() => void>>();
   const featureErrors = new Map<string, Error>();
   const cleanups: Array<{ featureId: string; cleanup: () => void }> = [];
@@ -741,6 +808,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       add('onboardingActions', feature.onboardingActions);
       add('editorExtensions', feature.editorExtensions);
       add('overlays', feature.overlays);
+      add('workspaceMenuItems', feature.workspaceMenuItems);
       for (const [kind, component] of Object.entries(feature.pageBodies ?? {})) {
         if (component)
           offs.push(

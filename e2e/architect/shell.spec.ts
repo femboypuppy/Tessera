@@ -117,6 +117,7 @@ test('publishes diagnostics for tests and bug reports', async ({ page }) => {
   );
   expect(Object.keys(diagnostics?.services ?? {}).sort()).toEqual([
     'assetStore',
+    'credentialStore',
     'docStore',
     'linkIndex',
     'markdownCodec',
