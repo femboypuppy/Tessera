@@ -344,7 +344,7 @@ export const TOPICS: readonly Topic[] = [
       'Hanoi',
       'Porto',
     ],
-    adjectives: ['slow', 'car-free', 'off-season', 'budget', 'weekend', 'scenic'],
+    adjectives: ['slow', 'car-free', 'off-season', 'budget', 'scenic', 'rainy-day'],
     verbs: ['book', 'pack', 'explore', 'walk', 'photograph', 'plan', 'map'],
     tags: ['travel', 'travel/europe', 'travel/asia', 'trips', 'bucket-list'],
     titles: [
