@@ -2,7 +2,6 @@ import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import {
-  EMPTY_GROUP_KEY,
   listProperties,
   resolveViewProperties,
   updateView,
@@ -21,8 +20,7 @@ import {
   IconButton,
   cn,
 } from '@tessera/ui';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronRight, Copy, EyeOff, FileText, PanelRightOpen, Plus, Trash2 } from 'lucide-react';
+import { Copy, FileText, PanelRightOpen, Plus, Trash2 } from 'lucide-react';
 import {
   useCallback,
   useEffect,
@@ -59,15 +57,12 @@ import type { QueryContext } from '../../query/types';
 import { PICKABLE_TYPES, PropertyIcon, typeLabel } from '../common';
 import { POPOVER_EDITOR_TYPES, TEXT_EDITOR_TYPES, type EditMove } from '../cells/editors';
 import { useDragAccessibility, useDragSensors } from '../dnd';
-import { GroupLabel, groupName } from '../group-label';
 import { runAction, useAfterMenuClose } from '../hooks';
 import { OptionsDialog } from '../options-dialog';
 import { fromTsv, toHtmlTable, toTsv } from './clipboard';
 import { HeaderCell } from './header-cell';
 import {
   ADD_COLUMN_WIDTH,
-  FOOTER_HEIGHT,
-  GROUP_HEIGHT,
   GUTTER_WIDTH,
   HEADER_HEIGHT,
   ROW_HEIGHT,
@@ -81,18 +76,10 @@ import {
   type GridSelection,
 } from './navigation';
 import { SummaryRow } from './summary-row';
-import { TableRow, cellElementId, type CellEvents, type TableColumn } from './table-row';
+import { TableBody, type TableBodyHandle, type TableItem } from './table-body';
+import { cellElementId, type CellEvents, type TableColumn } from './table-row';
 
-type Item =
-  | {
-      kind: 'row';
-      key: string;
-      row: ResolvedRow;
-      navIndex: number;
-      group: RowGroup<ResolvedRow> | null;
-    }
-  | { kind: 'group'; key: string; group: RowGroup<ResolvedRow> }
-  | { kind: 'add'; key: string; group: RowGroup<ResolvedRow> };
+type Item = TableItem;
 
 const HEADER_KEY = '__header__';
 /** The row key of an edit that waits for its row to be created. */
@@ -293,17 +280,7 @@ export function TableView({
 
   const focusGrid = () => scrollRef.current?.focus({ preventScroll: true });
 
-  const virtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (items[index]?.kind === 'group' ? GROUP_HEIGHT : ROW_HEIGHT),
-    getItemKey: (index) => items[index]?.key ?? index,
-    overscan: 12,
-    scrollMargin: HEADER_HEIGHT,
-    scrollPaddingStart: HEADER_HEIGHT,
-    scrollPaddingEnd: FOOTER_HEIGHT + 8,
-    initialRect: { width: 1200, height: 720 },
-  });
+  const body = useRef<TableBodyHandle | null>(null);
 
   const scrollIntoView = useCallback(
     (pos: GridPos) => {
@@ -311,7 +288,7 @@ export function TableView({
       if (!element) return;
       if (pos.row >= 0 && pos.row < rowCount) {
         const itemIndex = itemIndexByNav.get(pos.row);
-        if (itemIndex !== undefined) virtualizer.scrollToIndex(itemIndex, { align: 'auto' });
+        if (itemIndex !== undefined) body.current?.scrollToItem(itemIndex);
       }
       const column = columns[pos.col];
       if (!column) return;
@@ -325,7 +302,7 @@ export function TableView({
       else if (right > element.scrollLeft + element.clientWidth)
         element.scrollLeft = right - element.clientWidth;
     },
-    [columns, itemIndexByNav, rowCount, virtualizer],
+    [columns, itemIndexByNav, rowCount],
   );
 
   const select = (next: GridSelection, scroll = true) => {
@@ -814,8 +791,30 @@ export function TableView({
       afterMenu.schedule(() => setRenaming(property.id));
     });
 
+  // Groups --------------------------------------------------------------------------------------
+  const toggleGroup = (group: RowGroup<ResolvedRow>) =>
+    runAction(ctx, () => {
+      const config = view.group;
+      if (!config) return;
+      const collapsed = config.collapsed.includes(group.key)
+        ? config.collapsed.filter((key) => key !== group.key)
+        : [...config.collapsed, group.key];
+      updateView(database.doc, view.id, { group: { ...config, collapsed } });
+    });
+  const hideGroup = (group: RowGroup<ResolvedRow>) =>
+    runAction(ctx, () => {
+      const config = view.group;
+      if (!config) return;
+      updateView(database.doc, view.id, {
+        group: { ...config, hidden: [...config.hidden, group.key] },
+      });
+    });
+  const addInGroup = (group: RowGroup<ResolvedRow>) =>
+    void createRow({
+      group: view.group ? { propertyId: view.group.propertyId, key: group.key } : null,
+    });
+
   // Rendering -----------------------------------------------------------------------------------
-  const virtualItems = virtualizer.getVirtualItems();
   const activeDescendant = (() => {
     if (!grid || editing) return undefined;
     if (grid.active.row === -1) return `${gridId}-header-${grid.active.col}`;
@@ -952,124 +951,29 @@ export function TableView({
             </div>
 
             {/* Body */}
-            <div
-              role="rowgroup"
-              className="relative"
-              style={{ height: virtualizer.getTotalSize() }}
-            >
-              {virtualItems.map((virtualItem) => {
-                const item = items[virtualItem.index];
-                if (!item) return null;
-                const top = virtualItem.start - HEADER_HEIGHT;
-                if (item.kind === 'group') {
-                  return groupProperty ? (
-                    <GroupHeader
-                      key={item.key}
-                      group={item.group}
-                      top={top}
-                      width={totalWidth}
-                      label={
-                        <GroupLabel
-                          group={item.group}
-                          property={groupProperty}
-                          queryCtx={queryCtx}
-                          pages={pages}
-                        />
-                      }
-                      name={groupName(item.group, groupProperty, queryCtx, pages)}
-                      onToggle={() =>
-                        runAction(ctx, () => {
-                          const config = view.group;
-                          if (!config) return;
-                          const collapsed = config.collapsed.includes(item.group.key)
-                            ? config.collapsed.filter((key) => key !== item.group.key)
-                            : [...config.collapsed, item.group.key];
-                          updateView(database.doc, view.id, { group: { ...config, collapsed } });
-                        })
-                      }
-                      onHide={
-                        readOnly
-                          ? undefined
-                          : () =>
-                              runAction(ctx, () => {
-                                const config = view.group;
-                                if (!config) return;
-                                updateView(database.doc, view.id, {
-                                  group: { ...config, hidden: [...config.hidden, item.group.key] },
-                                });
-                              })
-                      }
-                    />
-                  ) : null;
-                }
-                if (item.kind === 'add') {
-                  return (
-                    <div
-                      key={item.key}
-                      role="presentation"
-                      className="absolute top-0 left-0 flex items-center border-b border-border"
-                      style={{
-                        width: totalWidth,
-                        height: ROW_HEIGHT,
-                        transform: `translateY(${top}px)`,
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void createRow({
-                            group: view.group
-                              ? { propertyId: view.group.propertyId, key: item.group.key }
-                              : null,
-                          })
-                        }
-                        className="sticky left-0 flex h-full items-center gap-1.5 px-2 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
-                        style={{ paddingLeft: GUTTER_WIDTH }}
-                      >
-                        <Plus aria-hidden="true" className="size-4" />
-                        {t('new')}
-                      </button>
-                    </div>
-                  );
-                }
-                const active = grid && grid.active.row === item.navIndex ? grid.active.col : null;
-                const rowInRange =
-                  range &&
-                  range.top >= 0 &&
-                  item.navIndex >= range.top &&
-                  item.navIndex <= range.bottom;
-                const isEditing = editing?.row === item.key ? colIndex.get(editing.col) : undefined;
-                return (
-                  <TableRow
-                    key={item.key}
-                    gridId={gridId}
-                    database={database}
-                    row={item.row}
-                    rowIndex={item.navIndex}
-                    ariaRowIndex={item.navIndex + 2}
-                    columns={columns}
-                    totalWidth={totalWidth}
-                    top={top}
-                    height={wrap ? null : ROW_HEIGHT}
-                    measure={wrap ? virtualizer.measureElement : undefined}
-                    itemIndex={virtualItem.index}
-                    activeCol={active}
-                    rangeCols={
-                      rowInRange && range && rangeSize(range) > 1 ? [range.left, range.right] : null
-                    }
-                    editing={
-                      isEditing !== undefined && editing
-                        ? { col: isEditing, initialText: editing.initialText }
-                        : null
-                    }
-                    wrap={wrap}
-                    readOnly={readOnly}
-                    queryCtx={queryCtx}
-                    events={events}
-                  />
-                );
-              })}
-            </div>
+            <TableBody
+              scrollRef={scrollRef}
+              handle={body}
+              items={items}
+              columns={columns}
+              colIndex={colIndex}
+              totalWidth={totalWidth}
+              gridId={gridId}
+              database={database}
+              grid={grid}
+              range={range}
+              multiCell={range !== null && rangeSize(range) > 1}
+              editing={editing}
+              wrap={wrap}
+              readOnly={readOnly}
+              queryCtx={queryCtx}
+              events={events}
+              groupProperty={groupProperty}
+              pages={pages}
+              onToggleGroup={toggleGroup}
+              onHideGroup={readOnly ? undefined : hideGroup}
+              onAddInGroup={addInGroup}
+            />
 
             {/* New row */}
             {!readOnly && !result.groups ? (
@@ -1225,53 +1129,6 @@ function AddPropertyButton({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function GroupHeader({
-  group,
-  top,
-  width,
-  label,
-  name,
-  onToggle,
-  onHide,
-}: {
-  group: RowGroup<ResolvedRow>;
-  top: number;
-  width: number;
-  label: React.ReactNode;
-  name: string;
-  onToggle: () => void;
-  onHide: (() => void) | undefined;
-}) {
-  const collapsed = group.collapsed;
-  return (
-    <div
-      role="presentation"
-      className="absolute top-0 left-0 flex items-end border-b border-border bg-bg"
-      style={{ width, height: GROUP_HEIGHT, transform: `translateY(${top}px)` }}
-    >
-      <div className="sticky left-0 flex h-9 items-center gap-1.5 px-2">
-        <button
-          type="button"
-          aria-expanded={!collapsed}
-          aria-label={collapsed ? t('expandGroup', { name }) : t('collapseGroup', { name })}
-          onClick={onToggle}
-          className="inline-flex size-6 items-center justify-center rounded-md text-fg-muted hover:bg-hover focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
-        >
-          <ChevronRight
-            aria-hidden="true"
-            className={cn('duration-fast size-4 transition-transform', !collapsed && 'rotate-90')}
-          />
-        </button>
-        {label}
-        <span className="text-xs text-fg-subtle tabular-nums">{group.rows.length}</span>
-        {onHide && group.key !== EMPTY_GROUP_KEY ? (
-          <IconButton size="sm" label={t('hideGroup')} icon={<EyeOff />} onClick={onHide} />
-        ) : null}
-      </div>
-    </div>
   );
 }
 

@@ -52,8 +52,14 @@ export interface TableRowProps {
   measure?: (element: HTMLElement | null) => void;
   itemIndex: number;
   activeCol: number | null;
-  rangeCols: readonly [number, number] | null;
-  editing: { col: number; initialText: string | null } | null;
+  /** The selected columns of this row when a multi-cell range covers it, null otherwise. */
+  rangeLeft: number | null;
+  rangeRight: number | null;
+  /** The column being edited in this row, and the text typed to start the edit. */
+  editingCol: number | null;
+  editingText: string | null;
+  /** The pointer is over the row: show its hover buttons (mounted only then, to keep rows light). */
+  hovered: boolean;
   wrap: boolean;
   readOnly: boolean;
   queryCtx: QueryContext;
@@ -93,14 +99,17 @@ export const TableRow = memo(function TableRow({
   measure,
   itemIndex,
   activeCol,
-  rangeCols,
-  editing,
+  rangeLeft,
+  rangeRight,
+  editingCol,
+  editingText,
+  hovered,
   wrap,
   readOnly,
   queryCtx,
   events,
 }: TableRowProps) {
-  const selectedRow = rangeCols !== null;
+  const selectedRow = rangeLeft !== null && rangeRight !== null;
   return (
     // Rows and cells are not focusable: the grid keeps focus and points at the active cell with
     // aria-activedescendant (the ARIA grid pattern for virtualized grids).
@@ -112,7 +121,7 @@ export const TableRow = memo(function TableRow({
       aria-selected={selectedRow || undefined}
       data-index={itemIndex}
       data-row-id={row.id}
-      className="group/row absolute top-0 left-0 flex border-b border-border bg-bg"
+      className="absolute top-0 left-0 flex border-b border-border bg-bg"
       style={{
         width: totalWidth,
         transform: `translateY(${top}px)`,
@@ -128,7 +137,7 @@ export const TableRow = memo(function TableRow({
         className="sticky left-0 z-[2] flex shrink-0 items-center justify-center bg-bg"
         style={{ width: GUTTER_WIDTH }}
       >
-        {!readOnly ? (
+        {!readOnly && hovered ? (
           <button
             type="button"
             tabIndex={-1}
@@ -137,7 +146,7 @@ export const TableRow = memo(function TableRow({
               const rect = event.currentTarget.getBoundingClientRect();
               events.onRowMenu(rowIndex, rect.left, rect.bottom);
             }}
-            className="inline-flex size-6 items-center justify-center rounded-md text-fg-subtle opacity-0 transition-opacity group-hover/row:opacity-100 hover:bg-hover hover:text-fg focus-visible:opacity-100"
+            className="inline-flex size-6 items-center justify-center rounded-md text-fg-subtle hover:bg-hover hover:text-fg"
           >
             <MoreHorizontal aria-hidden="true" className="size-4" />
           </button>
@@ -146,15 +155,15 @@ export const TableRow = memo(function TableRow({
       {columns.map((column, col) => {
         const { property } = column;
         const active = activeCol === col;
-        const inRange = rangeCols !== null && col >= rangeCols[0] && col <= rangeCols[1];
-        const isEditing = editing?.col === col;
+        const inRange = selectedRow && col >= rangeLeft && col <= rangeRight;
+        const isEditing = editingCol === col;
         const popover = isEditing && POPOVER_EDITOR_TYPES.has(property.type);
         const editorProps: CellEditorProps = {
           database,
           row,
           property,
           queryCtx,
-          initialText: editing?.initialText ?? null,
+          initialText: editingText,
           onDone: events.onEditDone,
         };
         const content = (
@@ -203,7 +212,7 @@ export const TableRow = memo(function TableRow({
             )}
           >
             {content}
-            {property.type === 'title' && !isEditing ? (
+            {property.type === 'title' && hovered && !isEditing ? (
               <button
                 type="button"
                 tabIndex={-1}
@@ -212,7 +221,7 @@ export const TableRow = memo(function TableRow({
                   event.stopPropagation();
                   events.onOpenPeek(row.id);
                 }}
-                className="absolute top-1/2 right-1.5 hidden h-6 -translate-y-1/2 items-center gap-1 rounded-md border border-border bg-surface px-1.5 text-xs font-medium text-fg-muted shadow-subtle group-hover/row:inline-flex hover:bg-hover hover:text-fg"
+                className="absolute top-1/2 right-1.5 inline-flex h-6 -translate-y-1/2 items-center gap-1 rounded-md border border-border bg-surface px-1.5 text-xs font-medium text-fg-muted shadow-subtle hover:bg-hover hover:text-fg"
               >
                 <PanelRightOpen aria-hidden="true" className="size-3.5" />
                 {t('openRow')}
