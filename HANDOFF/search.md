@@ -69,8 +69,8 @@ Tests: 11 Vitest files in `packages/search` (71 tests) and 1 in `apps/web/src/fe
 **`graph` feature**
 
 - `routes`: `/graph` (lazy; `/graph?focus=<pageId>` focuses a page). `pageSidePanels`:
-  `PANELS.localGraph` (no `when`, like backlinks). `commands`: `graph.open`
-  (`COMMANDS.openGraph`), `graph.showLocal`.
+  `PANELS.localGraph` (no `when`, like backlinks). `sidebarSections`: `graph` (a "Graph view"
+  entry at the top). `commands`: `graph.open` (`COMMANDS.openGraph`), `graph.showLocal`.
 
 **Settings keys**: workspace `backlinks.showFooter`; device `graph.options` (color mode, orphans,
 rows, depth), `graph.localDepth`, `search.recent.<workspaceId>`, `search.testHooks`.
