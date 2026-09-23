@@ -1,3 +1,5 @@
+import { WebSocketStatus } from '@hocuspocus/provider';
+import { SyncSocket } from '@tessera/sync/socket';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { createDevice, type Device } from '../testing/devices';
@@ -5,6 +7,7 @@ import {
   bootstrap,
   cleanupServers,
   eventually,
+  NodeWebSocket,
   startTestServer,
   type TestServer,
 } from '../testing/harness';
@@ -159,6 +162,37 @@ describe('HocuspocusSyncProvider with the runtime DocManager', () => {
     offlineCopy.release();
   });
 
+  it('never counts an open page as caught up, and pulls it once it closes', async () => {
+    const t = await server();
+    const { ownerToken, workspaceId } = await bootstrap(t);
+    const laptop = await device(t, { name: 'laptop', token: ownerToken, workspaceId });
+    const phone = await device(t, { name: 'phone', token: ownerToken, workspaceId });
+    const onPhone = await phone.open('page:live');
+    const onLaptop = await laptop.open('page:live');
+    onLaptop.doc.getText('t').insert(0, 'typed on the laptop');
+    await laptop.settled();
+    await eventually(() => expect(text(onPhone.doc)).toBe('typed on the laptop'));
+    const seqOnServer = async () =>
+      (await phone.api.docs(workspaceId)).find((doc) => doc.name === 'page:live')?.seq;
+    const seqCaughtUp = async () =>
+      (await phone.syncState.all()).get('page:live')?.serverSeq ?? null;
+
+    // While it is open, the live copy is not proof: a broadcast counted in the server's sequence
+    // number may still be on its way when the page closes.
+    await phone.replicator.runNow();
+    expect(await seqCaughtUp()).toBeNull();
+
+    // The first pass after it closes catches it up from the server.
+    onPhone.release();
+    await phone.manager.flush();
+    await eventually(async () => {
+      await phone.replicator.runNow();
+      expect(await seqCaughtUp()).toBe(await seqOnServer());
+    });
+    expect(await storedText(phone, 'page:live')).toBe('typed on the laptop');
+    onLaptop.release();
+  });
+
   it('survives a server restart: clients reconnect on their own', async () => {
     let t = await server();
     const { ownerToken, workspaceId } = await bootstrap(t);
@@ -208,5 +242,53 @@ describe('HocuspocusSyncProvider with the runtime DocManager', () => {
       10_000,
     );
     await eventually(async () => expect(await laptop.syncState.outbox()).toEqual([]));
+  });
+});
+
+describe('SyncSocket', () => {
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const open = (t: TestServer) =>
+    new SyncSocket({
+      url: t.wsUrl,
+      WebSocketPolyfill: NodeWebSocket,
+      delay: 200,
+      minDelay: 200,
+      maxDelay: 200,
+    });
+
+  it('never brings a destroyed socket back, even when a dropped connection scheduled a reconnect', async () => {
+    const t = await server();
+    const socket = open(t);
+    await eventually(() => expect(socket.status).toBe(WebSocketStatus.Connected));
+    const dropped = new Promise<void>((resolve) => socket.on('close', () => resolve()));
+    const stopping = t.stop();
+    // The connection dropped, so a reconnect is scheduled; the workspace closes right now.
+    await dropped;
+    socket.destroy();
+    await stopping;
+    await wait(600);
+    expect(socket.shouldConnect).toBe(false);
+    expect(socket.status).toBe(WebSocketStatus.Disconnected);
+  });
+
+  it('stays disconnected while offline, and reconnects on resume()', async () => {
+    let t = await server();
+    const port = t.server.port;
+    const socket = open(t);
+    await eventually(() => expect(socket.status).toBe(WebSocketStatus.Connected));
+    const dropped = new Promise<void>((resolve) => socket.on('close', () => resolve()));
+    const stopping = t.stop();
+    // The connection dropped, so a reconnect is scheduled; then the browser goes offline.
+    await dropped;
+    socket.disconnect();
+    await stopping;
+    t = await startTestServer({ port }, {}, t.dataDir);
+    servers.push(t);
+    await wait(600);
+    expect(socket.status).toBe(WebSocketStatus.Disconnected);
+
+    void socket.resume();
+    await eventually(() => expect(socket.status).toBe(WebSocketStatus.Connected));
+    socket.destroy();
   });
 });

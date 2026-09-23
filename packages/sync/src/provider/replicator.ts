@@ -158,8 +158,14 @@ export class BackgroundReplicator {
     const push = [...states.values()]
       .filter((record) => record.dirty && local.has(record.docName) && wanted(record.docName))
       .map((record) => record.docName);
+    // Open docs are live: they are pulled by the first pass after they close (see `syncDoc`).
     const pull = serverDocs
-      .filter((doc) => (states.get(doc.name)?.serverSeq ?? -1) < doc.seq && wanted(doc.name))
+      .filter(
+        (doc) =>
+          (states.get(doc.name)?.serverSeq ?? -1) < doc.seq &&
+          wanted(doc.name) &&
+          !provider.isOpen(doc.name),
+      )
       .map((doc) => doc.name)
       .filter((name) => !push.includes(name));
     const queue = [...push, ...pull];
@@ -191,8 +197,10 @@ export class BackgroundReplicator {
     const { provider, docStore, syncState, workspaceId } = this.options;
     const observed = record?.version ?? 0;
     if (provider.isOpen(docName)) {
-      // Live: the runtime's connection syncs it. Record progress once it is in sync.
-      if (provider.isDocSynced(docName)) await syncState.markSynced(docName, observed, serverSeq);
+      // Live: the runtime's connection pushes it, so the local changes seen are acknowledged once
+      // it is in sync. The server sequence number is not recorded: a broadcast counted in it may
+      // still be on its way, and if the doc closes first, only a pull would bring it back.
+      if (provider.isDocSynced(docName)) await syncState.markSynced(docName, observed, null);
       return;
     }
     const state = await docStore.load(docName);
