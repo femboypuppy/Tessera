@@ -73,7 +73,7 @@ export default function QuickCapture() {
   };
 
   return (
-    <main className="duration-fast flex h-dvh flex-col overflow-hidden border border-border bg-surface text-fg transition-colors has-[textarea:focus-visible]:border-accent">
+    <main className="duration-fast flex h-dvh flex-col overflow-hidden border border-border bg-surface text-fg transition-colors has-[textarea:focus-visible]:border-accent!">
       <header
         data-tauri-drag-region=""
         className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-4 select-none"
@@ -101,7 +101,11 @@ export default function QuickCapture() {
           aria-label={t('captureTitle')}
           placeholder={t('capturePlaceholder')}
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => {
+            setText(event.target.value);
+            // Typing again after a save starts a new note.
+            if (phase.kind === 'saved') setPhase({ kind: 'editing' });
+          }}
           onKeyDown={onKeyDown}
           readOnly={phase.kind === 'saving'}
           aria-busy={phase.kind === 'saving'}

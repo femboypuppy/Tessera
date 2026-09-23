@@ -1,0 +1,16 @@
+/*
+ * Tailwind utilities for the classes this package uses. apps/web/src/styles.css generates
+ * utilities for packages/* only, and this package lives in apps/, so the desktop feature brings
+ * its own (loaded only inside the desktop app, with feature.ts). Remove this file once the web
+ * stylesheet also scans apps/desktop/src (HANDOFF/desktop.md, contract change request 3).
+ *
+ * They go in the `components` layer, below the app's `utilities`: a class the app also generates
+ * keeps the app's position in the cascade (a second `utilities` layer loaded later would override
+ * the shell's responsive variants). Where one of this package's classes must beat a class the app
+ * generates on the same element, it uses Tailwind's `!` modifier.
+ */
+@import 'tailwindcss/theme' layer(theme);
+@import '../../../packages/ui/src/styles/theme.css';
+@import 'tailwindcss/utilities' layer(components) source(none);
+
+@source './**/*.{ts,tsx}';

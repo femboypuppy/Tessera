@@ -19,6 +19,8 @@ export function getAppRegistry(): TauriWorkspaceRegistry | null {
 
 /** App phase: the workspace registry. Also installs the page-wide listeners (exit flush). */
 export async function createWorkspaceRegistry(): Promise<TauriWorkspaceRegistry> {
+  // The first-run screen shows the desktop's onboarding action, whose strings live here.
+  await import('./i18n');
   const backend = getBackend();
   installAppListeners(backend);
   const info = await backend.appInfo();

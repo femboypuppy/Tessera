@@ -23,9 +23,9 @@ export async function desktopTestContext(
   options: FakeTauriOptions & { workspaceName?: string } = {},
 ): Promise<DesktopTestContext> {
   installFakeTauri(options);
-  const { desktopFeature } = await import('../feature');
+  const { createDesktopFeature } = await import('../index');
   const test = await createTestAppContext({
-    features: [desktopFeature],
+    features: [createDesktopFeature()],
     workspaceName: options.workspaceName ?? 'Apollo research',
     runtime: {
       platform: detectPlatform({

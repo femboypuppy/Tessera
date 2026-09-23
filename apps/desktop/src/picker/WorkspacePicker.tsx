@@ -55,11 +55,17 @@ interface Row {
 type LoadState =
   { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; rows: Row[] };
 
+/** The workspace's emoji on a quiet tile, or its initial on the accent color. */
 function WorkspaceBadge({ name, icon }: { name: string; icon?: string | undefined }) {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-semibold text-accent-fg"
+      className={cn(
+        'inline-flex size-8 shrink-0 items-center justify-center rounded-lg',
+        icon
+          ? 'border border-border bg-bg-subtle text-lg'
+          : 'bg-accent text-sm font-semibold text-accent-fg',
+      )}
     >
       {icon ?? name.trim().charAt(0).toUpperCase()}
     </span>

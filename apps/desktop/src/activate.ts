@@ -1,6 +1,9 @@
 import type { AppContext } from '@tessera/core';
 import { confirm, toast } from '@tessera/ui';
+// Utilities for this package's classes (see the file); loaded with the desktop UI.
+import './styles.css';
 import { openDeepLink, openPendingLink } from './commands';
+import { registerDesktopContributions } from './contributions';
 import { t } from './i18n';
 import { DESKTOP_COMMANDS, TAURI_DOC_STORE_ID, WINDOWS } from './constants';
 import { buildAppMenu } from './menu/app-menu';
@@ -64,6 +67,7 @@ function ensureMenuDispatcher(isApple: boolean): MenuDispatcher {
 export async function activateDesktop(ctx: AppContext): Promise<() => void> {
   const backend = getBackend();
   const cleanups: Array<() => void> = [];
+  registerDesktopContributions(ctx);
   setCurrentContext(ctx);
   cleanups.push(() => {
     if (getCurrentContext() === ctx) setCurrentContext(null);

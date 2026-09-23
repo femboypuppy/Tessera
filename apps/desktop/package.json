@@ -5,10 +5,11 @@
   "description": "The Tessera desktop app (Tauri 2). Its TypeScript side exports the desktop services and UI that the web desktop feature registers.",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
-    "./feature": "./src/feature.ts",
     "./testing": "./src/testing/fake-tauri.ts"
   },
   "scripts": {
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "2.11.5",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "tailwindcss": "4.3.3"
   }
 }

@@ -158,7 +158,14 @@ test('desktop screenshots', async ({ page, context }) => {
   await page.keyboard.press('Escape');
   await expect(picker).toHaveCount(0);
 
-  // Quick capture: the small always-on-top window over the app, as on screen.
+  // Quick capture: the small always-on-top window over the app, as on screen. The shortcut shows
+  // the window again (Rust emits `desktop://capture-shown`), then a new note is typed.
+  await capture.evaluate(() =>
+    (window as unknown as { __fakeTauri: { emit(event: string): void } }).__fakeTauri.emit(
+      'desktop://capture-shown',
+    ),
+  );
+  await expect(capture.getByRole('button', { name: 'Add to Inbox' })).toBeVisible();
   await field.fill('Book the vacuum chamber for Thursday\n[ ] send the test plan to Gene');
   const shots: Record<string, { app: string; capture: string }> = {};
   for (const colorScheme of THEMES) {
