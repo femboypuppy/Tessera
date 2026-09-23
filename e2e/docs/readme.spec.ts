@@ -19,6 +19,8 @@ const DOCS = [
   'CONTRIBUTING.md',
   'CODE_OF_CONDUCT.md',
   '.github/PULL_REQUEST_TEMPLATE.md',
+  'LAUNCH.md',
+  'BUILT_WITH_AGENTS.md',
 ];
 
 function isExternal(target: string): boolean {
