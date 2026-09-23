@@ -67,14 +67,19 @@ export function TableControls({
   root: RefObject<HTMLElement | null>;
 }) {
   const readOnly = useStore(controller.readOnly);
-  const tablePos = useEditorState({
+  // The table with the caret (its node changes when it's edited). Outside tables this stays null,
+  // so typing elsewhere never re-renders (a React commit walks the whole editor DOM to save the
+  // selection, which is slow on long pages).
+  const around = useEditorState({
     editor,
-    selector: ({ editor: current }) => tableAround(current),
+    selector: ({ editor: current }) => {
+      const pos = tableAround(current);
+      return pos === null ? null : { pos, node: current.state.doc.nodeAt(pos) };
+    },
+    equalityFn: (a, b) => a?.pos === b?.pos && a?.node === b?.node,
   });
-  const docVersion = useEditorState({
-    editor,
-    selector: ({ editor: current }) => current.state.doc,
-  });
+  const tablePos = around?.pos ?? null;
+  const tableNode = around?.node ?? null;
   const [box, setBox] = useState<{
     top: number;
     left: number;
@@ -101,7 +106,7 @@ export function TableControls({
       width: rect.width,
       height: rect.height,
     });
-  }, [editor, tablePos, docVersion, readOnly, root]);
+  }, [editor, tablePos, tableNode, readOnly, root]);
 
   if (tablePos === null || !box || readOnly) return null;
   const run =

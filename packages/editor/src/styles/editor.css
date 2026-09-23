@@ -958,10 +958,14 @@
   opacity: 1;
 }
 
-body.tess-block-dragging,
-body.tess-block-dragging * {
-  cursor: grabbing !important;
-  user-select: none !important;
+/* Covers the page during a block drag (cursor and no hover effects, without restyling it). */
+.tess-drag-surface {
+  position: fixed;
+  inset: 0;
+  z-index: var(--tess-z-popover);
+  cursor: grabbing;
+  user-select: none;
+  touch-action: none;
 }
 
 .tess-block-handle {

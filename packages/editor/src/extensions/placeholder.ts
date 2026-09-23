@@ -1,11 +1,14 @@
 import { Extension } from '@tiptap/core';
 import type { Node as PMNode, ResolvedPos } from '@tiptap/pm/model';
-import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type EditorState, type Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { t } from '../i18n';
+import { changedRanges } from './changed-ranges';
 
 interface PlaceholderState {
   focused: boolean;
+  /** Placeholders of empty headings and toggle summaries, kept up to date incrementally. */
+  structural: DecorationSet;
 }
 
 export const placeholderPluginKey = new PluginKey<PlaceholderState>('tesseraPlaceholder');
@@ -49,38 +52,54 @@ function hintFor($pos: ResolvedPos): string | null {
   }
 }
 
-const structuralCache = new WeakMap<PMNode, Decoration[]>();
+/** Empty headings and toggle summaries always say what they are. */
+function structuralPlaceholder(node: PMNode, pos: number, doc: PMNode): Decoration | null {
+  if (
+    node.content.size !== 0 ||
+    (node.type.name !== 'heading' && node.type.name !== 'toggleSummary')
+  )
+    return null;
+  const hint = hintFor(doc.resolve(pos + 1));
+  return hint
+    ? Decoration.node(pos, pos + node.nodeSize, {
+        class: 'tess-placeholder',
+        'data-placeholder': hint,
+      })
+    : null;
+}
 
-/** Empty headings and toggle summaries always say what they are (cached per document). */
-function structuralPlaceholders(doc: PMNode): Decoration[] {
-  const cached = structuralCache.get(doc);
-  if (cached) return cached;
+/** Structural placeholders for the textblocks between `from` and `to`. */
+function structuralPlaceholders(doc: PMNode, from = 0, to = doc.content.size): Decoration[] {
   const decorations: Decoration[] = [];
-  doc.descendants((node, pos) => {
+  doc.nodesBetween(from, to, (node, pos) => {
     if (node.isTextblock) {
-      if (
-        node.content.size === 0 &&
-        (node.type.name === 'heading' || node.type.name === 'toggleSummary')
-      ) {
-        const hint = hintFor(doc.resolve(pos + 1));
-        if (hint) {
-          decorations.push(
-            Decoration.node(pos, pos + node.nodeSize, {
-              class: 'tess-placeholder',
-              'data-placeholder': hint,
-            }),
-          );
-        }
-      }
+      const decoration = structuralPlaceholder(node, pos, doc);
+      if (decoration) decorations.push(decoration);
       return false;
     }
     return node.type.name !== 'codeBlock' && node.type.name !== 'table';
   });
-  structuralCache.set(doc, decorations);
   return decorations;
 }
 
-function placeholderDecorations(state: EditorState, focused: boolean, editable: boolean) {
+/** Updates the structural placeholders for a change, looking only at what it touched. */
+function updateStructural(tr: Transaction, previous: DecorationSet): DecorationSet {
+  let set = previous.map(tr.mapping, tr.doc);
+  const size = tr.doc.content.size;
+  for (const range of changedRanges([tr])) {
+    const from = Math.min(range.from, size);
+    const to = Math.min(range.to, size);
+    set = set.remove(set.find(from, to));
+    set = set.add(tr.doc, structuralPlaceholders(tr.doc, from, to));
+  }
+  return set;
+}
+
+function placeholderDecorations(
+  state: EditorState,
+  { focused, structural }: PlaceholderState,
+  editable: boolean,
+): DecorationSet {
   const { doc, selection } = state;
   if (!editable) return DecorationSet.empty;
   if (isEmptyDoc(doc)) {
@@ -92,7 +111,6 @@ function placeholderDecorations(state: EditorState, focused: boolean, editable: 
       }),
     ]);
   }
-  const decorations = [...structuralPlaceholders(doc)];
   // The block with the caret shows how to insert blocks.
   if (focused && selection.empty) {
     const { $from } = selection;
@@ -101,16 +119,16 @@ function placeholderDecorations(state: EditorState, focused: boolean, editable: 
       const hint = hintFor($from);
       if (hint) {
         const pos = $from.before();
-        decorations.push(
+        return structural.add(doc, [
           Decoration.node(pos, pos + block.nodeSize, {
             class: 'tess-placeholder',
             'data-placeholder': hint,
           }),
-        );
+        ]);
       }
     }
   }
-  return DecorationSet.create(doc, decorations);
+  return structural;
 }
 
 /**
@@ -127,16 +145,25 @@ export const Placeholder = Extension.create({
       new Plugin<PlaceholderState>({
         key: placeholderPluginKey,
         state: {
-          init: () => ({ focused: false }),
+          init: (_config, state) => ({
+            focused: false,
+            structural: DecorationSet.create(state.doc, structuralPlaceholders(state.doc)),
+          }),
           apply(tr, value) {
-            const focused = tr.getMeta(placeholderPluginKey) as boolean | undefined;
-            return focused === undefined || focused === value.focused ? value : { focused };
+            const meta = tr.getMeta(placeholderPluginKey) as boolean | undefined;
+            const focused = meta ?? value.focused;
+            const structural = tr.docChanged
+              ? updateStructural(tr, value.structural)
+              : value.structural;
+            return focused === value.focused && structural === value.structural
+              ? value
+              : { focused, structural };
           },
         },
         props: {
           decorations(state) {
-            const focused = placeholderPluginKey.getState(state)?.focused ?? false;
-            return placeholderDecorations(state, focused, editor.isEditable);
+            const value = placeholderPluginKey.getState(state);
+            return value ? placeholderDecorations(state, value, editor.isEditable) : null;
           },
           handleDOMEvents: {
             focus(view) {

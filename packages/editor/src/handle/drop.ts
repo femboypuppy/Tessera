@@ -25,22 +25,88 @@ function isBlockUnitNode(node: PMNode, parent: PMNode): boolean {
   return !['tableCell', 'tableHeader', 'tableRow'].includes(parent.type.name);
 }
 
-/** The block under a point: an atom block directly, or the block around the nearest position. */
-export function blockAtCoords(view: EditorView, x: number, y: number): BlockRef | null {
-  const box = view.dom.getBoundingClientRect();
-  const left = Math.min(Math.max(x, box.left + 2), box.right - 2);
-  const top = Math.min(Math.max(y, box.top + 1), box.bottom - 1);
-  const result = view.posAtCoords({ left, top });
-  if (!result) return null;
-  const { doc } = view.state;
-  if (result.inside >= 0) {
-    const node = doc.nodeAt(result.inside);
-    if (node && node.isBlock && node.isAtom) {
-      const $inside = doc.resolve(result.inside);
-      if (isBlockUnitNode(node, $inside.parent)) return { pos: result.inside, node };
+/** The box of the node at `pos`, or null when it has no DOM or is hidden (a closed toggle's body). */
+function visibleRect(view: EditorView, pos: number): DOMRect | null {
+  const dom = view.nodeDOM(pos);
+  if (!(dom instanceof HTMLElement)) return null;
+  const rect = dom.getBoundingClientRect();
+  return rect.width > 0 || rect.height > 0 ? rect : null;
+}
+
+/**
+ * The child of `parent` (whose content starts at `start`) at height `y`: the last visible child
+ * that starts at or above it, so the gap below a block belongs to that block, or the first one
+ * when `y` is above them all. A binary search over the children's boxes, falling back to a scan
+ * when it meets a hidden child.
+ */
+function childAtY(
+  view: EditorView,
+  parent: PMNode,
+  start: number,
+  y: number,
+): { node: PMNode; pos: number } | null {
+  const offsets: number[] = [];
+  parent.forEach((_child, offset) => offsets.push(offset));
+  const at = (index: number) => {
+    const offset = offsets[index] ?? 0;
+    const node = parent.child(index);
+    return { node, pos: start + offset };
+  };
+  const scan = () => {
+    let found: number | null = null;
+    let first: number | null = null;
+    for (let index = 0; index < offsets.length; index += 1) {
+      const rect = visibleRect(view, at(index).pos);
+      if (!rect) continue;
+      first ??= index;
+      if (rect.top <= y) found = index;
+      else break;
     }
+    const index = found ?? first;
+    return index === null ? null : at(index);
+  };
+  let low = 0;
+  let high = offsets.length - 1;
+  let found = -1;
+  while (low <= high) {
+    const middle = (low + high) >> 1;
+    const rect = visibleRect(view, at(middle).pos);
+    if (!rect) return scan();
+    if (rect.top <= y) {
+      found = middle;
+      low = middle + 1;
+    } else high = middle - 1;
   }
-  return blockAt(doc.resolve(result.pos));
+  if (found >= 0) return at(found);
+  return visibleRect(view, at(0).pos) ? at(0) : scan();
+}
+
+/**
+ * The block at height `y`: the innermost block unit whose box spans it (see `blockAt`), found by a
+ * binary search over block boxes from the top level down. Unlike `posAtCoords`, this needs no hit
+ * testing, so it stays cheap on pages with thousands of blocks (it runs every frame of a drag and
+ * on every hover).
+ */
+export function blockAtY(view: EditorView, y: number): BlockRef | null {
+  const { doc } = view.state;
+  let parent: PMNode = doc;
+  let start = 0;
+  for (;;) {
+    const child = childAtY(view, parent, start, y);
+    if (!child) return null;
+    const { node, pos } = child;
+    if (node.isAtom) {
+      const $pos = doc.resolve(pos);
+      return node.isBlock && isBlockUnitNode(node, $pos.parent) ? { pos, node } : blockAt($pos);
+    }
+    // Tables move as a whole; everything else with blocks inside is searched further.
+    if (!node.isTextblock && node.childCount > 0 && node.type.name !== 'table') {
+      parent = node;
+      start = pos + 1;
+      continue;
+    }
+    return blockAt(doc.resolve(pos + 1));
+  }
 }
 
 function elementRect(view: EditorView, pos: number): DOMRect | null {
@@ -93,7 +159,7 @@ export function dropTargetAt(
       },
     };
   }
-  const block = blockAtCoords(view, x, y);
+  const block = blockAtY(view, y);
   if (!block) return null;
   if (block.pos === dragged.pos || insideDragged(block.pos, dragged)) return null;
   const rect = elementRect(view, block.pos);

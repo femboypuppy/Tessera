@@ -20,7 +20,7 @@ function scrollParent(element: HTMLElement): HTMLElement | Window {
 }
 
 /** A translucent copy of the block that follows the pointer (without live iframes). */
-function createGhost(source: HTMLElement | null): HTMLElement {
+function createGhost(source: HTMLElement | null, width: number): HTMLElement {
   const ghost = document.createElement('div');
   ghost.className = 'tess-drag-ghost';
   ghost.setAttribute('aria-hidden', 'true');
@@ -29,7 +29,7 @@ function createGhost(source: HTMLElement | null): HTMLElement {
     clone.querySelectorAll('iframe, video, audio').forEach((element) => element.remove());
     clone.removeAttribute('id');
     clone.classList.remove('tess-drag-source');
-    ghost.style.width = `${Math.min(source.getBoundingClientRect().width, 640)}px`;
+    ghost.style.width = `${Math.min(width, 640)}px`;
     // Inside an editor-styled wrapper, so the copy looks like the block.
     const styled = document.createElement('div');
     styled.className = 'tess-editor';
@@ -37,6 +37,27 @@ function createGhost(source: HTMLElement | null): HTMLElement {
     ghost.append(styled);
   }
   return ghost;
+}
+
+/**
+ * A transparent layer over the page for the length of a drag: it shows the grabbing cursor and
+ * keeps hover effects and text selection away, without restyling the document (which costs a
+ * full style pass on long pages). Wheel scrolling goes through to the editor's scroller.
+ */
+function createSurface(scroller: HTMLElement | Window, onScroll: () => void): HTMLElement {
+  const surface = document.createElement('div');
+  surface.className = 'tess-drag-surface';
+  surface.setAttribute('aria-hidden', 'true');
+  surface.addEventListener(
+    'wheel',
+    (event) => {
+      const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : 1;
+      scroller.scrollBy(event.deltaX * unit, event.deltaY * unit);
+      onScroll();
+    },
+    { passive: true },
+  );
+  return surface;
 }
 
 /**
@@ -61,6 +82,7 @@ export function startBlockDrag(
   let frame = 0;
   let target: DropTarget | null = null;
   let ghost: HTMLElement | null = null;
+  let surface: HTMLElement | null = null;
   const indicator = document.createElement('div');
   indicator.className = 'tess-drop-indicator';
   indicator.setAttribute('aria-hidden', 'true');
@@ -100,13 +122,27 @@ export function startBlockDrag(
 
   const begin = () => {
     dragging = true;
+    // Measured before anything changes, so it doesn't force a layout.
+    const width = source?.getBoundingClientRect().width ?? 0;
+    // The surface takes over from the grip's pointer capture (and shows its cursor).
+    for (
+      let node = start.target instanceof Element ? start.target : null;
+      node;
+      node = node.parentElement
+    )
+      if (node.hasPointerCapture(pointerId)) {
+        node.releasePointerCapture(pointerId);
+        break;
+      }
     controller.dragging.set(true);
     controller.blockMenu.set(null);
-    document.body.classList.add('tess-block-dragging');
-    ghost = createGhost(source);
+    ghost = createGhost(source, width);
+    surface = createSurface(scroller, () => {
+      if (!frame) frame = requestAnimationFrame(render);
+    });
     // Dimmed through a decoration: ProseMirror redraws nodes whose DOM is changed directly.
     setDragSource(view, block.pos);
-    document.body.append(ghost, indicator);
+    document.body.append(surface, ghost, indicator);
   };
 
   const cleanup = () => {
@@ -116,8 +152,8 @@ export function startBlockDrag(
     window.removeEventListener('keydown', onKey, true);
     cancelAnimationFrame(frame);
     ghost?.remove();
+    surface?.remove();
     indicator.remove();
-    document.body.classList.remove('tess-block-dragging');
     if (dragging) {
       setDragSource(view, null);
       controller.dragging.set(false);

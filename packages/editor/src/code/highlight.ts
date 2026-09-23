@@ -1,7 +1,8 @@
 import { Extension } from '@tiptap/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
+import { changedRanges } from '../extensions/changed-ranges';
 
 /** The parts of a lowlight instance the plugin uses. */
 interface Highlighter {
@@ -92,21 +93,20 @@ function tokensFor(node: PMNode): Token[] {
   return tokens;
 }
 
+function blockDecorations(node: PMNode, pos: number): Decoration[] {
+  if (!highlighter) return [];
+  return tokensFor(node).map((token) =>
+    Decoration.inline(pos + 1 + token.from, pos + 1 + token.to, { class: token.className }),
+  );
+}
+
 function decorate(doc: PMNode): { set: DecorationSet; hasCode: boolean } {
   const decorations: Decoration[] = [];
   let hasCode = false;
   doc.descendants((node, pos) => {
     if (node.type.name === 'codeBlock') {
       hasCode = true;
-      if (highlighter) {
-        for (const token of tokensFor(node)) {
-          decorations.push(
-            Decoration.inline(pos + 1 + token.from, pos + 1 + token.to, {
-              class: token.className,
-            }),
-          );
-        }
-      }
+      decorations.push(...blockDecorations(node, pos));
       return false;
     }
     return !node.isTextblock;
@@ -115,8 +115,33 @@ function decorate(doc: PMNode): { set: DecorationSet; hasCode: boolean } {
 }
 
 /**
+ * Updates the decorations for a change: the previous ones are mapped, and only code blocks the
+ * change touched are highlighted again, so typing costs the same on a page of any length.
+ */
+function redecorate(
+  tr: Transaction,
+  previous: DecorationSet,
+): { set: DecorationSet; hasCode: boolean } {
+  let set = previous.map(tr.mapping, tr.doc);
+  let hasCode = false;
+  const size = tr.doc.content.size;
+  for (const range of changedRanges([tr])) {
+    tr.doc.nodesBetween(Math.min(range.from, size), Math.min(range.to, size), (node, pos) => {
+      if (node.type.name === 'codeBlock') {
+        hasCode = true;
+        set = set.remove(set.find(pos, pos + node.nodeSize));
+        set = set.add(tr.doc, blockDecorations(node, pos));
+        return false;
+      }
+      return !node.isTextblock;
+    });
+  }
+  return { set, hasCode };
+}
+
+/**
  * Syntax highlighting for code blocks with lowlight, loaded on first use. Results are cached per
- * code block node, so typing elsewhere never re-highlights anything.
+ * code block node, and decorations are updated only where the document changed.
  */
 export const CodeHighlight = Extension.create({
   name: 'codeHighlight',
@@ -132,8 +157,9 @@ export const CodeHighlight = Extension.create({
             return set;
           },
           apply(tr, previous) {
-            if (!tr.docChanged && tr.getMeta(codeHighlightKey) !== 'refresh') return previous;
-            const { set, hasCode } = decorate(tr.doc);
+            const refresh = tr.getMeta(codeHighlightKey) === 'refresh';
+            if (!tr.docChanged && !refresh) return previous;
+            const { set, hasCode } = refresh ? decorate(tr.doc) : redecorate(tr, previous);
             if (hasCode && !highlighter) void loadHighlighter();
             return set;
           },

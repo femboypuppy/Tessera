@@ -3,7 +3,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import { blockAt } from '../actions/blocks';
 import type { EditorController } from '../react/controller';
-import { blockAtCoords } from './drop';
+import { blockAtY } from './drop';
 
 export const blockHandleKey = new PluginKey<number | null>('tesseraBlockHandle');
 
@@ -72,7 +72,7 @@ export function blockHandle(controller: EditorController) {
                 const rect = dom instanceof HTMLElement ? dom.getBoundingClientRect() : null;
                 if (rect && x < rect.left && y >= rect.top && y <= rect.bottom) return;
               }
-              const block = blockAtCoords(view, x, y);
+              const block = blockAtY(view, y);
               if (!block) controller.handle.set(null);
               else if (!current || current.pos !== block.pos || current.node !== block.node)
                 controller.handle.set(block);
