@@ -86,7 +86,10 @@ Milestones, in order, each ended tested and committed:
   cancellation, preserved source timestamps), `exporters.test.ts` (files, frontmatter, links,
   CSV, both link styles, HTML, backup and restore, and the round trip vault → import → export →
   import compared page by page), `csv.test.ts`, `performance.test.ts`, `worker/client.test.ts`,
-  `ui/dialogs.test.tsx`, `ui/views.test.tsx`, `ui/preview.test.ts`, `ui/demo.test.ts`.
+  `ui/dialogs.test.tsx` (import preview → report, undoable trash, empty state, export zip, `.md`
+  and HTML downloads, PDF, commands), `ui/restore.test.tsx` (a backup restored through the dialog
+  into a new workspace), `ui/views.test.tsx` (print view, settings panel), `ui/preview.test.ts`
+  (preview summary, dropped folders, backup detection), `ui/demo.test.ts`.
 
 ### `apps/web/src/features/import-export`
 
@@ -96,8 +99,9 @@ Milestones, in order, each ended tested and committed:
 
 - `import-export.spec.ts`: imports the Obsidian fixture through the dialog (preview, report
   counts, issues), opens the imported pages, follows imported links through the print view
-  (alias link, heading link) and back to the page; exports a workspace as a zip and checks its
-  files and contents.
+  (alias link, heading link) and back to the page; drops a Notion export zip on the drop zone
+  (detected as Notion, two databases); exports a workspace as a zip and checks its files and
+  contents.
 - `responsiveness.spec.ts`: a 2,000-note vault (zip) imports while an in-page heartbeat measures
   the longest main-thread gap and records the phases the dialog showed.
 - `access.spec.ts`: at phone width, "Import from Obsidian" from onboarding opens the dialog in a
