@@ -9,5 +9,12 @@ export {
   createMarkdownImporter,
   createNotionImporter,
   createObsidianImporter,
+  createBackupImporter,
 } from './importers';
+export {
+  EXPORTER_IDS,
+  createBackupExporter,
+  createHtmlExporter,
+  createMarkdownExporter,
+} from './exporters';
 export type { ImportPlan, PlanInput, PlanPage, SourceFormat } from './plan/types';

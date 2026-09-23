@@ -99,6 +99,26 @@ export function createObsidianImporter(): Importer {
   };
 }
 
+/** A JSON backup made by Tessera, restored into a new workspace. */
+export function createBackupImporter(): Importer {
+  return {
+    id: IMPORTER_IDS.backup,
+    label: t('backupLabel'),
+    description: t('backupDescription'),
+    accept: ['.json'],
+    async detect(files) {
+      const [file] = files;
+      if (files.length !== 1 || !file || !/.json$/i.test(file.path)) return 0;
+      const head = new TextDecoder().decode((await file.bytes()).subarray(0, 512));
+      return /"format"s*:s*"tessera-backup"/.test(head) ? 1 : 0;
+    },
+    async run(files, context, onProgress) {
+      const { runRestoreImport } = await import('./export/backup');
+      return runRestoreImport(files, context, onProgress, IMPORTER_IDS.backup);
+    },
+  };
+}
+
 /** Markdown files and folders (relative links and wikilinks); CSV files become databases. */
 export function createMarkdownImporter(id: string = IMPORTER_IDS.markdown): Importer {
   const runFormat = run('markdown');

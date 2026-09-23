@@ -294,8 +294,8 @@ export async function planImport(
     if (entry.kind !== 'note') continue;
     const match = FRONTMATTER.exec(entry.text);
     const frontmatter = match ? parseFrontmatter(match[1] ?? '').data : {};
-    if (typeof frontmatter.title === 'string' && frontmatter.title.trim())
-      entry.title = frontmatter.title.trim();
+    // An explicit title wins, even an empty one (an untitled page exported as `Untitled.md`).
+    if (typeof frontmatter.title === 'string') entry.title = frontmatter.title.trim();
     entry.aliases = stringList(frontmatter.aliases ?? frontmatter.alias);
     if (typeof frontmatter.icon === 'string' && isValidIcon(frontmatter.icon))
       entry.icon = frontmatter.icon;

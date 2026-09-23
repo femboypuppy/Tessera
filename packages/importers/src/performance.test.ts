@@ -37,13 +37,24 @@ export function generateVault(notes: number, folders = 40): ImportFile[] {
   return files;
 }
 
+/**
+ * CPU time of this thread in ms. Unlike wall-clock time it does not grow while other test files
+ * keep the machine busy, so the gaps below measure the importer's own work between yields.
+ */
+function cpuNow(): number {
+  const usage = process.threadCpuUsage();
+  return (usage.user + usage.system) / 1000;
+}
+
 describe('performance', () => {
   it('imports a 2,000-file vault while yielding to the page often', async () => {
     const files = generateVault(2000);
     const test = await importWorkspace();
     try {
       const gaps = new Map<ImportProgress['phase'], number>();
+      const cpuGaps = new Map<ImportProgress['phase'], number>();
       let last = performance.now();
+      let lastCpu = cpuNow();
       const started = last;
       const phaseStarts = new Map<ImportProgress['phase'], number>();
       const report = await createObsidianImporter().run(
@@ -52,8 +63,11 @@ describe('performance', () => {
         (progress) => {
           const now = performance.now();
           if (!phaseStarts.has(progress.phase)) phaseStarts.set(progress.phase, now);
+          const cpu = cpuNow();
           gaps.set(progress.phase, Math.max(gaps.get(progress.phase) ?? 0, now - last));
+          cpuGaps.set(progress.phase, Math.max(cpuGaps.get(progress.phase) ?? 0, cpu - lastCpu));
           last = now;
+          lastCpu = cpu;
         },
         new AbortController().signal,
       );
@@ -61,10 +75,10 @@ describe('performance', () => {
       expect(report.issues.filter((issue) => issue.severity === 'error')).toEqual([]);
       expect(report.counts.pages).toBe(2000 + 40 + 1);
       expect(report.counts.links).toBe(6000);
-      // Steps that run on the main thread in the app hand control back at least every 250 ms
-      // (planning runs in a worker there; in this test it runs inline).
+      // Steps that run on the main thread in the app hand control back after at most 250 ms of
+      // work (planning runs in a worker there; in this test it runs inline).
       for (const phase of ['reading', 'pages', 'finishing'] as const) {
-        expect(gaps.get(phase) ?? 0).toBeLessThan(250);
+        expect(cpuGaps.get(phase) ?? 0).toBeLessThan(250);
       }
       console.info(
         `2,000-file import: ${Math.round(total)} ms total; phases start at`,
@@ -73,6 +87,8 @@ describe('performance', () => {
         ),
         'longest gaps',
         Object.fromEntries([...gaps].map(([phase, gap]) => [phase, Math.round(gap)])),
+        'longest CPU stretches',
+        Object.fromEntries([...cpuGaps].map(([phase, gap]) => [phase, Math.round(gap)])),
       );
     } finally {
       await test.dispose();

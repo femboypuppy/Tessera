@@ -13,4 +13,21 @@ describe('import-export feature', () => {
       await dispose();
     }
   });
+
+  it('registers the importers and exporters, replacing the basic markdown ones', async () => {
+    const { ctx, dispose } = await createTestAppContext({ features: [importExportFeature] });
+    try {
+      const importers = ctx.importers.list().map((importer) => importer.id);
+      expect(importers).toEqual(
+        expect.arrayContaining(['notion', 'obsidian', 'markdown', 'tessera-backup']),
+      );
+      const exporters = ctx.exporters.list().map((exporter) => exporter.id);
+      expect(exporters).toEqual(expect.arrayContaining(['markdown', 'html', 'tessera-backup']));
+      // Core's basic entries are replaced by the full ones under the same ID.
+      expect(ctx.exporters.get('markdown-basic')?.label).toBe(ctx.exporters.get('markdown')?.label);
+      expect(ctx.importers.get('markdown-basic')?.label).toBe(ctx.importers.get('markdown')?.label);
+    } finally {
+      await dispose();
+    }
+  });
 });

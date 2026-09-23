@@ -10,6 +10,9 @@ export const en = {
   backupLabel: 'Tessera backup',
   backupDescription: 'A JSON backup made by Tessera, restored into a new workspace.',
   tableView: 'Table',
+  untitled: 'Untitled',
+  needsPlugin: 'This block needs a plugin',
+  database: 'Database',
   exportMarkdownLabel: 'Markdown (zip)',
   exportMarkdownDescription:
     'Obsidian-compatible markdown with attachments, properties and databases as CSV.',
