@@ -1,0 +1,106 @@
+name: Bug report
+description: Something doesn't work the way it should.
+title: '[Bug]: '
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please search [existing issues](https://github.com/femboypuppy/Tessera/issues) first.
+        **Security vulnerabilities:** don't file them here. Report them privately through the repository's Security tab.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Screenshots or a short recording help a lot.
+      placeholder: When I drag a card to another column on the board, it jumps back.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps that shows the problem, starting from a fresh workspace if you can.
+      placeholder: |
+        1. Create a database with a Status select property
+        2. Switch to the Board view
+        3. Drag a card from "To do" to "Done"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: The card stays in "Done" and its status changes.
+    validations:
+      required: true
+  - type: dropdown
+    id: data-loss
+    attributes:
+      label: Did you lose data?
+      description: We treat data loss as the most urgent kind of bug.
+      options:
+        - 'No'
+        - Yes, some content is gone
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tessera version
+      description: The release you use (for example 0.1.0), or the commit if you built it yourself.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: app
+    attributes:
+      label: Where do you run Tessera?
+      multiple: true
+      options:
+        - Desktop app
+        - Web app (browser)
+        - Self-hosted server
+        - From source (pnpm dev)
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      multiple: true
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - iOS or iPadOS
+        - Android
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: For the web app. Leave it empty for the desktop app.
+      placeholder: Firefox 142
+  - type: textarea
+    id: server
+    attributes:
+      label: Server setup
+      description: If you sync with a server, how you run it (Docker, Compose, a platform), any reverse proxy, and relevant settings. Never paste passwords or tokens.
+      placeholder: Docker Compose behind Caddy, SIGNUP_MODE=invite
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics and logs
+      description: In the browser console, run `window.__tessera.diagnostics()` and paste the result. Server logs come from `docker compose logs tessera`. Remove anything private.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this hasn't been reported yet.
+          required: true
