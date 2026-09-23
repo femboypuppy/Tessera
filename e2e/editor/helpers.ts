@@ -90,6 +90,28 @@ function textOf(node: NodeJSON): string {
   return (node.content ?? []).map(textOf).join(node.type === 'doc' ? '\n' : '');
 }
 
+/**
+ * Where the editor thinks the caret is: the text of its block and the offset in it. The browser
+ * moves the caret itself for Home, End and arrow keys and tells the editor a moment later, so a
+ * test that sends the next key at machine speed first waits for this to match (a person's pause
+ * between keys is always longer).
+ */
+export async function caret(page: Page): Promise<{ text: string; offset: number }> {
+  return editor(page).evaluate((element) => {
+    const instance = (
+      element as HTMLElement & {
+        editor?: {
+          state: {
+            selection: { $head: { parent: { textContent: string }; parentOffset: number } };
+          };
+        };
+      }
+    ).editor;
+    const head = instance?.state.selection.$head;
+    return { text: head?.parent.textContent ?? '', offset: head?.parentOffset ?? -1 };
+  });
+}
+
 /** `type:text` for each top-level block, for compact assertions. */
 export async function outline(page: Page): Promise<string[]> {
   const doc = await docJSON(page);

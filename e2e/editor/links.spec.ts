@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  caret,
   createPage,
   createWorkspace,
   docJSON,
@@ -111,6 +112,7 @@ test('pasting a URL over text links it; a bare URL offers an embed', async ({ pa
   );
 
   await page.keyboard.press('End');
+  await expect.poll(() => caret(page)).toEqual({ text: 'Read the docs', offset: 13 });
   await page.keyboard.press('Enter');
   await pasteData(page, { 'text/plain': 'https://vimeo.com/76979871' });
   const choices = page.getByRole('listbox', { name: 'Paste link as' });

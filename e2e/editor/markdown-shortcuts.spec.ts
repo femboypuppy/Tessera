@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  caret,
   createPage,
   createWorkspace,
   docJSON,
@@ -111,6 +112,7 @@ test('Backspace at the start of a heading or list item turns it back into text',
   await page.keyboard.type('# Title');
   await expect.poll(() => outline(page)).toEqual(['heading:Title']);
   await page.keyboard.press('Home');
+  await expect.poll(() => caret(page)).toEqual({ text: 'Title', offset: 0 });
   await page.keyboard.press('Backspace');
   await expect.poll(() => outline(page)).toEqual(['paragraph:Title']);
   await page.keyboard.press('End');
@@ -118,6 +120,7 @@ test('Backspace at the start of a heading or list item turns it back into text',
   await page.keyboard.type('- item');
   await expect.poll(() => outline(page)).toEqual(['paragraph:Title', 'bulletList:item']);
   await page.keyboard.press('Home');
+  await expect.poll(() => caret(page)).toEqual({ text: 'item', offset: 0 });
   await page.keyboard.press('Backspace');
   await expect.poll(() => outline(page)).toEqual(['paragraph:Title', 'paragraph:item']);
 });

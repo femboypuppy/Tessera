@@ -19,6 +19,8 @@ async function continueBelow(page: Page): Promise<void> {
 }
 
 test('inserts every block type from the slash menu', async ({ page }) => {
+  // One long flow (every block type, then undo and redo across all of them).
+  test.setTimeout(90_000);
   await createWorkspace(page);
   await createPage(page, 'Mission control');
   await page.keyboard.type('The control room.');
