@@ -1,0 +1,21 @@
+Name,Status,Priority,Owner,Zone,Due,Tags,Estimate (days),Budget (USD),Needs review
+Zone outline and floor plan,Done,High,Maya,All zones,2026-09-05,"Planning, Layout",3,0,false
+Orbit simulator physics prototype,Done,High,Theo,5. Robot explorers,2026-09-12,"Interactive, Software",5,0,false
+Orbit simulator visitor interface,In progress,High,Theo,5. Robot explorers,2026-10-09,"Interactive, Software, Design",10,1200,true
+Launch-window countdown for the simulator,Not started,Medium,Theo,5. Robot explorers,2026-10-16,"Interactive, Software",2,0,false
+Simulator playtest with pilot schools,Not started,High,Sam,5. Robot explorers,2026-10-22,"Education, Testing",2,150,false
+Panel design system (Mosaic),Done,High,Priya,All zones,2026-09-18,"Design, Panels",4,0,false
+Sputnik and Laika panels,Done,Medium,Maya,1. First satellites,2026-09-19,"Panels, Writing",3,400,false
+Gagarin and Tereshkova panels,In review,Medium,Maya,2. First people,2026-09-26,"Panels, Writing",3,400,true
+Apollo 11 panel and photo wall,In progress,High,Priya,3. The Moon,2026-10-03,"Panels, Photos, Design",6,2500,true
+Apollo 13 rescue story panel,In progress,Medium,Maya,3. The Moon,2026-10-03,"Panels, Writing",2,400,false
+Katherine Johnson activity card,In review,Medium,Sam,3. The Moon,2026-10-01,"Education, Writing",2,200,true
+Mir and ISS model loan,Blocked,Medium,Maya,4. Living in space,2026-10-10,"Loans, Objects",1,800,false
+Voyager Golden Record listening station,Not started,Low,Priya,5. Robot explorers,2026-10-24,"Audio, Objects",4,3200,false
+Mars rovers scale display,In progress,Medium,Priya,5. Robot explorers,2026-10-17,"Objects, Design",4,1800,false
+Artemis crew wall and mirror,Not started,Medium,Priya,6. What's next,2026-10-24,"Panels, Design",3,900,false
+Audio guide scripts (zones 1–3),In progress,High,Sam,All zones,2026-10-10,"Audio, Writing",6,0,true
+Audio guide recording,Blocked,High,Sam,All zones,2026-10-17,"Audio, Production",3,2400,false
+Accessibility review and large-print labels,Not started,High,Sam,All zones,2026-10-30,"Accessibility, Testing",3,300,true
+Send final panel files to the printer,Not started,High,Priya,All zones,2026-10-31,"Panels, Production",1,6000,false
+Opening night invitations,Not started,Low,Maya,All zones,2026-10-24,"Events, Writing",1,250,false
