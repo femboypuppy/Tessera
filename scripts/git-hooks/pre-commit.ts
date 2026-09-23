@@ -13,7 +13,7 @@ const root = path.resolve(import.meta.dirname, '..', '..');
 const require = createRequire(path.join(root, 'packages', 'testkit', 'package.json'));
 
 interface LintStagedOptions {
-  config?: string;
+  configPath?: string;
   cwd?: string;
   quiet?: boolean;
 }
@@ -33,7 +33,7 @@ try {
 }
 
 const passed = await lintStaged({
-  config: path.join(import.meta.dirname, 'lint-staged.config.mjs'),
+  configPath: path.join(import.meta.dirname, 'lint-staged.config.mjs'),
   cwd: root,
 });
 process.exitCode = passed ? 0 : 1;
