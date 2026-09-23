@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-doc-store"
+description = "Enables the doc_store command without any pre-configured scope."
+commands.allow = ["doc_store"]
+
+[[permission]]
+identifier = "deny-doc-store"
+description = "Denies the doc_store command without any pre-configured scope."
+commands.deny = ["doc_store"]

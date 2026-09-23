@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-registry-remove"
+description = "Enables the registry_remove command without any pre-configured scope."
+commands.allow = ["registry_remove"]
+
+[[permission]]
+identifier = "deny-registry-remove"
+description = "Denies the registry_remove command without any pre-configured scope."
+commands.deny = ["registry_remove"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mirror-begin"
+description = "Enables the mirror_begin command without any pre-configured scope."
+commands.allow = ["mirror_begin"]
+
+[[permission]]
+identifier = "deny-mirror-begin"
+description = "Denies the mirror_begin command without any pre-configured scope."
+commands.deny = ["mirror_begin"]

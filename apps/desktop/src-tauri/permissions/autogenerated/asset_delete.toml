@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-asset-delete"
+description = "Enables the asset_delete command without any pre-configured scope."
+commands.allow = ["asset_delete"]
+
+[[permission]]
+identifier = "deny-asset-delete"
+description = "Denies the asset_delete command without any pre-configured scope."
+commands.deny = ["asset_delete"]

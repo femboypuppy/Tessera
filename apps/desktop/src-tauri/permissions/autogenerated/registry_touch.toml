@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-registry-touch"
+description = "Enables the registry_touch command without any pre-configured scope."
+commands.allow = ["registry_touch"]
+
+[[permission]]
+identifier = "deny-registry-touch"
+description = "Denies the registry_touch command without any pre-configured scope."
+commands.deny = ["registry_touch"]

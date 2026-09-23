@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mirror-finish"
+description = "Enables the mirror_finish command without any pre-configured scope."
+commands.allow = ["mirror_finish"]
+
+[[permission]]
+identifier = "deny-mirror-finish"
+description = "Denies the mirror_finish command without any pre-configured scope."
+commands.deny = ["mirror_finish"]
