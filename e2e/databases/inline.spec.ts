@@ -18,7 +18,11 @@ test('embeds an inline database in a page and edits it there', async ({ page }) 
   const title = page.getByRole('textbox', { name: 'Page title' });
   await expect(title).toBeFocused();
   await title.fill('Team handbook');
+  // The editor loads lazily: wait for its body before Enter moves the caret into it.
+  const body = page.getByRole('textbox', { name: 'Page content' });
+  await expect(body).toBeVisible({ timeout: 20_000 });
   await title.press('Enter');
+  await expect(body).toBeFocused();
 
   // The slash menu inserts a new database right in the page.
   await page.keyboard.type('/database');
