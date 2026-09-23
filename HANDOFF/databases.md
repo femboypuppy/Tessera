@@ -393,10 +393,11 @@ No other core changes are needed.
   editing inside the embed → view choice written to the block's data) is covered on this branch by
   `apps/web/src/features/databases/databases.test.tsx`, which renders the embed the way the
   editor's embed node view does (`ctx.blocks.resolve('database')`). **Verified with the editor:**
-  in a scratch worktree with `feat/editor` (07b5bdb) merged into this branch, the whole
-  `e2e/databases` suite passed on the production build in Chromium and Firefox (15 passed, the
-  Chromium-only perf spec skipped in Firefox), and `inline.spec.ts` passed 6 of 6 runs
-  (`--repeat-each=3`, both browsers).
+  in a scratch worktree with `feat/editor` (07b5bdb) merged into this branch, the
+  `e2e/databases` suite ran on the production build in Chromium and Firefox: 14 passed, the
+  Chromium-only perf spec skipped in Firefox, and `inline.spec.ts` failed once in Chromium
+  (Enter pressed before the lazily loaded editor mounted). After the spec waited for the editor,
+  `inline.spec.ts` passed 6 of 6 runs (`--repeat-each=3`, both browsers).
 - The 10,000-row performance e2e measures in Chromium only (frame timing is engine-specific).
 - Row hover buttons ("Open", row actions) are for the mouse; keyboard users have Alt+Enter (side
   peek), the context-menu key or Shift+F10 (row actions) and the header menu. On touch screens the
