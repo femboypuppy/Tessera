@@ -1,212 +1,226 @@
-<div align="center">
+<a id="readme-top"></a>
 
-<a href="https://github.com/femboypuppy/Tessera">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg">
-    <img src="assets/brand/wordmark-light.svg" alt="Tessera" height="64">
-  </picture>
-</a>
+<p align="center">
+  <a href="https://github.com/femboypuppy/Tessera">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="assets/brand/wordmark-light.svg">
+      <img src="assets/brand/wordmark-light.svg" alt="Tessera" width="311" height="64">
+    </picture>
+  </a>
+</p>
 
-### Your notes, your server. Notion's power, Obsidian's freedom.
+<h3 align="center">Your notes, your server. Notion's power, Obsidian's freedom.</h3>
 
-An open-source, local-first knowledge app: blocks and databases, `[[wikilinks]]` and a graph,
-real-time collaboration and sandboxed plugins. On your device, on your own server.
+<p align="center">
+  An open-source, local-first knowledge app: blocks and databases, <code>[[wikilinks]]</code> and a graph,<br>
+  real-time collaboration and sandboxed plugins. On your device, on your own server.
+</p>
 
-[![CI](https://github.com/femboypuppy/Tessera/actions/workflows/ci.yml/badge.svg)](https://github.com/femboypuppy/Tessera/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/femboypuppy/Tessera?include_prereleases&sort=semver)](https://github.com/femboypuppy/Tessera/releases/latest)
-[![License: MIT](https://img.shields.io/github/license/femboypuppy/Tessera)](LICENSE)
-[![Docker image](https://img.shields.io/badge/docker-ghcr.io%2Ffemboypuppy%2Ftessera-2496ED?logo=docker&logoColor=white)](https://github.com/femboypuppy/Tessera/pkgs/container/tessera)
+<p align="center">
+  <a href="https://github.com/femboypuppy/Tessera/stargazers"><img src="https://img.shields.io/github/stars/femboypuppy/Tessera?style=flat&logo=github" alt="GitHub stars" width="85" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/forks"><img src="https://img.shields.io/github/forks/femboypuppy/Tessera?style=flat&logo=github" alt="GitHub forks" width="89" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/releases/latest"><img src="https://img.shields.io/github/v/release/femboypuppy/Tessera?include_prereleases&sort=semver" alt="Latest release" width="94" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/femboypuppy/Tessera/ci.yml?branch=main&label=CI" alt="CI status" width="74" height="20"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/femboypuppy/Tessera" alt="License: MIT" width="108" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/pkgs/container/tessera"><img src="https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white" alt="Docker image on GitHub Container Registry" width="111" height="20"></a>
+  <br>
+  <a href="https://github.com/femboypuppy/Tessera/commits/main"><img src="https://img.shields.io/github/last-commit/femboypuppy/Tessera" alt="Last commit" width="116" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/issues"><img src="https://img.shields.io/github/issues/femboypuppy/Tessera" alt="Open issues" width="104" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/graphs/contributors"><img src="https://img.shields.io/github/contributors/femboypuppy/Tessera" alt="Contributors" width="108" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera/discussions"><img src="https://img.shields.io/github/discussions/femboypuppy/Tessera" alt="GitHub Discussions" width="132" height="20"></a>
+</p>
 
-**[Docs](https://femboypuppy.github.io/Tessera/)** ·
-**[Download](https://github.com/femboypuppy/Tessera/releases/latest)** ·
-**[Self-host](https://femboypuppy.github.io/Tessera/self-hosting/)** ·
-**[Plugins](https://femboypuppy.github.io/Tessera/plugins/)** ·
-**[Roadmap](#roadmap)**
-
-</div>
+<p align="center">
+  <a href="https://femboypuppy.github.io/Tessera/"><strong>Docs</strong></a> ·
+  <a href="https://github.com/femboypuppy/Tessera/releases/latest"><strong>Download</strong></a> ·
+  <a href="https://femboypuppy.github.io/Tessera/self-hosting/"><strong>Self-host</strong></a> ·
+  <a href="https://femboypuppy.github.io/Tessera/plugins/"><strong>Plugins</strong></a> ·
+  <a href="#roadmap"><strong>Roadmap</strong></a> ·
+  <a href="https://github.com/femboypuppy/Tessera/discussions"><strong>Discussions</strong></a>
+</p>
 
 <!-- PLACEHOLDER: assets/demo.gif is a "coming soon" frame until the polish phase records the demo (agents/12-polish.md). -->
 <p align="center">
-  <img src="assets/demo.gif" alt="Tessera demo: writing with the slash menu, linking pages, dragging a card on a board and exploring the graph (recording coming soon)" width="860">
+  <img src="assets/demo.gif" alt="Tessera demo: writing with the slash menu, linking pages, dragging a card on a board and exploring the graph (recording coming soon)" width="800">
 </p>
 
-- **It's yours.** Your device holds the real data. Tessera works fully offline, and a server is optional.
-- **No lock-in.** Import Notion and Obsidian in one click. Export to plain markdown any time.
-- **Built to be extended.** Plugins run in a sandbox with permissions you approve.
+- **It's yours.** Your device holds the real data. Tessera works fully offline; a server is optional.
+- **No lock-in.** Import Notion and Obsidian in one click. Export plain markdown any time.
+- **Built to be extended.** Plugins run in a sandbox, with permissions you approve.
+
+> [!NOTE]
+> Tessera is an early release (0.1). It's ready to try and to build on, and there will be rough
+> edges. Keep a backup of anything important, and please
+> [tell us what breaks](https://github.com/femboypuppy/Tessera/issues/new/choose).
+
+<details>
+<summary><strong>Table of contents</strong></summary>
+
+- [Features](#features)
+- [Quickstart](#quickstart)
+- [How it works](#how-it-works)
+- [How Tessera compares](#how-tessera-compares)
+- [Roadmap](#roadmap)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [Community and support](#community-and-support)
+- [Star history](#star-history)
+- [Acknowledgements](#acknowledgements)
+- [License and contact](#license-and-contact)
+
+</details>
 
 ## Features
 
-### Write in blocks
-
-A fast block editor with a slash menu, markdown shortcuts, drag handles, tables, callouts, toggles,
-code with syntax highlighting, images and embeds. Type `[[` to link a page, `#` to tag it.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/editor/rich-page-dark.png">
-  <img src="assets/screenshots/editor/rich-page-light.png" alt="A page with headings, a callout, a code block, a table, a toggle and a task list">
-</picture>
-
 <table>
   <tr>
-    <td width="50%">
+    <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/editor/slash-menu-dark.png">
-        <img src="assets/screenshots/editor/slash-menu-light.png" alt="The slash menu listing block types">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/architect/shell-dark.png">
+        <img src="assets/screenshots/architect/shell-light.png" alt="A Tessera workspace with a nested page tree, favorites, a page icon and a cover" width="420">
       </picture>
+      <p align="center"><strong>Your workspace</strong><br><sub>A page tree you can drag, nest and reorder from the keyboard, with favorites, icons and covers.</sub></p>
     </td>
-    <td width="50%">
+    <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/editor/link-preview-dark.png">
-        <img src="assets/screenshots/editor/link-preview-light.png" alt="Hovering a page link shows a preview">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/architect/shortcuts-dark.png">
+        <img src="assets/screenshots/architect/shortcuts-light.png" alt="The keyboard shortcuts overlay grouped by navigation, page, view and help" width="420">
       </picture>
+      <p align="center"><strong>Keyboard first</strong><br><sub>Every action has a shortcut. Press <kbd>?</kbd> to see them all, including the ones plugins add.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/architect/settings-dark.png">
+        <img src="assets/screenshots/architect/settings-light.png" alt="Settings with light, dark and system themes, display name, cursor color and workspace name" width="420">
+      </picture>
+      <p align="center"><strong>Light, dark or system</strong><br><sub>A calm interface in both themes, with your name and cursor color for collaboration.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/architect/trash-dark.png">
+        <img src="assets/screenshots/architect/trash-light.png" alt="The trash with two deleted pages, each with Restore and Delete forever buttons" width="420">
+      </picture>
+      <p align="center"><strong>Never lose a page</strong><br><sub>Deleting goes to the trash with an Undo. Restore brings back exactly what you removed.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top" align="center">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/architect/phone-dark.png">
+        <img src="assets/screenshots/architect/phone-light.png" alt="A page at phone width" width="180">
+      </picture>
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/architect/phone-sidebar-dark.png">
+        <img src="assets/screenshots/architect/phone-sidebar-light.png" alt="The sidebar as a drawer at phone width" width="180">
+      </picture>
+      <p align="center"><strong>Works at phone width</strong><br><sub>The web app adapts to small screens, with the sidebar as a drawer.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/docs/docs-home-dark.png">
+        <img src="assets/screenshots/docs/docs-home-light.png" alt="The Tessera documentation site home page" width="420">
+      </picture>
+      <p align="center"><strong>Documented</strong><br><sub>Guides for every feature, a self-hosting reference and an architecture guide for contributors.</sub></p>
     </td>
   </tr>
 </table>
 
-### Databases with real views
+<details>
+<summary><strong>The full feature list</strong></summary>
 
-Table, board, calendar, gallery and list views over typed properties: select, date, number,
-relation, checkbox and more. Filter, sort and group, all offline, and smooth with 10,000 rows.
+<br>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/databases/board-dark.png">
-  <img src="assets/screenshots/databases/board-light.png" alt="A project board grouped by status">
-</picture>
+**Write in blocks.** A block editor with a slash menu, markdown shortcuts, drag handles, tables,
+callouts, toggles, code with syntax highlighting, images and embeds (YouTube, Vimeo, Loom, Figma,
+CodePen). Type `[[` to link a page and `#` to tag it. Copy and paste keep their formatting.
 
-<table>
-  <tr>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/databases/table-dark.png">
-        <img src="assets/screenshots/databases/table-light.png" alt="A reading list in the table view">
-      </picture>
-    </td>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/databases/calendar-dark.png">
-        <img src="assets/screenshots/databases/calendar-light.png" alt="The calendar view">
-      </picture>
-    </td>
-  </tr>
-</table>
+**Databases with real views.** Table, board, calendar, gallery and list views over typed
+properties: text, number, select, multi-select, date, checkbox, URL, email, relation, created and
+updated time. Filters with nested and/or groups, multi-level sorts, grouping, summaries, row
+templates and CSV import and export. Inline databases inside any page.
 
-### Links, backlinks and a graph
+**Links, backlinks and a graph.** Links follow renames. Backlinks show the sentence around each
+link; unlinked mentions become links in one click. A global graph and a local graph for the
+current page.
 
-Every `[[link]]` works both ways. See what links here, turn unlinked mentions into links with one
-click, and explore your notes as a graph.
+**Find anything.** <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd> opens one palette for pages,
+full-text results, tags and commands, with filters like `tag:space`, `in:Projects` and `is:task`.
+Search runs in a worker, offline.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/graph-dark.png">
-  <img src="assets/screenshots/search/graph-light.png" alt="The graph view of a few hundred linked pages, colored by tag">
-</picture>
+**Collaborate, or never go online.** Every edit is saved locally first. Sync uses Yjs CRDTs, so
+offline edits merge without conflicts. Live cursors, presence, roles (owner, editor, viewer) and
+version history on your own server.
 
-<table>
-  <tr>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/backlinks-dark.png">
-        <img src="assets/screenshots/search/backlinks-light.png" alt="The backlinks panel with linked references and unlinked mentions">
-      </picture>
-    </td>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/palette-dark.png">
-        <img src="assets/screenshots/search/palette-light.png" alt="The command palette searching pages and commands">
-      </picture>
-    </td>
-  </tr>
-</table>
+**Plugins, safely sandboxed.** Commands, panels and custom blocks in sandboxed iframes, with
+permissions you approve and can revoke. A typed SDK and `pnpm create tessera-plugin`.
 
-### Find anything with <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd>
+**Move in, move out.** Import a Notion export, an Obsidian vault or a markdown folder with links,
+databases and attachments. Export to Obsidian-compatible markdown, HTML, PDF or a full JSON
+backup.
 
-One palette for pages, full-text results with highlights, tags and commands. Filters like
-`tag:space`, `in:Projects` and `is:task` narrow it down.
+**Desktop and self-hosting.** Apps for macOS, Windows and Linux keep each workspace in a folder
+you choose, with quick capture from anywhere. The server is one container with SQLite.
 
-### Collaborate in real time, or never go online
+</details>
 
-Edit the same page with others and see their cursors. Offline edits sync when you reconnect, with
-nothing lost. Every page keeps a version history you can restore.
+> [!TIP]
+> The fastest way to look around: choose **Open demo workspace** on the first screen. It has a
+> project board, a reading list, meeting notes and a small knowledge garden about the history of
+> space exploration, so the graph has something to show.
 
-<table>
-  <tr>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/sync/presence-dark.png">
-        <img src="assets/screenshots/sync/presence-light.png" alt="Two people editing the same page">
-      </picture>
-    </td>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/sync/history-panel-dark.png">
-        <img src="assets/screenshots/sync/history-panel-light.png" alt="The version history panel">
-      </picture>
-    </td>
-  </tr>
-</table>
-
-### Plugins, safely sandboxed
-
-Plugins add commands, panels and custom blocks. Each one runs in its own sandboxed iframe and can
-only do what you allowed. Scaffold one with `pnpm create tessera-plugin`.
-
-<table>
-  <tr>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/plugins/mermaid-block-dark.png">
-        <img src="assets/screenshots/plugins/mermaid-block-light.png" alt="A Mermaid diagram block rendered by a plugin">
-      </picture>
-    </td>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/plugins/permission-prompt-dark.png">
-        <img src="assets/screenshots/plugins/permission-prompt-light.png" alt="The permission prompt shown when installing a plugin">
-      </picture>
-    </td>
-  </tr>
-</table>
-
-### Move in, move out
-
-Import a Notion export, an Obsidian vault or a folder of markdown, with links, databases and
-attachments intact. Export a page or everything to Obsidian-compatible markdown, HTML, PDF or a
-full JSON backup.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/importers/import-report-dark.png">
-  <img src="assets/screenshots/importers/import-report-light.png" alt="The import report after importing an Obsidian vault">
-</picture>
-
-### Desktop app and one-command self-hosting
-
-Native apps for macOS, Windows and Linux keep each workspace in a folder you choose, with quick
-capture from anywhere. The server is one container.
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/desktop/desktop-window-dark.png">
-  <img src="assets/screenshots/desktop/desktop-window-light.png" alt="Tessera in its desktop window">
-</picture>
+<p align="right"><a href="#readme-top">back to top ↑</a></p>
 
 ## Quickstart
 
-**Desktop app.** Download it for macOS, Windows or Linux from the
-[latest release](https://github.com/femboypuppy/Tessera/releases/latest) and open it. That's all.
-
-**Docker, one line.**
+Run the server, then open `http://localhost:8787` and create the owner account:
 
 ```bash
 docker run -d --name tessera -p 8787:8787 -v tessera-data:/data ghcr.io/femboypuppy/tessera:latest
 ```
 
-Then open <http://localhost:8787> and create the owner account.
+Prefer a native app? Download it for macOS, Windows or Linux from the
+[latest release](https://github.com/femboypuppy/Tessera/releases/latest).
 
-**Docker Compose** (with optional automatic HTTPS through Caddy):
+<details>
+<summary><strong>All install methods</strong></summary>
+
+<br>
+
+**Desktop app.** Download the installer for your system from the
+[latest release](https://github.com/femboypuppy/Tessera/releases/latest) and open it. Each
+workspace is a folder on your disk, and everything works offline.
+
+**Docker Compose**, with a restart policy and optional automatic HTTPS through Caddy:
 
 ```bash
 mkdir tessera && cd tessera
 curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera/main/docker-compose.yml
 docker compose up -d
 ```
+
+A minimal compose file, if you'd rather write your own:
+
+```yaml
+services:
+  tessera:
+    image: ghcr.io/femboypuppy/tessera:latest
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    volumes:
+      - tessera-data:/data
+    environment:
+      PUBLIC_URL: https://notes.example.com
+      SIGNUP_MODE: invite
+volumes:
+  tessera-data:
+```
+
+**Web app.** Once a server runs, open its address in any modern browser. The web app keeps your
+workspace in the browser and syncs when it's online.
 
 **From source** (Node 24 and pnpm 11):
 
@@ -217,37 +231,83 @@ pnpm install
 pnpm dev
 ```
 
-The [installation guide](https://femboypuppy.github.io/Tessera/guide/installation) covers every
-option, and [self-hosting](https://femboypuppy.github.io/Tessera/self-hosting/) covers
-configuration, HTTPS, backups and upgrades.
+The [installation guide](https://femboypuppy.github.io/Tessera/guide/installation) covers each
+option in detail.
+
+</details>
+
+> [!IMPORTANT]
+> Before anyone signs in over the internet, put the server behind HTTPS and keep sign-ups
+> invite-only (`SIGNUP_MODE=invite`). The
+> [self-hosting guide](https://femboypuppy.github.io/Tessera/self-hosting/) covers HTTPS, every
+> setting, and [backups](https://femboypuppy.github.io/Tessera/self-hosting/backups).
+
+> [!WARNING]
+> A workspace that lives only in a browser is as durable as that browser profile: clearing site
+> data deletes it. For anything you'd hate to lose, use the desktop app or sync to a server.
+
+<p align="right"><a href="#readme-top">back to top ↑</a></p>
+
+## How it works
+
+```mermaid
+flowchart LR
+  subgraph device["Your device"]
+    app["Tessera app<br/>web or desktop"]
+    store[("Local storage<br/>IndexedDB or SQLite")]
+  end
+  subgraph server["Your server (optional)"]
+    sync["Sync server<br/>Hocuspocus"]
+    db[("SQLite")]
+  end
+  other["Other devices<br/>and people"]
+
+  app -- "every edit, saved first" --> store
+  app <-- "Yjs updates over WebSocket" --> sync
+  sync --> db
+  sync <--> other
+```
+
+- **Every page is a [Yjs](https://github.com/yjs/yjs) document.** Edits are written to your
+  device before they go anywhere, and changes from different people merge without conflicts.
+- **The server is optional.** It stores updates and forwards them to other clients; your devices
+  keep working without it.
+- **Features plug in.** The editor, databases, search, sync and plugins are separate modules on one
+  small core. The [architecture guide](https://femboypuppy.github.io/Tessera/contributing/architecture)
+  and [SPEC.md](SPEC.md) explain the details.
 
 ## How Tessera compares
 
-Tessera is new (0.1). The products below are mature and polished; this table compares what each
-one can do, not how refined it is. Last checked **2026-09-23** against each product's own docs,
-pricing page and license.
+Tessera is new; the products below are mature and polished. This compares what each one can do,
+not how refined it is. Last checked **2026-09-23** against each product's own docs, pricing page
+and license. ✅ yes · ⚠️ partly · ❌ no
 
-|                                 | Tessera          | Notion                  | Obsidian             | Anytype                     | AFFiNE                                  | Logseq                     |
-| ------------------------------- | ---------------- | ----------------------- | -------------------- | --------------------------- | --------------------------------------- | -------------------------- |
-| Open source                     | ✅ MIT           | ❌                      | ❌                   | Source-available [^any-lic] | MIT client, source-available server [^affine-lic] | ✅ AGPL-3.0                |
-| Local-first, works offline      | ✅               | ❌ [^notion-offline]    | ✅                   | ✅                          | ✅                                      | ✅                         |
-| Self-hostable sync              | ✅ one container | ❌                      | ❌ [^obs-sync]       | ✅                          | ✅                                      | Experimental [^logseq-sync] |
-| Real-time collaboration         | ✅               | ✅                      | ❌                   | Partial [^any-collab]       | ✅                                      | Beta [^logseq-db]          |
-| Databases (typed views)         | ✅               | ✅                      | ✅ Bases             | ✅                          | ✅                                      | Beta [^logseq-db]          |
-| Plugins                         | ✅ sandboxed     | ❌ API only             | ✅                   | ❌                          | ❌                                      | ✅                         |
-| Graph view                      | ✅               | ❌                      | ✅                   | ✅                          | ❌                                      | ✅                         |
-| Price                           | Free             | Free; Plus $10/seat/mo  | Free; Sync $4/mo     | Free; paid from $4/mo       | Free; Pro $6.75/mo                      | Free                       |
+|                            | Tessera | Notion | Obsidian | Anytype | AFFiNE | Logseq |
+| -------------------------- | :-----: | :----: | :------: | :-----: | :----: | :----: |
+| Open source                | ✅ MIT | ❌ | ❌ | ⚠️ <sup>1</sup> | ⚠️ <sup>2</sup> | ✅ AGPL-3.0 |
+| Local-first, works offline | ✅ | ❌ <sup>3</sup> | ✅ | ✅ | ✅ | ✅ |
+| Self-hostable sync         | ✅ | ❌ | ❌ <sup>4</sup> | ✅ | ✅ | ⚠️ <sup>5</sup> |
+| Real-time collaboration    | ✅ | ✅ | ❌ | ⚠️ <sup>6</sup> | ✅ | ⚠️ <sup>7</sup> |
+| Databases (typed views)    | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>7</sup> |
+| Plugins                    | ✅ | ⚠️ <sup>8</sup> | ✅ | ❌ | ❌ | ✅ |
+| Graph view                 | ✅ | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Price                      | Free | Free; Plus $10/seat/mo | Free; Sync $4/mo | Free; paid from $4/mo | Free; Pro $6.75/mo | Free |
+
+**Notes**
+
+1. Anytype's apps use the Any Source Available License, which isn't OSI-approved. Its sync protocol and server (any-sync) are MIT.
+2. AFFiNE's editor and apps are MIT; its backend is under the AFFiNE Enterprise Edition license, with a free self-hosted community edition.
+3. Notion offers offline access to pages you download ahead of time. It is cloud-first.
+4. Obsidian Sync is a paid hosted service. Community plugins can sync through your own storage.
+5. The Logseq repository includes a sync server for the database version, but the official roadmap still lists self-hosted sync as planned.
+6. Anytype shares spaces between members and syncs changes when they're online; simultaneous editing of one object isn't documented.
+7. Real-time collaboration and typed database properties are part of the Logseq database version, in beta since 2026.
+8. Notion has a public API for integrations, but no plugins that run inside the app.
 
 Prices are the lowest paid tier, billed yearly, in USD. Spotted something out of date?
 [Open an issue](https://github.com/femboypuppy/Tessera/issues/new/choose) and we'll fix it.
 
-[^any-lic]: Anytype's apps use the Any Source Available License, which isn't OSI-approved. Its sync protocol and server (any-sync) are MIT.
-[^affine-lic]: AFFiNE's editor and apps are MIT; its backend is under the AFFiNE Enterprise Edition license, with a free self-hosted community edition.
-[^notion-offline]: Notion offers offline access to pages you download ahead of time. It is cloud-first.
-[^obs-sync]: Obsidian Sync is a paid hosted service. Community plugins can sync through your own storage.
-[^logseq-sync]: The Logseq repository includes a sync server for the database version, but the official roadmap still lists self-hosted sync as planned.
-[^any-collab]: Anytype shares spaces between members and syncs changes when they're online; simultaneous editing of one object isn't documented.
-[^logseq-db]: Real-time collaboration and typed database properties are part of the Logseq database version, in beta since 2026.
+<p align="right"><a href="#readme-top">back to top ↑</a></p>
 
 ## Roadmap
 
@@ -261,23 +321,117 @@ Tessera 0.1 covers everything above. Next, roughly in order (follow along in
 - Importers for Logseq, Bear and Evernote
 - Native mobile apps (the web app already works at phone width)
 
+## FAQ
+
+<details>
+<summary><strong>Is Tessera free?</strong></summary>
+
+<br>
+
+Yes. It's open source under the [MIT license](LICENSE). There's no paid plan, no account with us
+and no telemetry. Running a server costs whatever your hosting costs.
+
+</details>
+
+<details>
+<summary><strong>Where is my data?</strong></summary>
+
+<br>
+
+On your device: in a folder you choose (desktop app) or in the browser's storage (web app). If you
+connect a server, a copy lives on that server too, and you run it.
+
+</details>
+
+<details>
+<summary><strong>Do I need a server? Is there a hosted version?</strong></summary>
+
+<br>
+
+No server is needed: Tessera works fully offline on one device. You need one only to sync devices
+or work with other people, and it's a single container. There's no Tessera cloud; a small VPS or a
+home server runs it comfortably.
+
+</details>
+
+<details>
+<summary><strong>Is my data encrypted?</strong></summary>
+
+<br>
+
+Traffic between the apps and your server uses HTTPS. Data at rest is stored as-is on your device
+and your server, so use disk encryption. End-to-end encryption is on the [roadmap](#roadmap).
+
+</details>
+
+<details>
+<summary><strong>Can I use my Obsidian vault directly?</strong></summary>
+
+<br>
+
+Tessera imports vaults rather than editing the files in place, so that sync and collaboration can
+merge edits safely. You can export back to Obsidian-compatible markdown at any time, and the
+desktop app can keep a live markdown copy of each workspace.
+
+</details>
+
+<details>
+<summary><strong>How do plugins stay safe?</strong></summary>
+
+<br>
+
+Each plugin runs in its own sandboxed iframe with no access to the app, your storage or your
+cookies. It can only call the APIs for the permissions you approved, and you can revoke them at any
+time.
+
+</details>
+
+<details>
+<summary><strong>Is there a mobile app?</strong></summary>
+
+<br>
+
+Not yet. The web app works on phones and tablets; native apps are on the [roadmap](#roadmap).
+
+</details>
+
+More answers in the [FAQ](https://femboypuppy.github.io/Tessera/guide/faq) and
+[troubleshooting](https://femboypuppy.github.io/Tessera/guide/troubleshooting) guides.
+
+<p align="right"><a href="#readme-top">back to top ↑</a></p>
+
 ## Contributing
 
 Tessera is a friendly place for a first contribution. Read [CONTRIBUTING.md](CONTRIBUTING.md) for
 the dev setup and a tour of the repo, then pick a
 [good first issue](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
-The [architecture guide](https://femboypuppy.github.io/Tessera/contributing/architecture) and
-[SPEC.md](SPEC.md) explain how the pieces fit together.
+Plugins are welcome too: `pnpm create tessera-plugin my-plugin` scaffolds one.
 
-## Community
+<a href="https://github.com/femboypuppy/Tessera/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=femboypuppy/Tessera" alt="Avatars of the people who have contributed to Tessera" width="400">
+</a>
 
-- [GitHub Discussions](https://github.com/femboypuppy/Tessera/discussions) for questions, ideas and show-and-tell
-- [Issues](https://github.com/femboypuppy/Tessera/issues) for bugs and feature requests
+## Community and support
+
+- **Questions and ideas:** [GitHub Discussions](https://github.com/femboypuppy/Tessera/discussions)
+- **Bugs and feature requests:** [Issues](https://github.com/femboypuppy/Tessera/issues/new/choose)
+- **Security reports:** privately, through
+  [GitHub security advisories](https://github.com/femboypuppy/Tessera/security/advisories/new)
 - Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## License
+## Star history
 
-[MIT](LICENSE). Your notes stay yours, and so does the code.
+If Tessera is useful to you, or you'd like to see where it goes,
+**⭐ [star the repo](https://github.com/femboypuppy/Tessera)**. It helps other people find it,
+and it makes our day.
+
+<a href="https://star-history.com/#femboypuppy/Tessera&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date&theme=dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date">
+    <img src="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date" alt="Star history chart for femboypuppy/Tessera" width="600">
+  </picture>
+</a>
 
 ## Acknowledgements
 
@@ -307,11 +461,14 @@ Tessera stands on the shoulders of excellent open-source projects:
 [Vitest](https://vitest.dev) ·
 [VitePress](https://vitepress.dev).
 
-## Star history
+## License and contact
 
-<a href="https://star-history.com/#femboypuppy/Tessera&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date&theme=dark">
-    <img alt="Star history of Tessera" src="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date" width="600">
-  </picture>
-</a>
+Tessera is released under the [MIT License](LICENSE). Your notes stay yours, and so does the code.
+
+Curious how it was made? [BUILT_WITH_AGENTS.md](BUILT_WITH_AGENTS.md) describes how the first
+version was built by parallel AI agents working from written briefs.
+
+**Contact:** [femboypuppy@tutanota.de](mailto:femboypuppy@tutanota.de) · Security issues: please
+use [private security advisories](https://github.com/femboypuppy/Tessera/security/advisories/new).
+
+<p align="right"><a href="#readme-top">back to top ↑</a></p>

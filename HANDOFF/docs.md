@@ -38,7 +38,7 @@ Milestones from `agents/10-docs-launch.md`, each committed when it worked. All d
 | `.github/PULL_REQUEST_TEMPLATE.md` | What/why, how to test, screenshots, checklist. |
 | `examples/demo-workspace/` | `Welcome to Tessera` (interactive checklist tutorial), `Keyboard shortcuts`, `Every block type`, `Inbox`, `Projects.csv` (20 rows: select, multi-select, date, number, currency-like, checkbox), `Reading list.csv` (16 rows), `Meeting notes/` (4 meetings + a template), `Knowledge garden/` (30 interlinked notes on the history of space exploration, with tags and aliases; about 250 wikilinks across the workspace), `attachments/hohmann-transfer.png`. |
 | `LAUNCH.md` | Show HN title, post and first comment; r/selfhosted and r/opensource posts; Product Hunt listing; a 7-post thread; the blog post "Building a local-first Notion alternative with Yjs"; the launch-day checklist. |
-| `BUILT_WITH_AGENTS.md` | An honest write-up of the multi-agent process. Not linked from the README: the owner decides. |
+| `BUILT_WITH_AGENTS.md` | An honest write-up of the multi-agent process, linked from the README footer at the owner's request. |
 | `e2e/docs/` | `readme.spec.ts` (links, anchors, images, alt text, top-of-README contents, quickstart length, comparison table), `brand.spec.ts` (SVG validity, rendering at 16/32/64 px, PNG/ICO sizes, docs screenshots), `repo-files.ts` helpers. |
 | `assets/screenshots/docs/` | `docs-home`, `docs-guide`, `docs-self-hosting`, each `-light.png`/`-dark.png`, 1440×900. |
 
@@ -100,8 +100,32 @@ No FeatureModule: the docs team has no app feature. The docs site plugs into the
   and monthly prices, Logseq's self-hosted sync (the repo has a sync server; the roadmap still says
   "planned"), Anytype's collaboration (sync when online vs live co-editing), and Notion's USD
   prices (the page rendered in EUR; USD came from its embedded plan data).
-- **Code of Conduct contact:** email to the owner at the address on their GitHub profile. No
-  address was invented. The owner should add a dedicated conduct address (follow-up).
+- **Contact email:** femboypuppy@tutanota.de (given by the owner) in `CODE_OF_CONDUCT.md` and the
+  README footer. Security reports go to private GitHub security advisories instead.
+- **GitHub-native README.** Centered `<picture>` wordmark (light/dark), ten shields.io badges, a
+  quick-links row, the demo GIF at width 800, a collapsible table of contents, back-to-top links,
+  four alerts (NOTE: early release; TIP: demo workspace; IMPORTANT: HTTPS and invite-only
+  sign-ups; WARNING: browser-only workspaces), `<details>` for all install methods, the full
+  feature list and the FAQ, a Mermaid diagram, a ✅/⚠️/❌ comparison table, star history with a
+  dark variant, a contrib.rocks grid, and a footer with the license, `BUILT_WITH_AGENTS.md` and the
+  contact. Headings have no emoji, so their anchors are predictable.
+- **Showcase uses only screenshots that exist.** The rule is "no broken images", and the feature
+  screenshots (editor, databases, graph, …) live on other branches until the merge. So the
+  showcase shows the shell (workspace, shortcuts, settings, trash, phone layout) and the docs site,
+  and the merge swaps in the feature snippet under *README image paths*.
+- **Badge widths.** Every `<img>` has an explicit width, as asked. shields.io SVGs have no
+  `viewBox`, so a width can't scale them: each badge's width was measured from shields.io for a
+  large public repo (an upper bound for Tessera's counts) and set with `height="20"`. Small counts
+  leave a few pixels of padding, never clipping. While the repo is private, the dynamic badges,
+  star history and contributors grid show "repo not found" images; they fill in once it's public.
+- **Validated with GitHub's renderer.** The README was rendered by GitHub's `/markdown` API in both
+  `markdown` mode (how READMEs render) and `gfm` mode (the four alerts), then screenshotted with
+  `github-markdown-css` in light and dark: no broken local images, no raw markdown leaking out of
+  HTML blocks, all ten `<details>` rendered. That pass caught two things, now fixed: GFM footnotes
+  render at the very end of the page (the comparison notes are now a numbered list right under the
+  table), and `- [ ]` task items render as literal `[ ]` in READMEs (the roadmap uses plain
+  bullets). The Mermaid block was parsed and rendered with Mermaid 11. Heading anchors are added by
+  github.com's file view; the spec checks the TOC against GitHub's slug rule.
 - **Checks live in two places:** YAML validation needs a parser the root workspace doesn't expose,
   so the issue-form, demo and brand checks are `node:test` files in the docs project (also run by
   `pnpm --dir docs build`, so the docs CI job enforces them). The README and brand-asset checks
@@ -128,9 +152,10 @@ None.
   asset file names, how the compose file enables Caddy, and `.env.example`'s location.
 - `Screenshot.vue` isn't type-checked (no `vue-tsc`); `tsc` covers the config, theme entry and
   scripts.
-- 30 README image paths (15 screenshots × 2 themes) and several docs screenshots belong to other
-  agents and don't exist on this branch. The README shows broken images until the merge; the docs
-  site hides missing ones.
+- The README has no broken repo images: every relative image exists (enforced by
+  `e2e/docs/readme.spec.ts`). Its only placeholder is `assets/demo.gif`. The feature screenshots
+  from other agents are left out until the merge (see *README image paths*), and the docs site
+  hides any screenshot that doesn't exist yet.
 - `LAUNCH.md`'s r/selfhosted post has a `[link to the README or an album]` slot for the owner.
 
 ## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)
@@ -159,9 +184,10 @@ None.
 - **Plugin docs (Agent 06).** Nothing to wire: pages in `docs/plugins/` appear in the sidebar. Add
   a `docs/plugins/index.md` so `/plugins/` (linked from the README and issue forms) exists, and
   check `pnpm --dir docs build` passes the dead-link check with them.
-- **Screenshots.** After every branch is merged, run `STRICT_SCREENSHOTS=1 pnpm test:e2e e2e/docs`:
-  it fails if any README screenshot is missing. Then `pnpm --dir docs screenshots` to refresh the
-  docs-site shots.
+- **README showcase.** Once the feature branches are merged and their screenshots exist, replace
+  the `<table>` in the README's *Features* section with the snippet under *README image paths*,
+  then run `pnpm test:e2e e2e/docs` (it fails on any missing image). Refresh the docs-site shots
+  with `pnpm --dir docs screenshots`.
 - **Server configuration (Agent 03).** Copy the defaults from `apps/server/README.md` into
   `docs/self-hosting/configuration.md`, remove "to be confirmed" and the pre-release warning, and
   confirm the CLI (`tessera-server create-owner|backup|restore`) and port.
@@ -181,32 +207,106 @@ None.
 - **Owner tasks before launch:** upload `assets/brand/social-preview.png` in the repository
   settings; enable Discussions with a **Q&A** category (the question form links to
   `/discussions/categories/q-a`); create the labels `bug`, `enhancement`, `question`, `triage`,
-  `roadmap`, `good first issue`; enable private vulnerability reporting; add a conduct contact
-  email to `CODE_OF_CONDUCT.md`; pick a tagline; decide whether to link `BUILT_WITH_AGENTS.md`.
+  `roadmap`, `good first issue`; enable private vulnerability reporting; pick a tagline; decide
+  whether to keep the `BUILT_WITH_AGENTS.md` link in the README footer (added at the owner's
+  request).
 - **Git history note.** `main`'s commits have different SHAs from the base of the feature branches
   (same messages and the same tree as `feat/docs`'s base). Merging with `--no-ff` works, but the
   history will show both copies unless the owner intended the rewrite.
 
 ## README image paths
 
-Exist on this branch: `assets/brand/wordmark-light.svg`, `assets/brand/wordmark-dark.svg`,
-`assets/demo.gif` (placeholder).
+Every image the README uses exists on this branch (checked by `e2e/docs/readme.spec.ts`):
 
-Promised by other agents (each in `-light.png` and `-dark.png`), verified by `e2e/docs/readme.spec.ts`
-against the names in the agent files:
+- `assets/brand/wordmark-light.svg`, `assets/brand/wordmark-dark.svg` (logo)
+- `assets/demo.gif`: **placeholder**, a labeled "Demo recording coming soon" frame. The polish
+  phase replaces it with the real recording (`agents/12-polish.md`).
+- `assets/screenshots/architect/`: `shell`, `shortcuts`, `settings`, `trash`, `phone`,
+  `phone-sidebar` (each `-light.png` and `-dark.png`)
+- `assets/screenshots/docs/`: `docs-home` (`-light.png` and `-dark.png`)
+- External (fill in once the repo is public): shields.io badges, star-history.com, contrib.rocks.
 
-- `assets/screenshots/editor/`: `rich-page`, `slash-menu`, `link-preview`
-- `assets/screenshots/databases/`: `board`, `table`, `calendar`
-- `assets/screenshots/search/`: `graph`, `backlinks`, `palette`
-- `assets/screenshots/sync/`: `presence`, `history-panel`
-- `assets/screenshots/plugins/`: `mermaid-block`, `permission-prompt`
-- `assets/screenshots/importers/`: `import-report`
-- `assets/screenshots/desktop/`: `desktop-window`
+**Merge-time showcase.** When the feature branches land, replace the README's *Features* table
+with this one. It uses the exact screenshot names from each agent file, and a test checks every
+name against them:
 
-The docs guides additionally use `architect/shell`, `architect/onboarding`, `architect/shortcuts`
-(exist), `databases/gallery`, `databases/filter-builder`, `search/local-graph`,
-`importers/import-dialog`, `importers/export-dialog`, `sync/sync-status`, `sync/connect-server`,
-`desktop/workspace-picker` and `desktop/quick-capture`.
+<!-- merge-showcase:start -->
+```html
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/editor/rich-page-dark.png">
+        <img src="assets/screenshots/editor/rich-page-light.png" alt="A page with headings, a callout, a code block, a table, a toggle and a task list" width="420">
+      </picture>
+      <p align="center"><strong>Write in blocks</strong><br><sub>Slash menu, markdown shortcuts, tables, callouts, toggles, code and embeds.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/databases/board-dark.png">
+        <img src="assets/screenshots/databases/board-light.png" alt="A project board grouped by status" width="420">
+      </picture>
+      <p align="center"><strong>Databases with real views</strong><br><sub>Table, board, calendar, gallery and list views over typed properties.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/graph-dark.png">
+        <img src="assets/screenshots/search/graph-light.png" alt="The graph view of a few hundred linked pages, colored by tag" width="420">
+      </picture>
+      <p align="center"><strong>Links and a graph</strong><br><sub>Backlinks, unlinked mentions and a graph of everything you know.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/palette-dark.png">
+        <img src="assets/screenshots/search/palette-light.png" alt="The command palette searching pages and commands" width="420">
+      </picture>
+      <p align="center"><strong>Find anything</strong><br><sub>One palette for pages, full-text results, tags and commands.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/sync/presence-dark.png">
+        <img src="assets/screenshots/sync/presence-light.png" alt="Two people editing the same page" width="420">
+      </picture>
+      <p align="center"><strong>Real-time collaboration</strong><br><sub>Live cursors and presence on your own server, and it all works offline.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/plugins/mermaid-block-dark.png">
+        <img src="assets/screenshots/plugins/mermaid-block-light.png" alt="A Mermaid diagram block rendered by a plugin" width="420">
+      </picture>
+      <p align="center"><strong>Sandboxed plugins</strong><br><sub>Commands, panels and custom blocks with permissions you approve.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/importers/import-report-dark.png">
+        <img src="assets/screenshots/importers/import-report-light.png" alt="The import report after importing an Obsidian vault" width="420">
+      </picture>
+      <p align="center"><strong>Move in, move out</strong><br><sub>Import Notion and Obsidian; export markdown, HTML, PDF or a backup.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/desktop/desktop-window-dark.png">
+        <img src="assets/screenshots/desktop/desktop-window-light.png" alt="Tessera in its desktop window" width="420">
+      </picture>
+      <p align="center"><strong>Desktop apps</strong><br><sub>macOS, Windows and Linux, with each workspace in a folder you choose.</sub></p>
+    </td>
+  </tr>
+</table>
+```
+<!-- merge-showcase:end -->
+
+Other screenshots these agents promise and the docs guides use: `editor/slash-menu`,
+`editor/link-preview`, `databases/table`, `databases/calendar`, `databases/gallery`,
+`databases/filter-builder`, `search/backlinks`, `search/local-graph`, `sync/history-panel`,
+`sync/sync-status`, `sync/connect-server`, `plugins/permission-prompt`,
+`importers/import-dialog`, `importers/export-dialog`, `desktop/workspace-picker`,
+`desktop/quick-capture`.
 
 ## Good first issues (ready to file)
 
