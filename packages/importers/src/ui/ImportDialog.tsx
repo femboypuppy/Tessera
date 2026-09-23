@@ -77,7 +77,7 @@ const ENTRY_ICONS: Readonly<Record<PreviewEntry['kind'], LucideIcon>> = {
 };
 
 /** Entries listed in the preview before "and N more". */
-const PREVIEW_ENTRIES = 8;
+const PREVIEW_ENTRIES = 6;
 /** Issues listed per group in the report before "and N more". */
 const ISSUES_PER_GROUP = 50;
 
@@ -258,8 +258,9 @@ function SummaryCounts({ summary }: { summary: FileSummary }) {
     <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 text-ui text-fg-muted">
       {parts.map((part, index) => (
         <li key={part} className="flex items-center gap-2">
-          {index > 0 ? <span aria-hidden="true">·</span> : null}
           {part}
+          {/* After each item, so a wrapped line never starts with a dot. */}
+          {index < parts.length - 1 ? <span aria-hidden="true">·</span> : null}
         </li>
       ))}
     </ul>
@@ -283,7 +284,7 @@ function FilePreview({ summary }: { summary: FileSummary }) {
         ) : null}
         <SummaryCounts summary={summary} />
       </div>
-      <ul className="max-h-52 overflow-y-auto py-1">
+      <ul className="py-1">
         {shown.map((entry) => {
           const Icon = ENTRY_ICONS[entry.kind];
           return (
@@ -649,7 +650,8 @@ function IssueList({ report }: { report: ImportReport }) {
                       {pageId && ctx.workspace.getPage(pageId) ? (
                         <Button
                           variant="link"
-                          size="sm"
+                          // The link look, without the button size padding.
+                          className="h-auto px-0"
                           onClick={() => {
                             closeImportDialog();
                             ctx.navigate(pageId);

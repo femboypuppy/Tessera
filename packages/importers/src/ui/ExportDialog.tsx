@@ -1,5 +1,6 @@
 import {
   AbortError,
+  MemoryExportSink,
   toError,
   type ExportProgress,
   type ExportResult,
@@ -147,7 +148,30 @@ function ExportForm({ pageId }: { pageId: string | null }) {
     try {
       let result: ExportResult;
       let file: ExportedFile;
-      if (option.id === 'markdown') {
+      if (option.id === 'markdown' && target.kind === 'page') {
+        // One page: a plain `.md` file, or a zip when it has attachments to go with it.
+        const memory = new MemoryExportSink();
+        result = await exporter.run(
+          target,
+          exportContextFor(ctx),
+          memory,
+          onProgress,
+          controller.signal,
+        );
+        const [only] = memory.files;
+        if (memory.files.size === 1 && only) {
+          const [path, data] = only;
+          const content = typeof data === 'string' ? data : blobPart(data);
+          file = { blob: new Blob([content], { type: 'text/markdown' }), name: basename(path) };
+        } else {
+          const zip = new ZipExportSink();
+          for (const [path, data] of memory.files) await zip.writeFile(path, data);
+          file = {
+            blob: new Blob([blobPart(await zip.finish())], { type: 'application/zip' }),
+            name: `${fileNameFor(scopeTitle)}.zip`,
+          };
+        }
+      } else if (option.id === 'markdown') {
         const sink = new ZipExportSink();
         result = await exporter.run(
           target,

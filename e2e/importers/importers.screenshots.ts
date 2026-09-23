@@ -1,4 +1,6 @@
-import { mkdirSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 import { fixturePath, pageTree, researchVault, sidebar, writeZip } from './helpers';
@@ -40,14 +42,17 @@ async function blur(page: Page): Promise<void> {
 }
 
 test('import and export screenshots', async ({ page }) => {
+  // The fixture vault, in a folder named the way a person would name it.
+  const apollo = join(mkdtempSync(join(tmpdir(), 'tessera-screenshots-')), 'Apollo vault');
+  cpSync(fixturePath('obsidian-vault'), apollo, { recursive: true });
   await openDemoWorkspace(page);
 
   // The import dialog, after picking a vault: detected source, preview, root page name.
   await sidebar(page).getByRole('button', { name: 'Import', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Import' });
-  await dialog.getByTestId('import-folder-input').setInputFiles(fixturePath('obsidian-vault'));
+  await dialog.getByTestId('import-folder-input').setInputFiles(apollo);
   await expect(dialog.getByRole('button', { name: /^Import \d+ files$/ })).toBeVisible();
-  await dialog.getByLabel('New page for the import').fill('Apollo vault');
+  await expect(dialog.getByLabel('New page for the import')).toHaveValue('Apollo vault');
   await blur(page);
   await snap(page, 'import-dialog');
 
@@ -86,4 +91,41 @@ test('import and export screenshots', async ({ page }) => {
   await expect(exportDialog.getByRole('radio', { name: /^Markdown \(zip\)/ })).toBeChecked();
   await blur(page);
   await snap(page, 'export-dialog');
+
+  // Extra pictures: the print view behind the PDF export, and the settings panel.
+  await exportDialog.getByRole('radio', { name: /^PDF/ }).click();
+  await page.evaluate(() => {
+    window.print = () => undefined;
+  });
+  await exportDialog.getByRole('button', { name: 'Open print view' }).click();
+  await expect(page.getByTestId('print-page').getByRole('heading', { level: 1 })).toHaveText(
+    'Projects',
+  );
+  await blur(page);
+  await snap(page, 'print-view');
+  await page.getByRole('button', { name: 'Back to page' }).click();
+  await sidebar(page).getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Import & export' }).click();
+  await expect(page.getByRole('button', { name: 'Download backup' })).toBeVisible();
+  await snap(page, 'settings');
+});
+
+test('phone screenshot', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByRole('button', { name: /Import from Obsidian/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Import' });
+  const apollo = join(mkdtempSync(join(tmpdir(), 'tessera-screenshots-')), 'Apollo vault');
+  cpSync(fixturePath('obsidian-vault'), apollo, { recursive: true });
+  await dialog.getByTestId('import-folder-input').setInputFiles(apollo);
+  await expect(dialog.getByRole('button', { name: /^Import \d+ files$/ })).toBeVisible();
+  await blur(page);
+  await snap(page, 'import-phone');
+});
+
+test('onboarding screenshot', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /Open the demo workspace/ })).toBeVisible();
+  await blur(page);
+  await snap(page, 'onboarding');
 });

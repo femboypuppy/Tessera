@@ -191,6 +191,64 @@ describe('export dialog', () => {
     expect(strFromU8(files['Recipes.md'] ?? new Uint8Array())).toBe('Start with [[Pancakes]]\n');
   });
 
+  it('exports one page as a plain markdown file, or as a standalone HTML page', async () => {
+    const user = userEvent.setup();
+    const { ctx } = test;
+    const page = ctx.workspace.createPage({ title: 'Packing list' });
+    const handle = await ctx.loadPageDoc(page.id);
+    writeDocJSON(handle.doc, {
+      type: 'doc',
+      content: [
+        {
+          type: 'taskList',
+          content: [
+            {
+              type: 'taskItem',
+              attrs: { checked: true },
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Passport' }] }],
+            },
+          ],
+        },
+      ],
+    });
+    handle.release();
+    const saved: Array<{ blob: Blob; name: string }> = [];
+    let pending: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      pending = blob as Blob;
+      return 'blob:export';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      if (pending) saved.push({ blob: pending, name: this.download });
+    });
+
+    renderOverlay(ctx);
+    act(() => openExportDialog(page.id));
+    let dialog = await screen.findByRole('dialog', { name: 'Export' });
+    // No subpages: "this page" is the only page scope.
+    expect(within(dialog).queryByRole('radio', { name: /^This page and its subpages/ })).toBeNull();
+    expect(within(dialog).getByRole('radio', { name: /^This page/ })).toBeChecked();
+    await user.click(within(dialog).getByRole('button', { name: 'Export' }));
+    await screen.findByRole('dialog', { name: 'Export ready' });
+    expect(saved[0]?.name).toBe('Packing list.md');
+    expect(await saved[0]?.blob.text()).toBe('- [x] Passport\n');
+
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    act(() => openExportDialog(page.id));
+    dialog = await screen.findByRole('dialog', { name: 'Export' });
+    await user.click(within(dialog).getByRole('radio', { name: /^HTML/ }));
+    await user.click(within(dialog).getByRole('button', { name: 'Export' }));
+    await screen.findByRole('dialog', { name: 'Export ready' });
+    expect(saved[1]?.name).toBe('Packing list.html');
+    const html = (await saved[1]?.blob.text()) ?? '';
+    expect(html).toContain('<title>Packing list</title>');
+    expect(html).toContain('Passport');
+    expect(html).not.toContain('<script');
+  });
+
   it('opens the print view for a PDF', async () => {
     const user = userEvent.setup();
     const page = test.ctx.workspace.createPage({ title: 'Trip notes' });

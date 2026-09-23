@@ -186,7 +186,7 @@ export const en = {
     'Bring pages in from other apps. Imports go under a new page and never change what is already here.',
   settingsExportTitle: 'Export',
   settingsExportHint:
-    'Download everything as Obsidian-compatible markdown whenever you like. No lock-in.',
+    'Download everything, whenever you like, as markdown that Obsidian and other apps open.',
   exportWorkspaceMarkdown: 'Export workspace as markdown',
   settingsBackupTitle: 'Backup',
   settingsBackupHint:
