@@ -14,7 +14,9 @@ export function ViewBody(props: ViewBodyProps) {
     case 'gallery':
       return <GalleryView {...props} />;
     case 'list':
-    case 'table':
       return <ListView {...props} />;
+    case 'table':
+      // Rendered by DatabaseView itself.
+      return null;
   }
 }

@@ -17,6 +17,7 @@ import { addNode, newCondition } from '../query/filter-edit';
 import type { QueryResult } from '../query/run';
 import type { QueryContext } from '../query/types';
 import { overlays } from '../overlay-store';
+import { activeViewKey } from '../view-setting';
 import { displayTitle } from './common';
 import { runAction, useDatabase, useQueryContext, useViewQuery } from './hooks';
 import { MoreMenuItems } from './more-menu';
@@ -35,8 +36,6 @@ export interface DatabaseViewProps {
   viewId?: string | null;
   onViewChange?: (viewId: string) => void;
   readOnly: boolean;
-  /** Called with a function that focuses the view (Enter in the page title). */
-  registerFocus?: (focus: () => void) => () => void;
 }
 
 /** What every view layout receives. */
@@ -158,7 +157,7 @@ function LoadedDatabaseView({
   const idPrefix = `db-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [storedView, setStoredView] = useSetting<string>(
     ctx.settings.device,
-    `databases.view.${databaseId}`,
+    activeViewKey(databaseId),
     '',
   );
   const wanted = variant === 'inline' ? (viewId ?? '') : storedView;

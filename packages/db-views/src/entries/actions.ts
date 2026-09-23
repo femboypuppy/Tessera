@@ -15,6 +15,7 @@ import { runQuery } from '../query/run';
 import { createQueryContext } from '../query/types';
 import { displayLocale } from '../ui/common';
 import { downloadText, exportColumns } from '../ui/csv/export-item';
+import { activeViewKey } from '../view-setting';
 
 /**
  * What the feature's commands and buttons run, loaded on first use so none of it weighs on the
@@ -37,11 +38,6 @@ export async function newDatabaseAndOpen(
   });
   setTimeout(stop, 5000);
   ctx.navigate(page.id);
-}
-
-/** The device setting that remembers a database page's active view. */
-export function activeViewKey(databaseId: string): string {
-  return `databases.view.${databaseId}`;
 }
 
 /** Exports the active view of a database page as CSV (the command-palette path). */
