@@ -10,6 +10,7 @@ import { contributedExtensions } from '../contributed';
 import { editorExtensions } from '../editor-extensions';
 import { blockSelection } from '../extensions/block-selection';
 import { links } from '../extensions/links';
+import { watchRemoteCursors } from '../extensions/remote-cursors';
 import { pageLinkCommand } from '../menus/page-link-command';
 import { LinkPreview } from './LinkPreview';
 import { mediaDrop } from '../extensions/media-drop';
@@ -23,6 +24,7 @@ import { EditorControllerContext } from './context';
 import { createEditorController } from './controller';
 import { EditorPopovers } from './EditorPopovers';
 import { focusBody, focusTail, revealTarget } from './focus';
+import { SelectionToolbar } from './SelectionToolbar';
 import { TableControls } from './TableControls';
 import '../styles/editor.css';
 
@@ -121,6 +123,12 @@ function EditorView({
     [editor, registerFocusHandler],
   );
 
+  // Collaborators' carets, while a sync provider is connected.
+  useEffect(
+    () => (handle.sync ? watchRemoteCursors(editor, handle.sync) : undefined),
+    [editor, handle],
+  );
+
   // Scroll to the navigation target once per distinct target (the object changes every render).
   const targetRef = useRef(target);
   targetRef.current = target;
@@ -154,6 +162,7 @@ function EditorView({
       <SuggestionMenu controller={controller} editor={editor} />
       <EditorPopovers controller={controller} editor={editor} />
       <LinkPreview controller={controller} />
+      <SelectionToolbar controller={controller} editor={editor} />
     </EditorControllerContext.Provider>
   );
 }

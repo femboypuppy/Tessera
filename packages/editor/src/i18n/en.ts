@@ -206,8 +206,13 @@ export const en = {
   pasteAsBookmark: 'Bookmark',
   dismiss: 'Dismiss',
 
+  // Collaboration
+  anonymousUser: 'Someone',
+
   // Selection toolbar
   formatting: 'Formatting',
+  highlightDefault: 'Yellow (default)',
+  editLink: 'Edit link',
   bold: 'Bold',
   italic: 'Italic',
   underline: 'Underline',

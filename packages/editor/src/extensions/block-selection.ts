@@ -186,8 +186,19 @@ export function blockSelection(controller: EditorController) {
         'Shift-ArrowUp': () => extend(-1),
         Backspace: () => {
           const { selection } = editor.state;
-          if (!(selection instanceof BlockRangeSelection)) return false;
-          return deleteBlocks(editor, selection.blocks());
+          if (selection instanceof BlockRangeSelection)
+            return deleteBlocks(editor, selection.blocks());
+          // At the start of a heading, Backspace turns it back into text (like Notion).
+          const { $from } = selection;
+          if (!selection.empty || $from.parentOffset !== 0 || $from.parent.type.name !== 'heading')
+            return false;
+          const paragraph = editor.schema.nodes.paragraph;
+          if (!paragraph) return false;
+          const { blockId, color } = $from.parent.attrs;
+          editor.view.dispatch(
+            editor.state.tr.setBlockType($from.pos, $from.pos, paragraph, { blockId, color }),
+          );
+          return true;
         },
         Delete: () => {
           const { selection } = editor.state;

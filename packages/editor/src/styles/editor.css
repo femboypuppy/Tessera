@@ -967,3 +967,36 @@ body.tess-block-dragging * {
 .tess-block-handle {
   animation: tess-fade-in var(--tess-duration-fast) var(--tess-ease-out);
 }
+
+/* ------------------------------------------------------------------------------------------ */
+/* Collaborators                                                                               */
+/* ------------------------------------------------------------------------------------------ */
+
+.tess-editor .tess-remote-caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid var(--tess-remote-color);
+  word-break: normal;
+  pointer-events: none;
+}
+
+.tess-editor .tess-remote-label {
+  position: absolute;
+  bottom: 100%;
+  left: -2px;
+  padding: 2px 5px;
+  border-radius: 4px 4px 4px 0;
+  background: var(--tess-remote-color);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  user-select: none;
+  font-style: normal;
+  text-decoration: none;
+}
+
+.tess-editor .tess-remote-selection {
+  border-radius: 2px;
+}

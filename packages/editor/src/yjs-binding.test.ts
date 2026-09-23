@@ -7,9 +7,10 @@ import {
   writeDocJSON,
 } from '@tessera/core';
 import { kitchenSinkDoc } from '@tessera/core/testing';
+import { yUndoPluginKey } from '@tiptap/y-tiptap';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { blockTexts, createTestEditor, linkDocs } from './test-utils';
+import { blockTexts, createTestEditor, linkDocs, pressKey, typeText } from './test-utils';
 
 const cleanups: Array<() => void> = [];
 afterEach(() => {
@@ -116,5 +117,35 @@ describe('editor bound to the page doc', () => {
     second.editor.commands.insertContent(' and B');
     expect(blockTexts(first.editor)).toEqual(['paragraph:From A and B']);
     expect(docJSONEqual(readDocJSON(a), readDocJSON(bDoc))).toBe(true);
+  });
+});
+
+describe('undo and redo across structural changes', () => {
+  it('redoes a step that removed a block (y-tiptap stale selection regression)', () => {
+    const { editor, doc } = setup({ content: b.doc(b.paragraph()) });
+    editor.commands.focus('end');
+    const undoManager = () =>
+      (yUndoPluginKey.getState(editor.state) as { undoManager: { stopCapturing(): void } })
+        .undoManager;
+    typeText(editor, 'Head');
+    undoManager().stopCapturing();
+    pressKey(editor, 'Enter');
+    typeText(editor, 'x');
+    undoManager().stopCapturing();
+    for (let round = 0; round < 3; round += 1) {
+      editor.commands.undo();
+      expect(blockTexts(editor)).toEqual(['paragraph:Head']);
+      expect(readDocJSON(doc).content).toHaveLength(1);
+      editor.commands.redo();
+      expect(blockTexts(editor)).toEqual(['paragraph:Head', 'paragraph:x']);
+      expect(readDocJSON(doc).content).toHaveLength(2);
+    }
+  });
+
+  it('keeps undo keys away from the browser when there is nothing to undo', () => {
+    const { editor } = setup({ content: b.doc(b.paragraph('Stay')) });
+    expect(pressKey(editor, 'z', { mod: true })).toBe(true);
+    expect(pressKey(editor, 'y', { mod: true })).toBe(true);
+    expect(blockTexts(editor)).toEqual(['paragraph:Stay']);
   });
 });
