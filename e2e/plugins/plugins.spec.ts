@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { createPage, createWorkspace, pageTree } from '../architect/helpers';
 import {
   approvePrompt,
   ensureExamplesBuilt,
+  exampleDist,
   exampleZip,
   expectCommand,
   FIXTURE_BASE,
@@ -130,6 +132,45 @@ test('install from a zip file, then uninstall', async ({ page }) => {
   await expect(page.getByText('Random page was uninstalled', { exact: true })).toBeVisible();
   await expect(page.getByText('No plugins yet')).toBeVisible();
   await expectCommand(page, 'plugins.random-page/open-random', false);
+});
+
+test('install from a folder', async ({ page, browserName }) => {
+  const folder = exampleDist('word-count');
+  if (browserName === 'chromium') {
+    // Chromium has the File System Access API. Its native dialog can't be driven, so the picker
+    // returns the built plugin's files through the same handle interface.
+    const files = ['manifest.json', 'main.js', 'README.md'].map((name) => [
+      name,
+      readFileSync(`${folder}/${name}`, 'utf8'),
+    ]);
+    await page.addInitScript((entries: string[][]) => {
+      Object.assign(window, {
+        showDirectoryPicker: async () => ({
+          kind: 'directory',
+          name: 'dist',
+          async *values() {
+            for (const [name = '', text = ''] of entries)
+              yield { kind: 'file', name, getFile: async () => new File([text], name) };
+          },
+        }),
+      });
+    }, files);
+  }
+  await createWorkspace(page, 'Folder');
+  await openPluginSettings(page);
+  await page.getByRole('button', { name: 'Install plugin' }).click();
+  if (browserName === 'chromium') {
+    await page.getByRole('menuitem', { name: 'From a folder…' }).click();
+  } else {
+    // Elsewhere, a folder input (`webkitdirectory`).
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('menuitem', { name: 'From a folder…' }).click();
+    await (await chooser).setFiles(folder);
+  }
+  await approvePrompt(page, 'Word count');
+  await expect(page.getByText('Running', { exact: true })).toBeVisible({ timeout: 20_000 });
+  await page.getByRole('tab', { name: 'About' }).click();
+  await expect(page.getByText('a folder: dist')).toBeVisible();
 });
 
 test('dev mode reloads a plugin when its code changes', async ({ page }) => {

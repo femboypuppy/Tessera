@@ -74,11 +74,11 @@ test('a plugin stuck in an infinite loop is stopped while the app stays responsi
   await createPage(page, 'Still responsive');
   expect(Date.now() - started).toBeLessThan(4_000);
 
+  const notifications = page.getByRole('region', { name: /Notifications/ });
   await expect(
-    page.getByText('Spinner stopped responding and was stopped.', { exact: true }),
-  ).toBeVisible({
-    timeout: 15_000,
-  });
+    notifications.getByText('Spinner stopped responding and was stopped.', { exact: true }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(notifications.getByRole('button', { name: 'Restart' })).toBeVisible();
   await expectCommand(page, 'plugins.spinner/spin', false);
   await openPluginSettings(page);
   await page.getByRole('button', { name: 'Details for Spinner' }).click();
@@ -86,7 +86,7 @@ test('a plugin stuck in an infinite loop is stopped while the app stays responsi
   await page.getByRole('tab', { name: /Console/ }).click();
   await expect(page.getByRole('log').getByText('Spinning now')).toBeVisible();
 
-  // It can be restarted.
-  await page.getByRole('button', { name: 'Restart' }).click();
+  // It can be restarted (from its details here; the notification offers the same).
+  await page.getByRole('main').getByRole('button', { name: 'Restart' }).click();
   await expectCommand(page, 'plugins.spinner/spin');
 });

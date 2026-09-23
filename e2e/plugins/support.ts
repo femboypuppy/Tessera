@@ -60,6 +60,11 @@ export async function serveRegistry(page: Page): Promise<void> {
   });
 }
 
+/** The built folder of an example plugin (`manifest.json`, `main.js`, `README.md`). */
+export function exampleDist(id: string): string {
+  return `${EXAMPLES}${id}/dist`;
+}
+
 /** The built zip of an example plugin. */
 export function exampleZip(id: string, version = '1.0.0'): string {
   return `${EXAMPLES}${id}/dist/${id}-${version}.zip`;

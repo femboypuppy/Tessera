@@ -65,8 +65,8 @@ The repository ships five complete plugins in
 Everything happens in **Settings → Plugins**:
 
 - **Browse** lists the plugins of a registry (the example registry by default; the source can be
-  changed next to the search box). Installing from it checks the download's checksum and that
-  the plugin asks for nothing beyond what the registry lists.
+  changed next to the search box). Installing from it checks the download against the registry:
+  its checksum when one is listed, and that the plugin asks for nothing the registry doesn't show.
 - **Install plugin** installs from a `.zip` file, a plugin folder (where the browser supports
   picking folders), or a URL to a `.zip` or a `manifest.json`.
 - **Load a dev plugin** connects to a plugin author's dev server and reloads the plugin each time
