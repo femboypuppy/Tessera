@@ -108,9 +108,9 @@ export function createBackupImporter(): Importer {
     accept: ['.json'],
     async detect(files) {
       const [file] = files;
-      if (files.length !== 1 || !file || !/.json$/i.test(file.path)) return 0;
+      if (files.length !== 1 || !file || !/\.json$/i.test(file.path)) return 0;
       const head = new TextDecoder().decode((await file.bytes()).subarray(0, 512));
-      return /"format"s*:s*"tessera-backup"/.test(head) ? 1 : 0;
+      return /"format"\s*:\s*"tessera-backup"/.test(head) ? 1 : 0;
     },
     async run(files, context, onProgress) {
       const { runRestoreImport } = await import('./export/backup');

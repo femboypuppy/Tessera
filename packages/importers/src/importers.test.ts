@@ -159,6 +159,8 @@ describe('Obsidian importer', () => {
       created: '1969-07-16',
     });
     expect(apollo.createdAt).toBe(Date.UTC(1969, 6, 16));
+    // Writing the content is not an edit: the page keeps the source's time, not the import's.
+    expect(apollo.updatedAt).toBe(Date.UTC(1969, 6, 16));
     expect(vault.page('Daily/2026-09-23').createdAt).toBe(Date.UTC(2026, 8, 23));
   });
 

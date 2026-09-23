@@ -20,6 +20,7 @@ import {
   type PropertyDefinition,
   type TransferIssue,
 } from '@tessera/core';
+import * as Y from 'yjs';
 import type { ImportPlan, PlanCellValue, PlanPage } from './plan/types';
 
 /** Transaction origin of everything an import writes. */
@@ -28,12 +29,13 @@ export const IMPORT_ORIGIN = 'import';
 /** How long the main thread works before letting the page render (ms). */
 const SLICE_MS = 12;
 
-type SchedulerWithYield = { yield?: () => Promise<void> };
-
-/** Lets the browser render and handle input before the next slice of work. */
+/**
+ * Lets the browser render and handle input before the next slice of work. A message queues behind
+ * the tasks already waiting (React's renders use messages too), so the UI keeps up. Not
+ * `scheduler.yield()`: its continuation runs *before* waiting tasks, which starved the progress
+ * dialog of every render for the whole import.
+ */
 export function yieldToEventLoop(): Promise<void> {
-  const scheduler = (globalThis as { scheduler?: SchedulerWithYield }).scheduler;
-  if (typeof scheduler?.yield === 'function') return scheduler.yield();
   if (typeof MessageChannel !== 'undefined') {
     return new Promise((resolve) => {
       const channel = new MessageChannel();
@@ -45,6 +47,29 @@ export function yieldToEventLoop(): Promise<void> {
     });
   }
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+/**
+ * Writes a page's content and properties the way a synced change arrives: built in a scratch doc,
+ * then applied as one update. The runtime "touches" pages after local edits (updated time and
+ * author become now and the current user); an import is not an edit, so the source's times stay,
+ * and 2,000 pages do not cost 2,000 more workspace transactions.
+ */
+function writeContent(
+  target: Y.Doc,
+  doc: PlanPage['doc'] | undefined,
+  props: PlanPage['props'] | undefined,
+): void {
+  const scratch = new Y.Doc();
+  try {
+    scratch.transact(() => {
+      if (doc) writeDocJSON(scratch, normalizeDocJSON(doc), { origin: IMPORT_ORIGIN });
+      if (props) setPageProps(scratch, props);
+    }, IMPORT_ORIGIN);
+    Y.applyUpdate(target, Y.encodeStateAsUpdate(scratch), IMPORT_ORIGIN);
+  } finally {
+    scratch.destroy();
+  }
 }
 
 function now(): number {
@@ -236,11 +261,7 @@ export async function applyPlan(
       throwIfAborted(signal);
       const handle = await context.loadPageDoc(write.id);
       try {
-        handle.doc.transact(() => {
-          if (write.doc)
-            writeDocJSON(handle.doc, normalizeDocJSON(write.doc), { origin: IMPORT_ORIGIN });
-          if (write.props) setPageProps(handle.doc, write.props);
-        }, IMPORT_ORIGIN);
+        writeContent(handle.doc, write.doc, write.props);
       } catch (error) {
         if (write.page)
           issue(

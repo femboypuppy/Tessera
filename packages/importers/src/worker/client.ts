@@ -1,5 +1,5 @@
 import { AbortError, throwIfAborted } from '@tessera/core';
-import type { ImportPlan, PlanInput, PlanProgress } from '../plan/types';
+import type { ImportPlan, PlanInput, PlanPage, PlanProgress } from '../plan/types';
 import type { WorkerRequest, WorkerResponse } from './protocol';
 
 /** Where the last plan was computed (shown in diagnostics and tests). */
@@ -43,6 +43,7 @@ export async function planInWorker(
   return new Promise<ImportPlan>((resolve, reject) => {
     let settled = false;
     let started = false;
+    const pages: PlanPage[] = [];
     const finish = (action: () => void) => {
       if (settled) return;
       settled = true;
@@ -56,9 +57,10 @@ export async function planInWorker(
       const message = event.data;
       started = true;
       if (message.type === 'progress') onProgress(message.progress);
+      else if (message.type === 'pages') pages.push(...message.pages);
       else if (message.type === 'done') {
         lastPlanRunner = 'worker';
-        finish(() => resolve(message.plan));
+        finish(() => resolve({ ...message.plan, pages }));
       } else finish(() => reject(new Error(message.message)));
     };
     worker.onerror = (event) => {
