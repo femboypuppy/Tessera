@@ -1,0 +1,331 @@
+import vm from 'node:vm';
+import { describe, expect, it, vi } from 'vitest';
+import { uiInnerBootstrap, uiOuterBootstrap, workerFrameBootstrap } from './bootstraps';
+import { createRuntimeKit, type RuntimeInit, type RuntimeKit } from './runtime-kit';
+import { runUi, type UiEnv } from './runtime-ui';
+import { runWorker } from './runtime-worker';
+import {
+  buildCsp,
+  createNonce,
+  sandboxDocument,
+  uiInnerDocument,
+  uiOuterDocument,
+  uiRuntimeModuleSource,
+  workerFrameDocument,
+  workerScriptSource,
+} from './sources';
+
+const init: RuntimeInit = {
+  plugin: { id: 'p', name: 'P', version: '1.0.0', apiVersion: 1, permissions: [] },
+  settings: {},
+  theme: { mode: 'dark', reducedMotion: false, tokens: { bg: '#000' } },
+};
+
+/** A fresh JavaScript realm with only the globals a sandbox has (no module scope of this file). */
+function realm(globals: Record<string, unknown> = {}) {
+  const context = vm.createContext({
+    console: { log() {}, info() {}, warn() {}, error() {}, debug() {} },
+    setTimeout,
+    clearTimeout,
+    ...globals,
+  });
+  return context;
+}
+
+function evaluate<T>(source: string, context: vm.Context): T {
+  return vm.runInContext(`(${source})`, context) as T;
+}
+
+function messages(port: MessagePort) {
+  const received: Array<Record<string, unknown>> = [];
+  port.onmessage = (event: MessageEvent) => received.push(event.data as Record<string, unknown>);
+  return received;
+}
+
+describe('sandbox sources are self-contained', () => {
+  it.each([
+    ['createRuntimeKit', createRuntimeKit],
+    ['runWorker', runWorker],
+    ['runUi', runUi],
+    ['workerFrameBootstrap', workerFrameBootstrap],
+    ['uiOuterBootstrap', uiOuterBootstrap],
+    ['uiInnerBootstrap', uiInnerBootstrap],
+  ])('%s has no import or bundler references', (_name, fn) => {
+    const source = fn.toString();
+    expect(source).not.toMatch(/__vite|__vi_|require\(|import\(|import\.meta/);
+    expect(() => evaluate(source, realm())).not.toThrow();
+  });
+
+  it('runs the worker script in a fresh realm: it answers pings and reports a failed load', async () => {
+    const context = realm({
+      URL: { createObjectURL: () => 'blob:null/1', revokeObjectURL: () => undefined },
+      Blob: class {},
+    });
+    context.self = context;
+    context.addEventListener = () => undefined;
+    vm.runInContext(workerScriptSource(), context);
+    const channel = new MessageChannel();
+    const received = messages(channel.port1);
+    (context.onmessage as (event: { data: unknown }) => void)({
+      data: { port: channel.port2, code: 'export default {}', init },
+    });
+    expect(context.onmessage).toBeNull();
+    // A vm realm can't import(), so loading fails: the runtime says so instead of crashing.
+    await vi.waitFor(() =>
+      expect(received).toContainEqual(
+        expect.objectContaining({
+          type: 'notify',
+          method: 'error',
+          params: expect.objectContaining({ fatal: true }),
+        }),
+      ),
+    );
+    channel.port1.postMessage({ v: 1, type: 'request', id: 1, method: 'ping' });
+    await vi.waitFor(() =>
+      expect(received).toContainEqual({ v: 1, type: 'response', id: 1, ok: true, result: 'pong' }),
+    );
+    channel.port1.close();
+  });
+
+  it('runs the worker runtime from a fresh realm through a whole lifecycle', async () => {
+    const context = realm();
+    const kit = evaluate<() => RuntimeKit>(createRuntimeKit.toString(), context)();
+    const run = evaluate<typeof runWorker>(runWorker.toString(), context);
+    const channel = new MessageChannel();
+    const received = messages(channel.port1);
+    const activate = vi.fn();
+    const hello = vi.fn();
+    void run(
+      {
+        port: channel.port2,
+        code: '',
+        init,
+        importPlugin: async () => ({
+          default: {
+            __tesseraPlugin: 1,
+            settings: { n: { type: 'number', label: 'N', default: 1 } },
+            activate() {
+              activate();
+            },
+            panels: { side: () => undefined },
+          },
+        }),
+        console: { log() {}, info() {}, warn() {}, error() {}, debug() {} },
+        global: { addEventListener: () => undefined },
+      },
+      kit,
+    );
+    await vi.waitFor(() =>
+      expect(received).toContainEqual(
+        expect.objectContaining({
+          method: 'ready',
+          params: {
+            panels: ['side'],
+            blocks: [],
+            activate: true,
+            settings: { n: { type: 'number', label: 'N', default: 1 } },
+          },
+        }),
+      ),
+    );
+    channel.port1.postMessage({ v: 1, type: 'request', id: 2, method: 'activate' });
+    await vi.waitFor(() => expect(activate).toHaveBeenCalled());
+    channel.port1.postMessage({
+      v: 1,
+      type: 'request',
+      id: 3,
+      method: 'command.run',
+      params: { id: 'nope' },
+    });
+    await vi.waitFor(() =>
+      expect(received).toContainEqual(expect.objectContaining({ id: 3, ok: false })),
+    );
+    expect(hello).not.toHaveBeenCalled();
+    channel.port1.close();
+  });
+
+  it('runs the UI runtime from a fresh realm and renders with the theme', async () => {
+    const context = realm();
+    const kit = evaluate<() => RuntimeKit>(createRuntimeKit.toString(), context)();
+    const run = evaluate<typeof runUi>(runUi.toString(), context);
+    const channel = new MessageChannel();
+    const received = messages(channel.port1);
+    const doc = document.implementation.createHTMLDocument('frame');
+    const env: UiEnv = {
+      port: channel.port2,
+      code: '',
+      init: { ...init, surface: { kind: 'panel', id: 'side', pageId: 'page-1' }, fonts: [] },
+      importPlugin: async () => ({
+        default: {
+          __tesseraPlugin: 1,
+          panels: {
+            side(ctx: { root: HTMLElement; pageId: string | null }) {
+              ctx.root.textContent = `Page ${ctx.pageId}`;
+            },
+          },
+        },
+      }),
+      window: { addEventListener: () => undefined },
+      document: doc,
+      console: { log() {}, info() {}, warn() {}, error() {}, debug() {} },
+      ResizeObserver: globalThis.ResizeObserver,
+      FontFace: class {} as unknown as typeof FontFace,
+    };
+    await run(env, kit);
+    expect(doc.getElementById('root')?.textContent).toBe('Page page-1');
+    expect(doc.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(doc.documentElement.getAttribute('data-surface')).toBe('panel');
+    expect(doc.documentElement.style.getPropertyValue('--tess-bg')).toBe('#000');
+    expect(doc.head.querySelector('style')?.textContent).toContain(':where(button)');
+    await vi.waitFor(() =>
+      expect(received).toContainEqual(expect.objectContaining({ method: 'rendered' })),
+    );
+    channel.port1.close();
+  });
+});
+
+describe('bootstraps', () => {
+  it('the logic frame starts a classic worker for its parent only', () => {
+    const listeners: Array<(event: unknown) => void> = [];
+    const workers: Array<{ url: string; options: unknown; posted: unknown[] }> = [];
+    const parentWindow = {};
+    const context = realm({
+      parent: parentWindow,
+      addEventListener: (_type: string, listener: (event: unknown) => void) =>
+        listeners.push(listener),
+      removeEventListener: (_type: string, listener: (event: unknown) => void) =>
+        listeners.splice(listeners.indexOf(listener), 1),
+      URL: { createObjectURL: () => 'blob:null/worker' },
+      Blob: class {},
+      Worker: class {
+        onerror: unknown = null;
+        posted: unknown[] = [];
+        constructor(url: string, options: unknown) {
+          workers.push({ url, options, posted: this.posted });
+        }
+        postMessage(message: unknown) {
+          this.posted.push(message);
+        }
+      },
+    });
+    evaluate<() => void>(workerFrameBootstrap.toString(), context)();
+    const rpc = new MessageChannel();
+    const control = new MessageChannel();
+    const controlMessages = messages(control.port1);
+    const init = {
+      type: 'tessera:init',
+      workerSource: 'code',
+      name: 'P',
+      code: 'plugin',
+      init: {},
+    };
+    // Another frame (a plugin reaching `top.frames`) can't start it.
+    listeners[0]?.({ source: {}, data: init, ports: [rpc.port2, control.port2] });
+    expect(workers).toHaveLength(0);
+    listeners[0]?.({ source: parentWindow, data: init, ports: [rpc.port2, control.port2] });
+    expect(workers).toEqual([
+      {
+        url: 'blob:null/worker',
+        options: { name: 'P' },
+        posted: [{ port: rpc.port2, code: 'plugin', init: {} }],
+      },
+    ]);
+    expect(listeners).toHaveLength(0);
+    return vi
+      .waitFor(() => expect(controlMessages).toEqual([{ type: 'started' }]))
+      .finally(() => {
+        rpc.port1.close();
+        control.port1.close();
+      });
+  });
+
+  it('the outer UI frame nests a sandboxed frame and reports its navigations', async () => {
+    const listeners: Array<(event: unknown) => void> = [];
+    const created: HTMLIFrameElement[] = [];
+    const parentWindow = {};
+    const context = realm({
+      parent: parentWindow,
+      addEventListener: (_type: string, listener: (event: unknown) => void) =>
+        listeners.push(listener),
+      removeEventListener: () => undefined,
+      document: {
+        body: document.body,
+        createElement: (tag: string) => {
+          const element = document.createElement(tag) as HTMLIFrameElement;
+          Object.defineProperty(element, 'contentWindow', { value: { postMessage: vi.fn() } });
+          created.push(element);
+          return element;
+        },
+      },
+    });
+    evaluate<() => void>(uiOuterBootstrap.toString(), context)();
+    const rpc = new MessageChannel();
+    const control = new MessageChannel();
+    const controlMessages = messages(control.port1);
+    listeners[0]?.({
+      source: parentWindow,
+      data: {
+        type: 'tessera:init',
+        innerHtml: '<p>inner</p>',
+        title: 'Mermaid diagram',
+        runtimeSource: 'rt',
+        code: 'c',
+        init: {},
+      },
+      ports: [rpc.port2, control.port2],
+    });
+    const inner = created[0];
+    expect(inner?.getAttribute('sandbox')).toBe('allow-scripts');
+    expect(inner?.getAttribute('title')).toBe('Mermaid diagram');
+    expect(inner?.srcdoc).toBe('<p>inner</p>');
+    // The first load (jsdom loads the srcdoc itself) hands the port to the inner frame.
+    const post = (inner?.contentWindow as unknown as { postMessage: ReturnType<typeof vi.fn> })
+      .postMessage;
+    await vi.waitFor(() => expect(post).toHaveBeenCalled());
+    expect(post).toHaveBeenCalledWith(
+      { type: 'tessera:init', runtimeSource: 'rt', code: 'c', init: {} },
+      '*',
+      [rpc.port2],
+    );
+    inner?.dispatchEvent(new Event('load'));
+    await vi.waitFor(() =>
+      expect(controlMessages).toEqual([{ type: 'started' }, { type: 'navigation' }]),
+    );
+    inner?.remove();
+    rpc.port1.close();
+    control.port1.close();
+  });
+});
+
+describe('sandbox documents', () => {
+  it('builds a strict CSP with only the granted network sources', () => {
+    const csp = buildCsp({
+      nonce: 'abc',
+      network: ['https://api.example.com', 'wss://api.example.com'],
+    });
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("script-src 'nonce-abc' blob:");
+    expect(csp).toContain('connect-src https://api.example.com wss://api.example.com');
+    expect(csp).toContain('img-src data: blob: https://api.example.com');
+    expect(csp).toContain("frame-src 'none'");
+    expect(csp).toContain("form-action 'none'");
+    expect(buildCsp({ nonce: 'abc', network: [] })).toContain("connect-src 'none'");
+    expect(csp).not.toContain('unsafe-eval');
+  });
+
+  it('puts the CSP and a nonce on every document and refuses closing script tags', () => {
+    const nonce = createNonce();
+    expect(nonce).toMatch(/^[A-Za-z0-9]{16,}$/);
+    for (const html of [
+      workerFrameDocument({ nonce, network: [] }),
+      uiOuterDocument({ nonce, network: [] }),
+      uiInnerDocument({ nonce, network: [] }),
+    ]) {
+      expect(html).toContain('http-equiv="Content-Security-Policy"');
+      expect(html).toContain(`<script nonce="${nonce}">`);
+      expect(html.match(/<script/g)).toHaveLength(1);
+    }
+    expect(() => sandboxDocument({ csp: '', nonce: 'n', script: 'x("</script>")' })).toThrow();
+    expect(uiRuntimeModuleSource()).toMatch(/^export default function start\(env\)/);
+  });
+});
