@@ -21,3 +21,4 @@ export * from './database/types';
 export * from './database/views';
 export * from './database/database-doc';
 export * from './plugins/manifest';
+export * from './schema/index';
