@@ -32,11 +32,13 @@ Milestones from `agents/07-desktop-selfhost.md`, each ended tested and committed
 | `tauri.conf.json`, `capabilities/` | Strict CSP; bundles for every OS; deep-link scheme; updater endpoint; per-window capabilities (the quick-capture window can't touch menus, folders, the keychain or updates). |
 | `icons/` | All desktop sizes, generated from `icons/source.svg` (placeholder). |
 
-**TypeScript, `apps/desktop/src/`** (`@tessera/desktop`, 72 Vitest tests):
+**TypeScript, `apps/desktop/src/`** (`@tessera/desktop`, 74 Vitest tests):
 
 | Path | What |
 |---|---|
-| `feature.ts` | The `FeatureModule`: three services, the `/capture` bare route, the picker overlay, the Desktop settings panel, a sidebar section, an onboarding action, 14 commands, `activate`. |
+| `index.ts` | The light entry the web app imports: `isTauri()` and `createDesktopFeature()` (three services, the onboarding action, `activate`; `{ id }` only in a browser). |
+| `contributions.ts`, `activate.ts` | Registered when a workspace opens: the `/capture` bare route, the picker overlay, the Desktop settings panel, a sidebar section and 14 commands; then title, menus, deep links, mirror, folder checks, update check. |
+| `styles.css` | Tailwind utilities for this package's classes (CCR 3 workaround), loaded with `activate`. |
 | `backend/` | `DesktopBackend` (one method per command), `TauriBackend` (invoke/listen, raw binary bodies with percent-encoded headers, zod-validated replies, typed errors). |
 | `stores/` | `TauriDocStore`, `TauriAssetStore`, `TauriWorkspaceRegistry` (plus `openFolder`, `locate`, `listAll`), `KeychainCredentialStore` (ready for CCR 1). |
 | `picker/`, `settings/`, `sidebar/`, `capture/` | Workspace picker, Settings → Desktop (folder, cloud/conflicts with Merge, markdown copy, quick-capture shortcut recorder, tray, updates, signed-in servers), a quiet sidebar warning, quick capture (`[ ]` lines become tasks). |
@@ -45,8 +47,10 @@ Milestones from `agents/07-desktop-selfhost.md`, each ended tested and committed
 | `scripts/smoke-app.mjs` | Drives the **real** Windows app over WebView2's DevTools (see Decisions). |
 | `docker/linux-build.Dockerfile`, `scripts/build-linux-in-docker.mjs` | Linux `.deb`/`.rpm`/AppImage from any machine with Docker. |
 
-**Web feature**: `apps/web/src/features/desktop/index.ts` loads `@tessera/desktop/feature` only
-when `isTauri()` (top-level `await`); in a browser the feature is `{ id: 'desktop' }`.
+**Web feature**: `apps/web/src/features/desktop/index.ts` is one line,
+`export const desktopFeature = createDesktopFeature();`. In a browser the feature is
+`{ id: 'desktop' }` and nothing else of the package is downloaded (the startup bundle gains
+`isTauri()`, a few strings' getters and one icon).
 
 **Self-hosting** (root and `deploy/`):
 
@@ -65,14 +69,21 @@ when `isTauri()` (top-level `await`); in a browser the feature is `{ id: 'deskto
 
 ## How it plugs in (FeatureModule entries, services, extension points used)
 
+Declared statically by `createDesktopFeature()` (only inside Tauri):
+
 - **Services** (priority `SERVICE_PRIORITY.desktop` = 100, `isAvailable` = inside Tauri, and for
   storage the workspace has a `path`): `workspaceRegistry` → `tauri-folders`, `docStore` →
   `tauri-sqlite`, `assetStore` → `tauri-files`. The sync provider stays Agent 03's.
+- **onboardingActions**: `desktop-open-folder` ("Open a workspace folder").
+- **activate(ctx)** (below).
+
+Registered by `activate` through `ctx.contributions` and `ctx.commands`, so their code and strings
+stay out of the browser bundle (the session removes them when it closes):
+
 - **routes**: `/capture` with `layout: 'bare'` (the quick-capture window).
 - **overlays**: `desktop-workspaces` (the picker; loads its dialog only when opened).
 - **settingsPanels**: `desktop` (Settings → Desktop).
 - **sidebarSections**: `desktop-folder-status` (bottom; renders only for synced folders or conflicts).
-- **onboardingActions**: `desktop-open-folder` ("Open a workspace folder").
 - **commands** (`workspace`, `view`, `page`, `help` groups; hidden in the capture window):
   `desktop.openWorkspaces` (Mod+O), `newWorkspace`, `openFolder`, `revealWorkspace`,
   `quickCapture`, `copyDeepLink`, `zoomIn` (Mod+=), `zoomOut` (Mod+-), `resetZoom` (Mod+0),
@@ -115,12 +126,19 @@ when `isTauri()` (top-level `await`); in a browser the feature is `{ id: 'deskto
 - **Two windows, one Rust process.** The quick-capture window is a second webview on `/capture`
   (created on first use, then hidden, so it opens instantly; hides on blur, keeps the draft). Rust
   relays each stored update to the other window (`desktop://doc-update`), so the main window sees
-  captured notes live. The capture window's capability has no access to menus, folders, keychain
-  or updates.
+  captured notes live. The capture window always writes into the workspace open in the main window:
+  it follows the most recently opened workspace whenever the registry changes, and stays on
+  `/capture`. Its capability has no access to menus, folders, keychain or updates.
 - **Attachments via a custom scheme** (`tessera-asset://`), served only for open workspaces and
   recorded asset IDs: no filesystem scope to widen, `nosniff` and a sandbox CSP.
-- **The desktop feature loads only inside Tauri** (top-level `await` in the feature folder), so the
-  browser bundle is unchanged.
+- **The feature is defined synchronously; its UI registers at runtime.** A first version used a
+  top-level `await` in the feature folder to import the feature only inside Tauri. It worked, but
+  Firefox occasionally hung while opening a workspace (2 of 8 runs of a shell spec, against 0 of 6
+  without it), so the feature is now a tiny synchronous module whose routes, panels and commands
+  are registered by `activate` (`ctx.contributions`, `ctx.commands`), and whose onboarding
+  strings are read lazily (registered when the desktop registry starts).
+- **Package styles**: Tailwind only scans `packages/*/src` (CCR 3), so this package generates
+  its own utilities, in the `components` layer so they can never override the shell.
 - **Updater**: the committed public key is a placeholder; such builds report "not configured"
   (Settings → Desktop links to Releases). CI injects the key and `createUpdaterArtifacts`.
 - **Docker runtime without npm**: plain Alpine plus the `node` binary saves 22 MB over
@@ -133,8 +151,9 @@ when `isTauri()` (top-level `await`); in a browser the feature is `{ id: 'deskto
   the server version); `MODE=online` uses the server's own backup command.
 - **Smoke tests on both ends**: `deploy/smoke/smoke-test.mjs` (the image, like Compose runs it) and
   `apps/desktop/scripts/smoke-app.mjs` (the real Windows app through WebView2's DevTools port).
-- **Dependencies added** (all MIT/Apache-2.0): npm: `@tessera/ui`, `lucide-react`, `yjs`, `zod`
-  (already in the repo, now declared by `@tessera/desktop`). Rust: `tauri` 2.11.6 (pinned to the
+- **Dependencies added** (all MIT/Apache-2.0, pinned): npm: `@tessera/ui`, `lucide-react`, `yjs`,
+  `zod`, and `tailwindcss` 4.3.3 as a dev dependency (for `src/styles.css`), all already in the
+  repo and now declared by `@tessera/desktop`. Rust: `tauri` 2.11.6 (pinned to the
   JS API's minor) and its official plugins (`deep-link`, `dialog`, `global-shortcut`, `log`,
   `opener`, `single-instance`, `updater`, `window-state`), `rusqlite` 0.40 (bundled SQLite),
   `keyring` 3.6 (native backends, pure-Rust Secret Service on Linux), `sha2`, `base64`,
@@ -202,7 +221,7 @@ browser on cookies (memory stub) and gives the desktop the keychain (priority 10
 
 Workaround meanwhile: `apps/desktop/src/stores/credential-store.ts` (`KeychainCredentialStore`,
 same shape, tested) and Settings → Desktop → Signed-in servers read the keychain directly. Once
-the change lands, add to `feature.ts`:
+the change lands, add to `createDesktopFeature()` in `apps/desktop/src/index.ts`:
 `defineService({ provides: 'credentialStore', id: 'keychain', priority: SERVICE_PRIORITY.desktop, isAvailable: () => isTauri(), create: async () => new (await import('./stores/credential-store')).KeychainCredentialStore((await import('./runtime')).getBackend()) })`.
 
 ### 2. Items in the workspace switcher menu
@@ -253,7 +272,7 @@ the screenshots: missing gaps and paddings).
 +@source '../../desktop/src/**/*.{ts,tsx}';
 ```
 
-Workaround: `apps/desktop/src/styles.css`, imported by `feature.ts` (so only inside the desktop
+Workaround: `apps/desktop/src/styles.css`, imported by `activate.ts` (so only inside the desktop
 app), generates this package's utilities into the `components` layer, below the app's
 `utilities`, so it can never override the shell. Delete that file and its import once the line
 above lands.
@@ -269,8 +288,25 @@ above lands.
 - **Not verified on the cloud platforms** (no accounts here): the Fly.io, Railway and Render configs
   and the Unraid/CasaOS/Umbrel templates follow each platform's documented formats; the
   root-owned-volume path they rely on was tested locally (`--user 0` on a root-owned volume).
-- **macOS was not built** (no Mac here); the steps are documented and CI builds it. Windows (debug
-  app, driven end to end) and Linux (release bundles in Docker) were built.
+- **macOS was not built** (no Mac here); the steps are documented and CI builds it. Verified here:
+  **Linux** `tauri build` in Docker (Debian bookworm) produced `Tessera_0.1.0_amd64.deb` (6.9 MB),
+  `Tessera-0.1.0-1.x86_64.rpm` (7.0 MB) and `Tessera_0.1.0_amd64.AppImage` (98 MB); the `.deb`
+  installs on a clean `debian:bookworm-slim` (depends on `libwebkit2gtk-4.1-0`, `libgtk-3-0`,
+  `libayatana-appindicator3-1`), registers `x-scheme-handler/tessera`, and the app runs under Xvfb.
+  **Windows**: the debug app passes `scripts/smoke-app.mjs` end to end (see Decisions), and the
+  release build (`pnpm --filter @tessera/desktop build:app`) produced
+  `Tessera_0.1.0_x64_en-US.msi` (6.5 MB) and `Tessera_0.1.0_x64-setup.exe` (NSIS, 5.2 MB).
+- **Firefox e2e flakiness is pre-existing**: under parallel load, the Architect's shell specs
+  sometimes time out in Firefox on this machine with or without the desktop feature (the baseline
+  stub failed 1 of 13 in one run). Every desktop spec passes in both browsers.
+- **The Architect's timing-sensitive unit tests time out on a busy machine**: with the other
+  agents' dev servers and browsers running here (CPU at 100%), `App.test.tsx` (the shell tests take
+  0.9–5.2 s each here) and `components.test.tsx > EmojiPicker` sometimes exceed Vitest's default
+  5 s, even alone; with `--testTimeout=60000` they pass. They don't load desktop code
+  (`features: []`). Suggestion for the Architect: a per-file timeout for these tests.
+- **A stale e2e server is reused locally**: `playwright.config.ts` has `reuseExistingServer` outside
+  CI, so a `vite preview` left running from an earlier run serves an old build (it cost me a
+  debugging session). Stop it before running e2e after changes.
 - **arm64 image** not built locally (the Dockerfile has nothing architecture-specific; the
   prune step keeps `linux-<arch>` prebuilds by `process.arch`).
 - **The updater's install path** needs a signed release to exercise; the check path and the
@@ -286,6 +322,12 @@ above lands.
   follow-ups.
 
 ## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)
+
+- **Git history**: `main` was rewritten after this branch was cut (same commits, new hashes), so
+  `feat/desktop` shares no ancestor with it. The trees match: this branch's base `312265a` is
+  identical to `main`'s `ff8a7bf`, and `main` only adds `ffde8e0` (LICENSE, `HANDOFF/architect.md`),
+  which this branch doesn't touch. Cherry-pick `312265a..feat/desktop` onto `main`, or merge with
+  `--allow-unrelated-histories` (no conflicts expected).
 
 - **Agent 03, server image**: serve the web build from `WEB_DIST_DIR` (the Dockerfile sets
   `/app/apps/web/dist`; `../../web/dist` relative to `apps/server/dist/main.js` also works).
@@ -303,7 +345,7 @@ above lands.
   `MODE=online` backups): align the wording with the real CLI.
 - **Agent 03, desktop sign-in**: after CCR 1, store the desktop's bearer token with
   `ctx.services.credentialStore` and pass it to the Hocuspocus provider; register
-  `KeychainCredentialStore` in `feature.ts` (snippet in CCR 1). Check: sign in from the desktop
+  `KeychainCredentialStore` in `createDesktopFeature()` (snippet in CCR 1). Check: sign in from the desktop
   app, restart it, it reconnects without asking; the token is in the OS keychain, not in files.
 - **Agent 08**: the markdown mirror picks the first exporter in
   `['markdown', 'markdown-folder', 'markdown-zip', 'markdown-basic']` that supports the `workspace`
@@ -323,9 +365,7 @@ above lands.
   `pnpm --filter @tessera/desktop icons`. Docs: link `deploy/README.md` and the guides; screenshot
   paths below. The templates in `deploy/appstores/` point at the app icon until the logo exists.
 - **Architect**: apply the CCRs; reword Settings → "Delete workspace" on the desktop ("Remove from
-  list", the folder stays), for example when `ctx.platform.isDesktopApp`. Check that the top-level
-  `await` in `apps/web/src/features/desktop/index.ts` survives the merged build (it does on this
-  branch: `vite build` and every e2e run use it).
+  list", the folder stays), for example when `ctx.platform.isDesktopApp`.
 - **Agent 02**: Edit → Undo/Redo in the desktop menu send `Mod+Z`/`Mod+Shift+Z` keydowns to the
   focused editor; check they reach the Yjs undo manager after the merge.
 - **Agent 06**: the desktop CSP allows `frame-src 'self' blob: https:` and `worker-src 'self'
