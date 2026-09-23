@@ -39,7 +39,7 @@ All four milestones of `agents/05-search-graph.md` are done and committed.
 Feature folders: `apps/web/src/features/search/index.ts` (+ `index.test.ts` covering all three
 features), `apps/web/src/features/graph/index.ts`, `apps/web/src/features/backlinks/index.ts`.
 
-Tests: 18 Vitest files in `packages/search` (70 tests) and 1 in `apps/web/src/features/search`
+Tests: 18 Vitest files in `packages/search` (71 tests) and 1 in `apps/web/src/features/search`
 (4 tests). e2e in `e2e/search/`: `palette.spec.ts` (5), `backlinks.spec.ts` (3), `graph.spec.ts` (4),
 `search.screenshots.ts`, and an opt-in performance run (`search.perf.ts`, `perf.config.ts`).
 
@@ -61,14 +61,16 @@ Tests: 18 Vitest files in `packages/search` (70 tests) and 1 in `apps/web/src/fe
 
 - `services`: `linkIndex` → `graph` (priority 50). It shares the index worker with the search index
   (one host per workspace doc), so each doc is read and parsed once for both.
-- `pageSidePanels`: `PANELS.backlinks`. `pageFooterSections`: `backlinks` (a light host that renders
+- `pageSidePanels`: `PANELS.backlinks` (no `when`: off a page it says "Open a page…" instead of the
+  shell's generic empty panel). `pageFooterSections`: `backlinks` (a light host that renders
   nothing unless `backlinks.showFooter` is on). `settingsPanels`: `backlinks` (the footer switch).
 - `commands`: `backlinks.show`.
 
 **`graph` feature**
 
 - `routes`: `/graph` (lazy; `/graph?focus=<pageId>` focuses a page). `pageSidePanels`:
-  `PANELS.localGraph`. `commands`: `graph.open` (`COMMANDS.openGraph`), `graph.showLocal`.
+  `PANELS.localGraph` (no `when`, like backlinks). `commands`: `graph.open`
+  (`COMMANDS.openGraph`), `graph.showLocal`.
 
 **Settings keys**: workspace `backlinks.showFooter`; device `graph.options` (color mode, orphans,
 rows, depth), `graph.localDepth`, `search.recent.<workspaceId>`, `search.testHooks`.
@@ -115,8 +117,9 @@ lists commands; Mod+Enter opens the search page for the current text.
   then by prefix; several pages with the title all count.
 - **Unlinked mentions**: the worker finds candidate pages with a regular expression over indexed
   text (a superset), then the precise check (`findTextOccurrences`) runs on the candidates' current
-  content, so positions always match the doc the Link button changes. Titles and aliases shorter
-  than two characters never count.
+  content, so positions always match the doc the Link button changes. The worker also returns
+  where each mention sits in the displayed block text (links show as titles there), so the panel
+  highlights the exact word. Titles and aliases shorter than two characters never count.
 - **Link is undoable exactly**: the change is written with its own transaction origin and a
   `Y.UndoManager` scoped to it; Undo reverts only that change even if the page was edited since.
   Stale mentions (text changed) are refused with a message and the list refreshes.
@@ -141,6 +144,9 @@ lists commands; Mod+Enter opens the search page for the current text.
   with links and tags, read a doc, wait for the index, a synthetic 10,000-node graph) and
   `window.__tesseraGraph` (node positions, layout settled). Installed only when the device setting
   `search.testHooks` is true, which only the specs set; my specs don't depend on the editor's UI.
+- **Test timeout**: the package's Vitest project allows 20 s per test. Its integration tests run
+  the real runtime, index and UI, and on a saturated machine (other agents' builds) some needed a
+  little over the 5 s default; the assertions are unchanged.
 - **Dependencies**: only `fake-indexeddb` 6.2.5 (Apache-2.0, dev only, already in the lockfile for
   `packages/sync`) to test the IndexedDB persistence. Everything else was pre-installed.
 
@@ -193,6 +199,11 @@ own `RichSearchHit` and `RichBacklink` types) and would simply move them into co
   context-close timeouts (Firefox logs `RenderCompositorSWGL failed mapping default framebuffer`);
   this affected two of the Architect's shell specs as well. With `--workers=2` everything passes.
 - The palette preview shows a simplified read-only rendering (tables and images as labels).
+- **Root `pnpm test` on a saturated machine**: two of the Architect's tests (`packages/ui`
+  EmojiPicker, `apps/web` App shell) hit the 5 s default timeout while 20 other agents' Node
+  processes kept the CPU at 100%; they pass with a longer timeout and don't touch this branch's code
+  (the App shell test runs with no features). Nothing in this branch changes them.
+- Checked at phone width (390 px): palette, backlinks sheet, graph with focus, search page.
 
 ## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)
 
