@@ -1,9 +1,20 @@
-import { defineFeature } from '@tessera/core';
+import { defineFeature, defineService, SERVICE_PRIORITY } from '@tessera/core';
 
 /**
- * Markdown, import & export (Agent 08). Registers the remark MarkdownCodec (priority 50), importers, exporters, the import and export dialogs and onboarding actions; logic lives in `@tessera/markdown` and `@tessera/importers`.
+ * Markdown, import & export (Agent 08). Registers the remark `MarkdownCodec` (priority 50);
+ * logic lives in `@tessera/markdown` and `@tessera/importers`.
  *
  * Keep this file thin: registration only, heavy code behind dynamic `import()`.
- * See HANDOFF/architect.md for the contracts this feature plugs into.
  */
-export const importExportFeature = defineFeature({ id: 'import-export' });
+export const importExportFeature = defineFeature({
+  id: 'import-export',
+  services: [
+    defineService({
+      provides: 'markdownCodec',
+      id: 'remark',
+      priority: SERVICE_PRIORITY.browser,
+      // unified and remark load here, in the service's async `create`, not in the startup bundle.
+      create: async () => (await import('@tessera/markdown')).createMarkdownCodec(),
+    }),
+  ],
+});
