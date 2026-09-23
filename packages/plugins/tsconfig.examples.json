@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "paths": {
+      "@tessera/plugin-api": ["../plugin-api/src/index.ts"],
+      "@tessera/plugin-api/testing": ["../plugin-api/src/testing/index.ts"],
+      "mermaid": ["./node_modules/mermaid"]
+    }
+  },
+  "include": [
+    "../../examples/plugins/*/src",
+    "../../examples/plugins/*/*.config.ts",
+    "../../examples/plugin-template/src",
+    "../../examples/plugin-template/*.config.ts"
+  ]
+}

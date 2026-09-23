@@ -1,0 +1,12 @@
+{
+  "id": "pomodoro",
+  "name": "Pomodoro",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "author": "Tessera",
+  "description": "A focus timer in a side panel: 25 minutes of work, short breaks, a long break every four sessions.",
+  "entry": "main.js",
+  "permissions": ["ui:panels", "ui:commands", "storage"],
+  "icon": "🍅",
+  "repository": "https://github.com/femboypuppy/Tessera"
+}

@@ -343,7 +343,7 @@ export function createRuntimeKit(): RuntimeKit {
       if (!hasPermission(granted, permission))
         throw makeError(
           'permission_denied',
-          `${init.plugin.name} doesn't have permission to ${action}. You can allow it in Settings → Plugins.`,
+          `${init.plugin.name} doesn’t have permission to ${action}. You can allow it in Settings → Plugins.`,
           permission,
         );
     };

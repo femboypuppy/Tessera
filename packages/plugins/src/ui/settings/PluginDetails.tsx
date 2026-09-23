@@ -93,7 +93,7 @@ function BlockPreview({
   }, [ctx, pluginId, type, fallbackData]);
   if (data === undefined) return null;
   return (
-    <div className="mt-2 rounded-lg border border-border bg-bg p-3">
+    <div className="mt-3" data-block-preview={`${pluginId}/${type}`}>
       <SurfaceFrame
         instance={instance}
         generation={instance.generation}

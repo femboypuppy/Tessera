@@ -182,7 +182,7 @@ export interface TestHarness<S extends SettingsSchema = SettingsSchema> {
       root?: HTMLElement;
     },
   ): Promise<RenderedBlock<T>>;
-  /** Waits for pending promises and timers of zero delay. */
+  /** Waits for pending promises (works with fake timers; advance timers yourself). */
   flush(): Promise<void>;
 }
 
@@ -192,8 +192,8 @@ const PERMISSION_TEXT: Record<string, string> = {
   'databases:read': 'read your databases',
   'databases:write': 'edit your databases',
   'ui:commands': 'add commands',
-  'ui:panels': 'add panels',
-  'ui:blocks': 'add blocks',
+  'ui:panels': 'add side panels',
+  'ui:blocks': 'add custom blocks',
   storage: 'store data',
 };
 
@@ -265,7 +265,8 @@ export function createTestHarness<S extends SettingsSchema>(
     if (!granted.includes(permission))
       throw new PluginError(
         'permission_denied',
-        `${info.name} doesn't have permission to ${PERMISSION_TEXT[permission] ?? permission}.`,
+        // Same wording as the app, so tests can assert what users will see.
+        `${info.name} doesn’t have permission to ${PERMISSION_TEXT[permission] ?? permission}. You can allow it in Settings → Plugins.`,
         permission,
       );
   };
@@ -645,8 +646,9 @@ export function createTestHarness<S extends SettingsSchema>(
   };
 
   const workerApi = createApi('worker');
+  // Microtasks only, so it also works under fake timers (every harness API call is a promise).
   const flush = async () => {
-    for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    for (let i = 0; i < 50; i += 1) await Promise.resolve();
   };
   const newRoot = () => {
     if (typeof document === 'undefined')

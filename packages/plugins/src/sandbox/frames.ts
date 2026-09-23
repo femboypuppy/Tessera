@@ -69,17 +69,17 @@ function readControl(data: unknown): ControlMessage | null {
   }
 }
 
-function newFrame(title: string): HTMLIFrameElement {
+function newFrame(title: string, kind: 'worker' | 'ui'): HTMLIFrameElement {
   const frame = document.createElement('iframe');
+  frame.setAttribute('data-plugin-frame', kind);
   // Scripts only: no same-origin (opaque origin, no access to the app's storage or DOM), no
   // popups, no forms, no top navigation, no modals.
   frame.setAttribute('sandbox', 'allow-scripts');
   frame.setAttribute('title', title);
   frame.setAttribute('referrerpolicy', 'no-referrer');
-  frame.setAttribute(
-    'allow',
-    "camera 'none'; microphone 'none'; geolocation 'none'; clipboard-read 'none'; clipboard-write 'none'; usb 'none'; serial 'none'; bluetooth 'none'; payment 'none'; display-capture 'none'",
-  );
+  // Powerful features are off for cross-origin frames by default; say so explicitly for the ones
+  // every browser knows (unknown names only produce console warnings).
+  frame.setAttribute('allow', "camera 'none'; microphone 'none'; geolocation 'none'");
   return frame;
 }
 
@@ -126,7 +126,7 @@ async function start(
 export const domSandboxFactory: SandboxFactory = {
   createWorker(options) {
     const nonce = createNonce();
-    const frame = newFrame(options.name);
+    const frame = newFrame(options.name, 'worker');
     frame.setAttribute('aria-hidden', 'true');
     frame.tabIndex = -1;
     frame.style.cssText = 'display:none';
@@ -145,7 +145,7 @@ export const domSandboxFactory: SandboxFactory = {
   },
   createUi(options) {
     const nonce = createNonce();
-    const frame = newFrame(options.title);
+    const frame = newFrame(options.title, 'ui');
     frame.style.cssText = 'display:block;border:0;width:100%;height:100%;background:transparent';
     return start(
       frame,

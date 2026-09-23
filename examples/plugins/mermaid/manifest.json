@@ -1,0 +1,12 @@
+{
+  "id": "mermaid",
+  "name": "Mermaid diagrams",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "author": "Tessera",
+  "description": "Flowcharts, sequence diagrams, timelines, mind maps and more, written as text and drawn in your theme.",
+  "entry": "main.js",
+  "permissions": ["ui:blocks"],
+  "icon": "🧜",
+  "repository": "https://github.com/femboypuppy/Tessera"
+}

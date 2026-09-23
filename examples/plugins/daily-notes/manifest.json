@@ -1,0 +1,12 @@
+{
+  "id": "daily-notes",
+  "name": "Daily notes",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "author": "Tessera",
+  "description": "One note per day, from a template, in a folder page. Open today’s note with a shortcut, or have it created when Tessera opens.",
+  "entry": "main.js",
+  "permissions": ["pages:read", "pages:write", "ui:commands"],
+  "icon": "📅",
+  "repository": "https://github.com/femboypuppy/Tessera"
+}
