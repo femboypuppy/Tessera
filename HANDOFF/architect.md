@@ -116,9 +116,6 @@ None. The Architect owns the contract; every change is described above and in SP
 
 ## Known gaps and bugs
 
-- **The LICENSE file holds GPL-3.0**, from the repository's initial commit, while `CLAUDE.md`,
-  `SPEC.md` and every `package.json` say MIT. `LICENSE` belongs to Agent 10, whose assignment is to
-  write the MIT license. The owner should confirm the license.
 - **Data lives in memory** until the sync feature merges: a reload starts at onboarding.
 - **Only English** exists; the language select is disabled until a second locale ships.
 - Pressing Enter in the emoji search before its data finishes loading (a few hundred ms, first use
@@ -308,9 +305,8 @@ as `-light.png` and `-dark.png`. The other agents' names are in their agent file
 from `packages/ui/src/styles/tokens.css`; the accent is `--tess-accent`, an indigo. The shell uses a
 placeholder mosaic logo (`apps/web/src/app/LogoMark.tsx`, `apps/web/public/favicon.svg`). Put the
 final SVGs in `assets/` and list the swap as a merge follow-up, since those files are the
-Architect's. `LICENSE` is yours, and today it holds GPL-3.0 text from the repository's initial
-commit: replace it with the MIT license your assignment asks for, and flag the change to the owner
-in HANDOFF. The demo workspace is a markdown folder that Agent 08's importer loads, so stay within
+Architect's. `LICENSE` is yours, and it already holds the MIT license (`Copyright (c) 2026
+femboypuppy`), which the owner confirmed, so it needs no change. The demo workspace is a markdown folder that Agent 08's importer loads, so stay within
 what the markdown importer supports: wikilinks, frontmatter `tags` and `aliases`, callouts, tasks,
 tables, and CSV files for databases. Pitfalls: document new pages as Mod+Alt+N for browsers, keep
 stretch goals out of the feature list, and use the screenshot paths exactly as the agents name them.
