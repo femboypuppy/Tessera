@@ -377,6 +377,7 @@ flag, or `register(item, { replace: true })`). Not required; noted so nobody cha
 | --- | --- | --- | --- |
 | Chromium (e2e, 2,000 notes in a zip, one test at a time) | 17.4 s | 147 ms | reading → planning in the worker → pages → content, all shown by the progress dialog |
 | Firefox (e2e, same) | 41.2 s | 114 ms | up to 97 s (gap 263 ms) when six browser tests ran at once on this machine |
+| Both, final run on a quieter machine (`pnpm test:e2e e2e/importers`) | Chromium 16.2 s, Firefox 19.1 s | 157 ms, 96 ms | the other worktrees' agents load this machine unevenly, hence the spread |
 | Node (`TESSERA_IMPORT_BENCH_NOTES=2000`, planning inline) | 36.8 s | CPU between yields: pages 32 ms, content 16 ms | reading 0.2 s, planning 16.3 s, pages 11.8 s, content 6.4 s |
 
 Before the M4 fixes the same Chromium import blocked the main thread for about 5 s (no progress
