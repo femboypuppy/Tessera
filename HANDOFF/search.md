@@ -197,7 +197,10 @@ own `RichSearchHit` and `RichBacklink` types) and would simply move them into co
   numbers below were measured with the GPU. 300-page graphs are fine either way.
 - **Firefox e2e under heavy load**: with many parallel workers on a busy machine, Firefox runs hit
   context-close timeouts (Firefox logs `RenderCompositorSWGL failed mapping default framebuffer`);
-  this affected two of the Architect's shell specs as well. With `--workers=2` everything passes.
+  this affected the Architect's shell, smoke and page-tree specs as well. The last full run
+  (`--workers=2`, both browsers) passed 49 of 50; the one failure was the Architect's Firefox
+  page-tree spec timing out while closing its browser context. Every `e2e/search` spec passed in
+  both browsers.
 - The palette preview shows a simplified read-only rendering (tables and images as labels).
 - **Root `pnpm test` on a saturated machine**: two of the Architect's tests (`packages/ui`
   EmojiPicker, `apps/web` App shell) hit the 5 s default timeout while 20 other agents' Node
