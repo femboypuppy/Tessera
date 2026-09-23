@@ -232,6 +232,10 @@ own `RichSearchHit` and `RichBacklink` types) and would simply move them into co
   boundary, so a lazy section would suspend the page; mine is a light host with its own
   `Suspense`. Wrapping them in the shell would make lazy sections safe. If a CSP is added, the two
   module workers need `worker-src 'self'`.
+- **Architect (tests)**: on this machine, with nine other agents building at once, three shell
+  tests exceed Vitest's 5 s default (`packages/ui` EmojiPicker ~8.6 s, `apps/web` App shell
+  "onboards…" ~6.9 s and "nests…" ~4.8–5.2 s); they pass with more time. A per-test timeout for
+  those integration tests would keep `pnpm test` green on busy CI runners.
 - **Bundle**: startup JS measured at 213 KB gzip (entry plus static imports) with every feature of
   this branch registered.
 
