@@ -9,10 +9,22 @@ import {
   createNotionImporter,
   createObsidianImporter,
 } from '@tessera/importers';
+import {
+  activateImportExport,
+  ExportPageAction,
+  ImportExportOverlay,
+  importExportCommands,
+  importExportOnboardingActions,
+  importExportRoutes,
+  importExportSettingsPanel,
+  ImportSidebarItem,
+} from '@tessera/importers/ui';
 
 /**
  * Markdown, import & export (Agent 08). Registers the remark `MarkdownCodec` (priority 50), the
- * importers and the exporters; logic lives in `@tessera/markdown` and `@tessera/importers`.
+ * importers and exporters, the import and export dialogs (`COMMANDS.openImport`,
+ * `COMMANDS.openExport`), the `/print/:pageId` view behind the PDF export, a settings panel and the
+ * first-run actions. Logic and UI live in `@tessera/markdown` and `@tessera/importers`.
  *
  * Keep this file thin: registration only, heavy code behind dynamic `import()`.
  */
@@ -42,4 +54,12 @@ export const importExportFeature = defineFeature({
     // Replaces core's basic markdown exporter, so the desktop mirror writes Obsidian markdown.
     createMarkdownExporter(CORE_MARKDOWN_ID),
   ],
+  commands: importExportCommands(),
+  overlays: [{ id: 'import-export', component: ImportExportOverlay }],
+  routes: importExportRoutes(),
+  sidebarSections: [{ id: 'import', position: 'bottom', order: 100, component: ImportSidebarItem }],
+  pageHeaderActions: [{ id: 'export', order: 50, component: ExportPageAction }],
+  settingsPanels: [importExportSettingsPanel()],
+  onboardingActions: importExportOnboardingActions(),
+  activate: (ctx) => activateImportExport(ctx),
 });
