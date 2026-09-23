@@ -103,6 +103,8 @@ export function HeaderCell({
       aria-colindex={colIndex + 2}
       style={style}
       data-active={active || undefined}
+      data-property-id={property.id}
+      data-property-type={property.type}
       className={cn(
         'group/header relative flex shrink-0 items-center border-r border-b border-border bg-bg',
         active && 'outline-2 -outline-offset-2 outline-accent',

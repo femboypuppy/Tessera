@@ -309,8 +309,9 @@ export interface TextCell {
 
 /**
  * Writes cells from text (pasting ranges, fill): parses each for its property type, creates
- * missing select options, resolves relation titles among the allowed pages, renames titles, and
- * writes everything per database in one transaction. Returns how many cells could not be parsed.
+ * missing select options, resolves relation titles among the allowed pages and writes everything
+ * per doc in one transaction. Titles go first, so relations in the same paste can point at rows
+ * named by it. Returns how many cells were written and how many could not be parsed.
  */
 export async function setCellsFromText(
   ctx: Ctx,
@@ -320,7 +321,23 @@ export async function setCellsFromText(
 ): Promise<{ written: number; skipped: number }> {
   let skipped = 0;
   let written = 0;
-  const titles: Array<[string, string]> = [];
+  const parsed = cells.map((cell) => ({
+    cell,
+    parsed: parseCellText(cell.text, cell.property, queryCtx),
+  }));
+
+  const titles = parsed.flatMap(({ cell, parsed: result }) =>
+    result.kind === 'title' ? [[cell.rowId, result.title] as const] : [],
+  );
+  if (titles.length > 0) {
+    ctx.workspace.doc.transact(() => {
+      for (const [rowId, title] of titles) {
+        if (ctx.workspace.getPage(rowId)) ctx.workspace.renamePage(rowId, title);
+      }
+    });
+    written += titles.length;
+  }
+
   const relations: Array<{ rowId: string; property: PropertyDefinition; ids: string[] }> = [];
   const values = new Map<string, Record<string, JsonValue | null>>();
   const setValue = (rowId: string, propertyId: string, value: JsonValue | null) => {
@@ -330,17 +347,15 @@ export async function setCellsFromText(
   };
   const snapshot = ctx.workspace.pages.getSnapshot();
   ref.doc.transact(() => {
-    for (const cell of cells) {
-      const parsed = parseCellText(cell.text, cell.property, queryCtx);
-      switch (parsed.kind) {
+    for (const { cell, parsed: result } of parsed) {
+      switch (result.kind) {
         case 'title':
-          titles.push([cell.rowId, parsed.title]);
           break;
         case 'value':
-          setValue(cell.rowId, cell.property.id, parsed.value);
+          setValue(cell.rowId, cell.property.id, result.value);
           break;
         case 'options': {
-          const ids = parsed.names.map((name) => ensureOption(ref.doc, cell.property.id, name).id);
+          const ids = result.names.map((name) => ensureOption(ref.doc, cell.property.id, name).id);
           setValue(
             cell.rowId,
             cell.property.id,
@@ -354,13 +369,15 @@ export async function setCellsFromText(
             ? snapshot.children(target, { includeRows: true })
             : snapshot.all().filter((page) => !snapshot.isTrashed(page.id));
           const ids: string[] = [];
-          for (const title of parsed.titles) {
+          for (const title of result.titles) {
             const match = candidates.find(
-              (page) => page.title.trim().toLowerCase() === title.trim().toLowerCase(),
+              (page) =>
+                page.id !== cell.rowId &&
+                page.title.trim().toLowerCase() === title.trim().toLowerCase(),
             );
             if (match) ids.push(match.id);
           }
-          if (ids.length === 0 && parsed.titles.length > 0) skipped += 1;
+          if (ids.length === 0 && result.titles.length > 0) skipped += 1;
           else relations.push({ rowId: cell.rowId, property: cell.property, ids });
           break;
         }
@@ -374,12 +391,6 @@ export async function setCellsFromText(
       written += Object.keys(rowValues).length;
     }
   });
-  if (titles.length > 0) {
-    ctx.workspace.doc.transact(() => {
-      for (const [rowId, title] of titles) ctx.workspace.renamePage(rowId, title);
-    });
-    written += titles.length;
-  }
   for (const { rowId, property, ids } of relations) {
     await setRelationValue(ctx, ref.doc, rowId, property, ids);
     written += 1;
