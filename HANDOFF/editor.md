@@ -147,8 +147,8 @@ None. Everything the editor needed was in the contract: `PageBodyProps` (focus h
 
   | | Editor processing p95 | End to end, keydown → layout | Browser floor, bare contenteditable, same DOM |
   |---|---|---|---|
-  | Chromium | 7–11 ms | p50 36–53, p95 49–69 ms | p50 30–40, p95 39–66 ms |
-  | Firefox | about 20 ms (not budgeted) | p50 about 34 ms | p50 about 11 ms |
+  | Chromium | 7–11 ms | p50 36–53, p95 49–69 ms | p50 26–40, p95 35–66 ms |
+  | Firefox | 12–21 ms (not budgeted) | p50 20–40, p95 30–51 ms | p50 6–11, p95 13–26 ms |
 
   - **Chromium:** the editor is well under budget. What remains end to end is the browser's floor for a contenteditable this size.
   - **Firefox:** most of the editor's time is O(page size) work inside dependencies:
