@@ -102,8 +102,21 @@ export function rankItems<T extends Rankable>(
     const index = recent.indexOf(item.id);
     return index < 0 ? Number.POSITIVE_INFINITY : index;
   };
+  // Recently used items get a bonus that lifts them over similar matches (a prefix match of a
+  // recent item beats a slightly better prefix match of another), but never over an exact match.
+  const bonus = (item: T) => {
+    const index = recent.indexOf(item.id);
+    return index < 0 ? 0 : Math.max(0, 60 - index * 6);
+  };
   const scored = items
-    .map((item, index) => ({ item, index, score: query.trim() ? itemScore(query, item) : 0 }))
+    .map((item, index) => {
+      const score = query.trim() ? itemScore(query, item) : 0;
+      return {
+        item,
+        index,
+        score: score === null ? null : score + (query.trim() ? bonus(item) : 0),
+      };
+    })
     .filter((entry): entry is { item: T; index: number; score: number } => entry.score !== null);
   scored.sort(
     (a, b) => b.score - a.score || recency(a.item) - recency(b.item) || a.index - b.index,

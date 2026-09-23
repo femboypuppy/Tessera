@@ -21,7 +21,8 @@ export interface MenuSection<T extends MenuItem = MenuItem> {
 
 /** An open suggestion menu. Items are grouped for display; keyboard focus moves over `flat`. */
 export interface SuggestionMenuState<T extends MenuItem = MenuItem> {
-  kind: 'slash' | 'page';
+  /** Slash commands, page autocomplete, or the choices after pasting a URL. */
+  kind: 'slash' | 'page' | 'paste';
   /** Accessible name of the listbox. */
   label: string;
   query: string;

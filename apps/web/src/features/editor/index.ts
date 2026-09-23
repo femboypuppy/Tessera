@@ -23,6 +23,22 @@ function preloadWhenIdle(): () => void {
   return () => globalThis.clearTimeout(timer);
 }
 
+/** Device setting read by the `[[` and `@` autocomplete (recent pages first). */
+const RECENT_PAGES_KEY = 'editor.recentPages';
+
+/** Remembers visited pages, most recent first, so link autocomplete can rank them first. */
+function trackRecentPages(ctx: AppContext): () => void {
+  return ctx.events.on('navigation.changed', ({ pageId }) => {
+    if (!pageId) return;
+    const stored = ctx.settings.device.get(RECENT_PAGES_KEY);
+    const list = Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : [];
+    ctx.settings.device.set(
+      RECENT_PAGES_KEY,
+      [pageId, ...list.filter((id) => id !== pageId)].slice(0, 20),
+    );
+  });
+}
+
 /** True when a page (not a database) is open. */
 function onPage({ app, pageId }: { app: AppContext; pageId: string | null }): boolean {
   return pageId !== null && app.workspace.getPage(pageId)?.kind === 'page';
@@ -94,5 +110,12 @@ export const editorFeature = defineFeature({
   pageBodies: { page: PageEditor },
   blockRenderers: [{ kind: 'web', component: WebEmbed, label: t('webEmbed') }],
   commands,
-  activate: () => preloadWhenIdle(),
+  activate: (ctx) => {
+    const stopPreload = preloadWhenIdle();
+    const stopTracking = trackRecentPages(ctx);
+    return () => {
+      stopPreload();
+      stopTracking();
+    };
+  },
 });

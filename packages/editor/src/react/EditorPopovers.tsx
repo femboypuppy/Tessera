@@ -370,48 +370,6 @@ function WebEmbedPanel({ editor, request, close }: PanelProps<'webEmbed'>) {
   );
 }
 
-const ROW =
-  'flex h-8 items-center rounded-md px-2 text-left text-sm text-fg outline-none hover:bg-hover focus-visible:bg-hover focus-visible:ring-2 focus-visible:ring-focus disabled:pointer-events-none disabled:opacity-50';
-
-function UrlPastePanel({ editor, request, close }: PanelProps<'urlPaste'>) {
-  const embeddable = resolveEmbed(request.url) !== null;
-  const replaceWith = (display: 'embed' | 'bookmark') => {
-    const { state } = editor;
-    const $from = state.doc.resolve(Math.min(request.from, state.doc.content.size));
-    const text = state.doc.textBetween(request.from, request.to);
-    close({ focusEditor: false });
-    if (text !== request.url && !text.includes(request.url)) return;
-    // Remove the pasted link text; an emptied paragraph is replaced by the embed.
-    editor.chain().deleteRange({ from: request.from, to: request.to }).run();
-    insertWebEmbed(
-      editor,
-      request.url,
-      display,
-      Math.min($from.pos, editor.state.doc.content.size),
-    );
-    editor.view.focus();
-  };
-  return (
-    <div className="flex w-48 flex-col" role="group" aria-label={t('pasteUrlMenu')}>
-      <p className="px-2 pt-1 pb-1.5 text-2xs font-medium text-fg-subtle">{t('pasteUrlMenu')}</p>
-      <button type="button" className={ROW} onClick={() => close()}>
-        {t('pasteAsLink')}
-      </button>
-      <button
-        type="button"
-        className={ROW}
-        disabled={!embeddable}
-        onClick={() => replaceWith('embed')}
-      >
-        {t('pasteAsEmbed')}
-      </button>
-      <button type="button" className={ROW} onClick={() => replaceWith('bookmark')}>
-        {t('pasteAsBookmark')}
-      </button>
-    </div>
-  );
-}
-
 function LinkPanel({ editor, request, close }: PanelProps<'link'>) {
   const [href, setHref] = useState(request.href ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -496,10 +454,6 @@ function PanelFor({
     case 'webEmbed':
       return (
         <WebEmbedPanel editor={editor} controller={controller} request={request} close={close} />
-      );
-    case 'urlPaste':
-      return (
-        <UrlPastePanel editor={editor} controller={controller} request={request} close={close} />
       );
     case 'link':
       return <LinkPanel editor={editor} controller={controller} request={request} close={close} />;

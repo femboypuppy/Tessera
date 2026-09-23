@@ -58,3 +58,42 @@ export function blockTexts(editor: Editor): string[] {
   editor.state.doc.forEach((node) => texts.push(`${node.type.name}:${node.textContent}`));
   return texts;
 }
+
+/**
+ * Types text like a user: each character goes through `handleTextInput` first (so input rules and
+ * suggestion triggers run), then is inserted when nothing handled it. `\n` presses Enter.
+ */
+export function typeText(editor: Editor, text: string): void {
+  for (const char of text) {
+    if (char === '\n') {
+      pressKey(editor, 'Enter');
+      continue;
+    }
+    const { view } = editor;
+    const { from, to } = view.state.selection;
+    const insert = () => view.state.tr.insertText(char, from, to);
+    const handled = view.someProp('handleTextInput', (handler) =>
+      handler(view, from, to, char, insert),
+    );
+    if (!handled) view.dispatch(insert());
+  }
+}
+
+/** Presses a key (with optional modifiers) through the editor's keymaps, like a real keydown. */
+export function pressKey(
+  editor: Editor,
+  key: string,
+  modifiers: { shift?: boolean; mod?: boolean; alt?: boolean } = {},
+): boolean {
+  const event = new KeyboardEvent('keydown', {
+    key,
+    shiftKey: !!modifiers.shift,
+    ctrlKey: !!modifiers.mod,
+    altKey: !!modifiers.alt,
+    bubbles: true,
+    cancelable: true,
+  });
+  const { view } = editor;
+  const handled = view.someProp('handleKeyDown', (handler) => handler(view, event)) ?? false;
+  return handled;
+}

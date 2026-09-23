@@ -8,6 +8,9 @@ import { CodeHighlight } from '../code/highlight';
 import { contributedExtensions } from '../contributed';
 import { editorExtensions } from '../editor-extensions';
 import { blockSelection } from '../extensions/block-selection';
+import { links } from '../extensions/links';
+import { pageLinkCommand } from '../menus/page-link-command';
+import { LinkPreview } from './LinkPreview';
 import { mediaDrop } from '../extensions/media-drop';
 import { BlockHandle } from '../handle/BlockHandle';
 import { blockHandle } from '../handle/handle-plugin';
@@ -61,6 +64,8 @@ function EditorView({
         extra: [
           CodeHighlight,
           slashCommand(controller),
+          pageLinkCommand(controller),
+          links(controller),
           mediaDrop(controller),
           blockHandle(controller),
           blockSelection(controller),
@@ -146,6 +151,7 @@ function EditorView({
       </div>
       <SuggestionMenu controller={controller} editor={editor} />
       <EditorPopovers controller={controller} editor={editor} />
+      <LinkPreview controller={controller} />
     </EditorControllerContext.Provider>
   );
 }

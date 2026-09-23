@@ -12,7 +12,6 @@ export type PopoverRequest =
   | { kind: 'image'; insertAt: number }
   | { kind: 'table'; insertAt: number }
   | { kind: 'webEmbed'; insertAt: number; display: 'embed' | 'bookmark' }
-  | { kind: 'urlPaste'; from: number; to: number; url: string }
   | { kind: 'link'; from: number; to: number; href: string | null };
 
 /** An open popover: the request plus the element (or rectangle) it is anchored to. */
