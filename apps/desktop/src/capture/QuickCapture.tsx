@@ -1,6 +1,6 @@
 import { toError } from '@tessera/core';
 import { useAppContext } from '@tessera/core/react';
-import { Button, Textarea } from '@tessera/ui';
+import { Button } from '@tessera/ui';
 import { Check, Inbox, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { t } from '../i18n';
@@ -73,7 +73,7 @@ export default function QuickCapture() {
   };
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden border border-border bg-surface text-fg">
+    <main className="duration-fast flex h-dvh flex-col overflow-hidden border border-border bg-surface text-fg transition-colors has-[textarea:focus-visible]:border-accent">
       <header
         data-tauri-drag-region=""
         className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-4 select-none"
@@ -94,26 +94,31 @@ export default function QuickCapture() {
           <X className="size-4" aria-hidden="true" />
         </button>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
-        <Textarea
+      <div className="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-3 pb-4">
+        {/* A borderless writing surface: the window itself is the field. */}
+        <textarea
           ref={field}
           aria-label={t('captureTitle')}
           placeholder={t('capturePlaceholder')}
           value={text}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={onKeyDown}
-          disabled={phase.kind === 'saving'}
-          className="min-h-0 flex-1 resize-none border-transparent bg-transparent px-0 text-base shadow-none hover:border-transparent focus-visible:border-transparent focus-visible:ring-0"
+          readOnly={phase.kind === 'saving'}
+          aria-busy={phase.kind === 'saving'}
+          className="min-h-0 w-full flex-1 resize-none bg-transparent text-base leading-relaxed text-fg outline-none placeholder:text-fg-subtle"
         />
         {error ? (
           <p role="alert" className="text-ui text-danger-text">
             {error}
           </p>
         ) : null}
-        <footer className="flex items-center justify-between gap-3">
-          <p className="hidden truncate text-xs text-fg-subtle sm:block">{t('captureHint')}</p>
+        <footer className="flex items-center gap-3">
+          <p className="min-w-0 flex-1 truncate text-xs text-fg-subtle">{t('captureHint')}</p>
           {phase.kind === 'saved' ? (
-            <p role="status" className="flex items-center gap-1.5 text-ui text-success-text">
+            <p
+              role="status"
+              className="flex shrink-0 items-center gap-1.5 text-ui text-success-text"
+            >
               <Check className="size-4" aria-hidden="true" />
               {t('captureSaved', { page: phase.page })}
             </p>

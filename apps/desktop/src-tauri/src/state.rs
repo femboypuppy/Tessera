@@ -57,9 +57,20 @@ pub struct OriginEvent {
 
 impl AppState {
     pub fn load<R: Runtime>(app: &AppHandle<R>) -> Result<Self> {
-        let config_dir = app.path().app_config_dir()?;
+        // Overrides for portable setups and tests: where the app keeps its lists and settings,
+        // and where new workspaces go.
+        let env_dir = |name: &str| {
+            std::env::var_os(name)
+                .filter(|value| !value.is_empty())
+                .map(PathBuf::from)
+        };
+        let config_dir = match env_dir("TESSERA_CONFIG_DIR") {
+            Some(dir) => dir,
+            None => app.path().app_config_dir()?,
+        };
         std::fs::create_dir_all(&config_dir)?;
-        let default_root = app.path().home_dir().ok().map(|home| home.join("Tessera"));
+        let default_root = env_dir("TESSERA_WORKSPACES_DIR")
+            .or_else(|| app.path().home_dir().ok().map(|home| home.join("Tessera")));
         let paths = Paths {
             registry: config_dir.join("workspaces.json"),
             prefs: config_dir.join("preferences.json"),
