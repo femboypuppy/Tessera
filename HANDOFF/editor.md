@@ -119,6 +119,7 @@ Package exports: `.`, `./page-editor`, `./web-embed`, `./commands`, `./i18n`, `.
   - Pasted HTML always goes through DOMPurify, and no HTML is ever rendered raw.
 - **The paste safety net.** When the codec's `parseHTML` doesn't account for at least 85% of the HTML's text (or more than 115%), paste uses the plain-text flavor. With the stub codec this keeps Google Docs lists from being dropped. With the real codec it guards against silent loss.
 - **Slash ranking:** fuzzy score plus a recency bonus when there is a query, and a "Recently used" section when there isn't.
+- **The editor view re-renders only for what it uses** (`handle`, `pageId`, `readOnly`, the focus registration and the target's key). Typing a page title changes the page's metadata with every keystroke, and that no longer re-renders the editor.
 - **Performance design**, from profiling the 2,000-block page:
   - Hover and drag find blocks by a binary search over block boxes. Before, they used hit tests, which cost about 5 ms a frame on long pages.
   - A drag shows its cursor through one covering layer. Before, a `* { cursor }` rule restyled 18,000 elements, about 240 ms on drag start.
@@ -156,7 +157,7 @@ None. Everything the editor needed was in the contract: `PageBodyProps` (focus h
     - ProseMirror's view update walks every top-level child.
 
     Fixing these belongs upstream (see *Follow-ups*).
-- **Dragging:** the editor's work is 1–2 ms per frame in Chromium and 3–5 ms in Firefox. In headless Chromium, the whole frame sometimes waits up to 20 ms on the compositor commit (software compositing). Frame intervals are 16.7 ms at p50.
+- **Dragging:** the editor's work is 1–3 ms per frame in Chromium and 3–5 ms in Firefox (up to 12 ms at p95 when other jobs load the machine). In headless Chromium, the whole frame sometimes waits up to 20 ms on the compositor commit (software compositing). Frame intervals are 16.7 ms at p50.
 - **Stub codec.** Until Agent 08's codec lands, pasted markdown lists, quotes and code become paragraphs, and copied text is the stub's plain text. The code is written against the `MarkdownCodec` interface and tested with a richer fake. The clipboard e2e checks rich structure automatically once the workspace's codec isn't `basic`.
 - **`@tiptap/y-tiptap` 3.0.9 bug, worked around in `history-guard.ts`.** After an undo or redo step it keeps absolute positions from an older document, which can throw a `RangeError` and leave ProseMirror out of sync with Yjs (a redo that never shows up). Worth reporting upstream.
 - **Touch:** dragging blocks by touch isn't supported. On touch screens the handle opens the block menu, which has Move up and Move down. Phone width is tested: the handle is a tap target and the toolbar fits.
@@ -175,6 +176,14 @@ None. Everything the editor needed was in the contract: `PageBodyProps` (focus h
 - **Upstream (y-tiptap / y-prosemirror):**
   - Skip the redundant relative-selection conversions per transaction.
   - Fix the stale absolute selection after undo/redo (then `HistoryGuard`'s workaround can go).
+- **Architect (web shell tests):** the two integration cases in `apps/web/src/app/App.test.tsx` ("onboards, then creates…" and "nests, un-nests…") take 2.4–5.2 s each on this shared Windows machine, against Vitest's 5 s default. "nests" timed out even with the editor unregistered. With the real editor, "onboards" also loads and mounts it (about 1 s more), so either can time out when other jobs load the CPU. Measured over three runs:
+
+  | Test | With the editor | Without it |
+  |---|---|---|
+  | "onboards" | 3.9–5.1 s | 3.7–4.2 s |
+  | "nests" | 2.4–5.2 s | 2.7–3.6 s |
+
+  Suggested fix, in the Architect's files: `testTimeout: 15_000` for the `web` project, or a timeout on those two tests.
 - **Lockfile:** `packages/editor/package.json` added and removed dependencies (see *Decisions*). Regenerate the lockfile at merge.
 
 ## Screenshots (list of files)

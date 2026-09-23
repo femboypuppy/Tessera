@@ -3,7 +3,7 @@ import { useAppContext, useContributions, usePageDoc } from '@tessera/core/react
 import { Button, EmptyState, Skeleton } from '@tessera/ui';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { AlertTriangle } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { clipboard } from '../clipboard/clipboard';
 import { CodeHighlight } from '../code/highlight';
 import { contributedExtensions } from '../contributed';
@@ -132,7 +132,7 @@ function EditorView({
   // Scroll to the navigation target once per distinct target (the object changes every render).
   const targetRef = useRef(target);
   targetRef.current = target;
-  const targetKey = target ? `${target.heading ?? ''}#${target.blockId ?? ''}` : '';
+  const targetKey = targetKeyOf(target);
   useEffect(() => {
     const current = targetRef.current;
     if (!targetKey || !current || editor.isDestroyed) return undefined;
@@ -167,6 +167,27 @@ function EditorView({
   );
 }
 
+function targetKeyOf(target: PageBodyProps['target']): string {
+  return target ? `${target.heading ?? ''}#${target.blockId ?? ''}` : '';
+}
+
+/**
+ * The editor re-renders only for what it uses. The page's metadata changes with every keystroke
+ * of its title, and `target` and `focusTitle` are new objects on every render of the page (the
+ * latest `focusTitle` is read through a ref, and every version focuses the same title).
+ */
+function sameEditorProps(previous: EditorViewProps, next: EditorViewProps): boolean {
+  return (
+    previous.handle === next.handle &&
+    previous.pageId === next.pageId &&
+    previous.readOnly === next.readOnly &&
+    previous.registerFocusHandler === next.registerFocusHandler &&
+    targetKeyOf(previous.target) === targetKeyOf(next.target)
+  );
+}
+
+const MemoEditorView = memo(EditorView, sameEditorProps);
+
 function PageEditorLoader(props: PageBodyProps & { onRetry: () => void }) {
   const { handle, loaded, error } = usePageDoc(props.pageId);
   if (error) {
@@ -180,7 +201,7 @@ function PageEditorLoader(props: PageBodyProps & { onRetry: () => void }) {
     );
   }
   if (!loaded || !handle || handle.id !== props.pageId) return <EditorSkeleton />;
-  return <EditorView key={handle.docName} handle={handle} {...props} />;
+  return <MemoEditorView key={handle.docName} handle={handle} {...props} />;
 }
 
 /**
