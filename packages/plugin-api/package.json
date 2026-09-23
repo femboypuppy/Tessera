@@ -16,9 +16,11 @@
     "build": "tsdown",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "docs:api": "tsx scripts/write-api-docs.ts"
   },
   "devDependencies": {
-    "@tessera/core": "workspace:*"
+    "@tessera/core": "workspace:*",
+    "typescript": "6.0.3"
   }
 }
