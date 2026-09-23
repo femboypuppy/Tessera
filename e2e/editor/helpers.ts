@@ -131,7 +131,11 @@ export async function redo(page: Page, times = 1): Promise<void> {
   for (let i = 0; i < times; i += 1) await page.keyboard.press('ControlOrMeta+Shift+z');
 }
 
-/** Dispatches a paste event with the given clipboard data on the focused editor. */
+/**
+ * Dispatches a paste event with the given clipboard data on the editor. Firefox ignores
+ * `clipboardData` in the event constructor (it creates an empty one), so the transfer is attached
+ * to the event directly.
+ */
 export async function pasteData(page: Page, data: Record<string, string>): Promise<void> {
   await editor(page).evaluate((element, entries) => {
     const transfer = new DataTransfer();
@@ -141,6 +145,7 @@ export async function pasteData(page: Page, data: Record<string, string>): Promi
       bubbles: true,
       cancelable: true,
     });
+    Object.defineProperty(event, 'clipboardData', { value: transfer });
     element.dispatchEvent(event);
   }, data);
 }
@@ -154,6 +159,7 @@ export async function copyData(page: Page): Promise<Record<string, string>> {
       bubbles: true,
       cancelable: true,
     });
+    Object.defineProperty(event, 'clipboardData', { value: transfer });
     element.dispatchEvent(event);
     return {
       'text/html': transfer.getData('text/html'),
