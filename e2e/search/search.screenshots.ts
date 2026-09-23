@@ -81,7 +81,19 @@ test('backlinks and local graph screenshots', async ({ page }) => {
   const backlinks = page.getByRole('complementary', { name: 'Backlinks' });
   await expect(backlinks.getByRole('region', { name: /Linked references/ })).toBeVisible();
   await expect(backlinks.getByText('Loading backlinks…')).toHaveCount(0);
-  await expect(backlinks.getByRole('button', { name: /Link this mention/ }).first()).toBeVisible();
+  const mentionsHeader = backlinks.getByRole('button', { name: /^Unlinked mentions/ });
+  await expect(backlinks.getByRole('button', { name: /Link this mention/ }).first()).toBeAttached();
+  // Show both sections: the end of the references and the first mentions with Link buttons.
+  await mentionsHeader.evaluate((element) => {
+    // Scroll the panel only (scrollIntoView would also scroll the page).
+    let scroller = element.parentElement;
+    while (scroller && getComputedStyle(scroller).overflowY !== 'auto') {
+      scroller = scroller.parentElement;
+    }
+    if (!scroller) return;
+    const offset = element.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    scroller.scrollTop += offset - scroller.clientHeight * 0.4;
+  });
   await page.mouse.move(0, 0);
   await snap(page, 'backlinks');
 

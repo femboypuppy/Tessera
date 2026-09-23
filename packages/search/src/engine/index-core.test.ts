@@ -345,6 +345,35 @@ describe('IndexCore mentions', () => {
     expect(mentions[0]).toMatchObject({ path: [0], from: 0, to: 6 });
   });
 
+  it('reports where each mention sits in the displayed block text', () => {
+    const core = new IndexCore({ now: () => NOW });
+    core.setMeta(
+      [meta('europa', 'Europa'), meta('notes', 'Europa reading notes'), meta('s', 'S')],
+      [],
+      true,
+    );
+    const doc = b.doc(
+      b.paragraph(
+        'See ',
+        b.pageLink('notes'),
+        ' before Europa rises, then ',
+        b.tag('europa'),
+        ' Europa.',
+      ),
+    );
+    core.setContentFromBytes('s', bytes(doc), NOW);
+    const mentions = core.findMentions('europa', [{ pageId: 's', bytes: bytes(doc) }]);
+    expect(mentions).toHaveLength(2);
+    for (const mention of mentions) {
+      const range = mention.display;
+      expect(range && mention.blockText.slice(range.start, range.end)).toBe('Europa');
+    }
+    expect(mentions[0]?.blockText).toBe(
+      'See Europa reading notes before Europa rises, then #europa Europa.',
+    );
+    expect(mentions.map((mention) => mention.display?.start)).toEqual([32, 59]);
+  });
+
   it('ignores the page itself, trashed sources, linked text and one-letter titles', () => {
     const core = new IndexCore({ now: () => NOW });
     core.setMeta(

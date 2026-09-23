@@ -1,4 +1,4 @@
-import type { LinkEdge, UnlinkedMention } from '@tessera/core';
+import type { LinkEdge } from '@tessera/core';
 import type { ChangeSummary, StaleSet } from './index-core';
 import type {
   GraphSnapshot,
@@ -6,6 +6,7 @@ import type {
   PageMetaLite,
   QueryRequest,
   QueryResponse,
+  RichMention,
   RichBacklink,
   RichOutgoingLink,
   TagCount,
@@ -63,7 +64,7 @@ export interface IndexResults {
   outgoing: RichOutgoingLink[];
   edges: LinkEdge[];
   mentionCandidates: string[];
-  mentions: UnlinkedMention[];
+  mentions: RichMention[];
   orphans: string[];
   tags: TagCount[];
   tagCooccurrence: TagPair[];

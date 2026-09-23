@@ -10,7 +10,6 @@ import {
   type PagesSnapshot,
   type PagesStore,
   type SearchOptions,
-  type UnlinkedMention,
   type WorkspaceInfo,
 } from '@tessera/core';
 import * as Y from 'yjs';
@@ -25,6 +24,7 @@ import type {
   QueryFilters,
   QueryResponse,
   RichBacklink,
+  RichMention,
   RichOutgoingLink,
   TagCount,
   TagPair,
@@ -619,7 +619,7 @@ export class IndexHost {
    * Unlinked mentions of a page: the index finds candidate pages, then their current content is
    * checked precisely (so positions match the doc a Link button will change).
    */
-  async unlinkedMentions(pageId: string): Promise<UnlinkedMention[]> {
+  async unlinkedMentions(pageId: string): Promise<RichMention[]> {
     await this.ready;
     this.flushMeta();
     const candidates = await this.transport.request({ type: 'mentionCandidates', pageId });

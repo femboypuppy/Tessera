@@ -1,7 +1,8 @@
-import type { LinkEdge, LinkIndex, UnlinkedMention } from '@tessera/core';
+import type { LinkEdge, LinkIndex } from '@tessera/core';
 import type {
   GraphSnapshot,
   RichBacklink,
+  RichMention,
   RichOutgoingLink,
   TagCount,
   TagPair,
@@ -28,7 +29,7 @@ export class GraphLinkIndex implements LinkIndex {
     return this.host.outgoing(pageId);
   }
 
-  unlinkedMentions(pageId: string): Promise<UnlinkedMention[]> {
+  unlinkedMentions(pageId: string): Promise<RichMention[]> {
     return this.host.unlinkedMentions(pageId);
   }
 

@@ -159,9 +159,11 @@ export function Context({
  * n is its rank among the block's mentions with the same text.
  */
 export function mentionRange(
-  mention: UnlinkedMention,
+  mention: UnlinkedMention & { display?: { start: number; end: number } | null },
   siblings: readonly UnlinkedMention[],
 ): { start: number; end: number } | null {
+  // Our index knows the exact position; other link indexes only give the text.
+  if (mention.display) return mention.display;
   const same = siblings
     .filter(
       (other) =>

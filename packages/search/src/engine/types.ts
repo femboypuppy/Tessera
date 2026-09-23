@@ -157,6 +157,14 @@ export interface GraphSnapshot {
   tags: TagCount[];
 }
 
+/**
+ * An unlinked mention with where it sits in `blockText` (which shows links as titles, so inline
+ * offsets and display offsets differ).
+ */
+export interface RichMention extends UnlinkedMention {
+  display: HighlightRange | null;
+}
+
 /** A precise mention check for one source page. */
 export interface MentionSource {
   pageId: string;

@@ -2,11 +2,14 @@ import {
   DATA_MODEL_VERSION,
   DOC_SCHEMA_VERSION,
   findTextOccurrences,
+  inlineText,
+  nodeAtPath,
   readDocJSON,
   tagHierarchy,
   tagKey,
+  type AnyNodeJSON,
+  type HighlightRange,
   type LinkEdge,
-  type UnlinkedMention,
 } from '@tessera/core';
 import MiniSearch, { type AsPlainObject, type SearchResult } from 'minisearch';
 import { docFromBytes, readContent, readRowValues, segmentsText } from './extract';
@@ -22,6 +25,7 @@ import type {
   QueryRequest,
   QueryResponse,
   RichBacklink,
+  RichMention,
   RichOutgoingLink,
   RichSearchHit,
   RowValuesRecord,
@@ -94,6 +98,35 @@ const FIELD_ORDER: Array<[Field, RichSearchHit['matchedIn']]> = [
   ['body', 'body'],
   ['props', 'property'],
 ];
+
+/**
+ * Maps an inline range (text characters count 1, inline atoms count 1) to the same range in the
+ * block's display text, where links show as titles and tags as `#name`.
+ */
+export function displayRange(
+  block: AnyNodeJSON | undefined,
+  from: number,
+  to: number,
+  resolveTitle: (pageId: string) => string | undefined,
+): HighlightRange | null {
+  let inline = 0;
+  let shown = 0;
+  let start = -1;
+  let end = -1;
+  for (const child of block?.content ?? []) {
+    if (child.type === 'text') {
+      const length = child.text?.length ?? 0;
+      if (start < 0 && from >= inline && from < inline + length) start = shown + (from - inline);
+      if (end < 0 && to > inline && to <= inline + length) end = shown + (to - inline);
+      inline += length;
+      shown += length;
+    } else {
+      inline += 1;
+      shown += inlineText([child], { resolveTitle }).length;
+    }
+  }
+  return start >= 0 && end > start ? { start, end } : null;
+}
 
 /** What changed after an update (so the host can notify listeners). */
 export interface ChangeSummary {
@@ -621,17 +654,18 @@ export class IndexCore {
    * The unlinked mentions of `pageId` in the given source pages (their current content): its
    * title or an alias as plain text, whole words, case-insensitive.
    */
-  findMentions(pageId: string, sources: readonly MentionSource[]): UnlinkedMention[] {
+  findMentions(pageId: string, sources: readonly MentionSource[]): RichMention[] {
     const needles = this.mentionNeedles(pageId);
     if (needles.length === 0) return [];
-    const mentions: UnlinkedMention[] = [];
+    const mentions: RichMention[] = [];
     for (const source of sources) {
       if (source.pageId === pageId || !this.isLive(source.pageId)) continue;
       const doc = docFromBytes(source.bytes);
       try {
         const json = readDocJSON(doc);
         for (const hit of findTextOccurrences(json, needles, { resolveTitle: this.title })) {
-          mentions.push({ sourcePageId: source.pageId, targetPageId: pageId, ...hit });
+          const display = displayRange(nodeAtPath(json, hit.path), hit.from, hit.to, this.title);
+          mentions.push({ sourcePageId: source.pageId, targetPageId: pageId, ...hit, display });
         }
       } finally {
         doc.destroy();
