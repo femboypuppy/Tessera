@@ -66,6 +66,19 @@ describe('definePlugin', () => {
     });
   });
 
+  it('types settings from the schema alone, next to typed panels and blocks', () => {
+    // Renderers built with defineBlock carry the default schema; they must not widen `S`.
+    const plugin = definePlugin({
+      settings: { greeting: { type: 'string', label: 'Greeting', default: 'Hello' } },
+      activate(api) {
+        expectTypeOf(api.settings.get('greeting')).toEqualTypeOf<string>();
+      },
+      panels: { side: () => undefined },
+      blocks: { counter: defineBlock<{ count: number }>(() => undefined) },
+    });
+    expect(isPluginDefinition(plugin)).toBe(true);
+  });
+
   it('types block data with defineBlock', () => {
     const renderer = defineBlock<{ code: string }>((ctx) => {
       expectTypeOf(ctx.data).toEqualTypeOf<{ code: string } | null>();

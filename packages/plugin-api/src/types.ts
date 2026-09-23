@@ -628,7 +628,7 @@ export interface PluginDefinition<S extends SettingsSchema = SettingsSchema> {
   /** Runs before the plugin stops (disabled, updated, uninstalled). Registrations are removed for you. */
   deactivate?(): void | Promise<void>;
   /** Panel renderers, by panel ID (see {@link UiApi.addPanel}). */
-  panels?: { readonly [id: string]: PanelRenderer<S> };
+  panels?: { readonly [id: string]: PanelRenderer<NoInfer<S>> };
   /** Block renderers, by block type (see {@link UiApi.addBlock}). */
-  blocks?: { readonly [type: string]: BlockRenderer<JsonValue, S> };
+  blocks?: { readonly [type: string]: BlockRenderer<JsonValue, NoInfer<S>> };
 }
