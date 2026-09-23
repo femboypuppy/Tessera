@@ -34,17 +34,33 @@ export function PluginsSettingsEntry() {
   );
 }
 
-/** Starts the plugin host for a workspace session; returns its cleanup. */
+/** Runs `callback` when the browser is idle (at most two seconds later). */
+function whenIdle(callback: () => void): () => void {
+  if (typeof requestIdleCallback === 'function') {
+    const handle = requestIdleCallback(callback, { timeout: 2_000 });
+    return () => cancelIdleCallback(handle);
+  }
+  const handle = setTimeout(callback, 200);
+  return () => clearTimeout(handle);
+}
+
+/**
+ * Starts the plugin host for a workspace session; returns its cleanup. The host loads once the
+ * browser is idle, so plugins never compete with the workspace's first paint and input.
+ */
 export function activatePlugins(ctx: AppContext): () => void {
   let cleanup: (() => void) | null = null;
   let cancelled = false;
-  import('./host/index')
-    .then(({ startPluginHost }) => {
-      if (!cancelled) cleanup = startPluginHost(ctx);
-    })
-    .catch((error: unknown) => console.error('[plugins] Could not load the plugin host', error));
+  const cancelIdle = whenIdle(() => {
+    import('./host/index')
+      .then(({ startPluginHost }) => {
+        if (!cancelled) cleanup = startPluginHost(ctx);
+      })
+      .catch((error: unknown) => console.error('[plugins] Could not load the plugin host', error));
+  });
   return () => {
     cancelled = true;
+    cancelIdle();
     cleanup?.();
   };
 }

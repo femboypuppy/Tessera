@@ -49,8 +49,24 @@ export function readTheme(doc: Document = document): ThemeInfo {
 
 /** Calls `listener` when the theme changes (the `data-theme` attribute or reduced motion). */
 export function watchTheme(listener: (theme: ThemeInfo) => void, doc: Document = document) {
+  // What can change the tokens. Computed styles are only read when one of these changed.
+  const signals = () => {
+    const root = doc.documentElement;
+    const motion =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return [
+      root.getAttribute('data-theme'),
+      root.getAttribute('class'),
+      root.getAttribute('style'),
+      motion,
+    ].join('|');
+  };
+  let lastSignals = signals();
   let last = JSON.stringify(readTheme(doc));
   const check = () => {
+    const current = signals();
+    if (current === lastSignals) return;
+    lastSignals = current;
     const theme = readTheme(doc);
     const serialized = JSON.stringify(theme);
     if (serialized === last) return;
