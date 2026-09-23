@@ -58,7 +58,12 @@ Every agent also owns `HANDOFF/<area>.md`, `assets/screenshots/<area>/` and `e2e
 
 `pnpm dev` · `pnpm build` · `pnpm test` · `pnpm test:e2e` · `pnpm typecheck` · `pnpm lint` · `pnpm format`
 
-Run one package: `pnpm --filter @tessera/<name> <script>`. (Architect: keep this section accurate.)
+- Run one package: `pnpm --filter @tessera/<name> <script>` (`test`, `typecheck`, `lint`, `build`). The plugin scaffolder's name is `create-tessera-plugin`.
+- Run only your e2e specs: `pnpm test:e2e e2e/<area>`. First time on a machine: `pnpm test:e2e:install`. `E2E_DEV=1` tests against the dev server instead of a production build.
+- Screenshots: `pnpm screenshots e2e/<area>` runs your `e2e/<area>/*.screenshots.ts` files (SPEC.md, section 9.2).
+- `pnpm lint:fix` applies ESLint and Prettier fixes.
+
+(Architect: keep this section accurate.)
 
 ## How to work
 
