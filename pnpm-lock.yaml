@@ -555,6 +555,9 @@ importers:
         specifier: 13.6.32
         version: 13.6.32
     devDependencies:
+      fake-indexeddb:
+        specifier: 6.2.5
+        version: 6.2.5
       react:
         specifier: 19.3.0
         version: 19.3.0

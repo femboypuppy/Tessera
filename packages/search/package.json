@@ -7,13 +7,15 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./services": "./src/services/index.ts"
   },
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "bench": "tsx src/bench/search.bench.ts"
   },
   "dependencies": {
     "@tessera/core": "workspace:*",
@@ -32,6 +34,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "fake-indexeddb": "6.2.5",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   }

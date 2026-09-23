@@ -1,9 +1,18 @@
-import { defineFeature } from '@tessera/core';
+import { defineFeature, defineService, SERVICE_PRIORITY } from '@tessera/core';
 
 /**
- * Search & command palette (Agent 05). Registers the MiniSearch SearchIndex (priority 50), the command palette (`COMMANDS.openPalette`, Mod+K), `COMMANDS.search` and the `/search` route; logic lives in `@tessera/search`.
- *
- * Keep this file thin: registration only, heavy code behind dynamic `import()`.
- * See HANDOFF/architect.md for the contracts this feature plugs into.
+ * Search (Agent 05): the MiniSearch search index (priority 50). Everything heavy lives in
+ * `@tessera/search` subpaths and loads on demand.
  */
-export const searchFeature = defineFeature({ id: 'search' });
+export const searchFeature = defineFeature({
+  id: 'search',
+  services: [
+    defineService({
+      provides: 'searchIndex',
+      id: 'minisearch',
+      priority: SERVICE_PRIORITY.browser,
+      create: async (context) =>
+        (await import('@tessera/search/services')).createSearchIndex(context),
+    }),
+  ],
+});
