@@ -1,0 +1,43 @@
+{
+  "name": "@tessera/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Tessera web app shell.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@tessera/core": "workspace:*",
+    "@tessera/db-views": "workspace:*",
+    "@tessera/desktop": "workspace:*",
+    "@tessera/editor": "workspace:*",
+    "@tessera/importers": "workspace:*",
+    "@tessera/markdown": "workspace:*",
+    "@tessera/plugin-api": "workspace:*",
+    "@tessera/plugins": "workspace:*",
+    "@tessera/search": "workspace:*",
+    "@tessera/sync": "workspace:*",
+    "@tessera/ui": "workspace:*",
+    "lucide-react": "1.47.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "8.4.0",
+    "yjs": "13.6.32",
+    "zod": "4.6.5",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@tessera/testkit": "workspace:*",
+    "@vitejs/plugin-react": "6.1.1",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.0"
+  }
+}

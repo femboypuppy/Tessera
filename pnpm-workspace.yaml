@@ -1,0 +1,10 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm 11 blocks dependency install scripts unless they are allowed here.
+# These native modules (and esbuild's binary) need them.
+allowBuilds:
+  argon2: true
+  better-sqlite3: true
+  esbuild: true

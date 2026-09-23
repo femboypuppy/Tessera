@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+.vite/
+.rolldown/
+coverage/
+
+# Tests
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Desktop (Tauri)
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/schemas/
+
+# Docs site
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# Server runtime data
+data/
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log
+*.local
+
+# Claude Code local overrides
+.claude/settings.local.json

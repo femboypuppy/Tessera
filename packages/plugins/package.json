@@ -1,0 +1,35 @@
+{
+  "name": "@tessera/plugins",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tessera plugin host: sandboxed iframes, permissions, typed RPC and the plugin manager UI.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@tessera/core": "workspace:*",
+    "@tessera/plugin-api": "workspace:*",
+    "@tessera/ui": "workspace:*",
+    "fflate": "0.8.3",
+    "lucide-react": "1.47.0",
+    "yjs": "13.6.32",
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}

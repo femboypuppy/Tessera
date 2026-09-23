@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+@import '@tessera/ui/styles.css';
+
+/* Generate utilities for classes used in any package, not just this app. */
+@source '../../../packages/*/src';
