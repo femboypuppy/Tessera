@@ -248,8 +248,14 @@ other client and everything converged.
 - Desktop bearer tokens are stored in IndexedDB until Agent 07 registers a keychain store.
 - The server has no admin UI for accounts (password reset is `create-owner` for the first account
   only); asset files are never garbage-collected on the server.
-- Pre-existing, not mine: `packages/ui` `EmojiPicker … picks` can time out at 5 s when the whole
-  suite runs on a loaded machine; it passes alone (`pnpm --filter @tessera/ui test`).
+- Pre-existing, not mine: the Architect's `packages/ui` `EmojiPicker … picks` and
+  `apps/web` `App.test.tsx` (`onboards, then creates, renames, trashes and restores a page`, run
+  with `features: []`, so no sync code) run close to Vitest's 5 s default and time out
+  (5.1 to 5.7 s) whenever the machine's CPU is saturated, even with only the `ui` and `web`
+  projects running. Neither file differs from the Architect's handoff. Suggest a `testTimeout`
+  for those projects or a longer timeout on those two tests. Firefox e2e likewise can hang on a
+  first navigation or `newPage` when several workers share a saturated machine (Architect and
+  sync specs alike); `--project=firefox --workers=1` passes all of them (13 + 7).
 - Test hooks: `window.__tesseraSync` exists only when the device setting `sync.debug` is `true`
   (the e2e fixture sets it); it reads and writes page content through the normal doc handles.
 
