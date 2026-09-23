@@ -11,6 +11,7 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
+    "prepare": "node scripts/git-hooks/install.ts",
     "dev": "pnpm --filter @tessera/web dev",
     "build": "pnpm -r build",
     "test": "vitest run",

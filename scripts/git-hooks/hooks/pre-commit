@@ -1,0 +1,3 @@
+#!/bin/sh
+# ESLint and Prettier on staged files (scripts/git-hooks/pre-commit.ts). Skip with --no-verify.
+exec node "$(git rev-parse --show-toplevel)/scripts/git-hooks/pre-commit.ts"

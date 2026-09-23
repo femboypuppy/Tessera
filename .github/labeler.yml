@@ -1,0 +1,116 @@
+# Pull request labels by changed paths (actions/labeler, run by .github/workflows/labeler.yml).
+# One label per area of SPEC.md section 9.1, plus documentation, tests and dependencies.
+
+'area: core':
+  - changed-files:
+      - any-glob-to-any-file: packages/core/**
+
+'area: shell':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/ui/**
+          - apps/web/src/app/**
+          - apps/web/src/i18n/**
+          - apps/web/src/main.tsx
+          - apps/web/src/styles.css
+          - apps/web/index.html
+          - apps/web/public/**
+
+'area: editor':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/editor/**
+          - apps/web/src/features/editor/**
+          - e2e/editor/**
+
+'area: sync':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/sync/**
+          - apps/server/**
+          - apps/web/src/features/sync/**
+          - e2e/sync/**
+
+'area: databases':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/db-views/**
+          - apps/web/src/features/databases/**
+          - e2e/databases/**
+
+'area: search':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/search/**
+          - apps/web/src/features/search/**
+          - apps/web/src/features/graph/**
+          - apps/web/src/features/backlinks/**
+          - e2e/search/**
+
+'area: plugins':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/plugins/**
+          - packages/plugin-api/**
+          - packages/create-tessera-plugin/**
+          - apps/web/src/features/plugins/**
+          - examples/plugins/**
+          - examples/plugin-template/**
+          - docs/plugins/**
+          - e2e/plugins/**
+
+'area: desktop':
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/desktop/**
+          - apps/web/src/features/desktop/**
+          - e2e/desktop/**
+
+'area: self-hosting':
+  - changed-files:
+      - any-glob-to-any-file:
+          - Dockerfile
+          - docker-compose.yml
+          - .dockerignore
+          - deploy/**
+
+'area: import-export':
+  - changed-files:
+      - any-glob-to-any-file:
+          - packages/markdown/**
+          - packages/importers/**
+          - apps/web/src/features/import-export/**
+          - e2e/importers/**
+
+'area: ci':
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .github/dependabot.yml
+          - .github/labeler.yml
+          - .github/CODEOWNERS
+          - scripts/**
+          - packages/testkit/**
+          - e2e/journeys/**
+          - e2e/support/**
+          - e2e/ci/**
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - '**/*.md'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.test.ts'
+          - '**/*.test.tsx'
+          - e2e/**
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - pnpm-lock.yaml
+          - docs/pnpm-lock.yaml
+          - apps/desktop/src-tauri/Cargo.lock

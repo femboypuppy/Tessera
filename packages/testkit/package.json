@@ -2,21 +2,74 @@
   "name": "@tessera/testkit",
   "version": "0.0.0",
   "private": true,
-  "description": "Tessera test helpers: a seeded workspace generator, runtime factories and Playwright fixtures.",
+  "description": "Tessera test tooling: a seeded workspace generator, runtime and React test helpers, Playwright fixtures, the seeded harness app, and the CI helpers behind scripts/.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./generator": "./src/generator/index.ts",
+    "./runtime": "./src/runtime/index.ts",
+    "./react": "./src/react/index.tsx",
+    "./playwright": "./src/playwright/index.ts",
+    "./ci": "./src/ci/index.ts"
   },
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p harness && tsc --noEmit -p ../../scripts",
+    "lint": "eslint . ../../scripts --max-warnings 0",
+    "harness": "vite --config harness/vite.config.ts",
+    "harness:build": "vite build --config harness/vite.config.ts",
+    "harness:preview": "vite preview --config harness/vite.config.ts",
+    "ci:local": "tsx ../../scripts/ci/local.ts"
   },
   "dependencies": {
     "@tessera/core": "workspace:*",
+    "@tessera/ui": "workspace:*",
+    "fflate": "0.8.3",
+    "yaml": "2.9.1",
     "yjs": "13.6.32"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@testing-library/react": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    },
+    "@testing-library/react": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "react-router": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "lint-staged": "17.5.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "8.4.0",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.0"
   }
 }

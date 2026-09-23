@@ -1,0 +1,20 @@
+# Code owners are asked to review pull requests that touch their paths (later lines win).
+# Today one maintainer owns everything; the sections below make it easy to hand areas to new
+# maintainers as the project grows. Areas follow SPEC.md section 9.1.
+
+*                                   @femboypuppy
+
+# The contracts every feature builds on: changes here affect every package.
+/packages/core/                     @femboypuppy
+/SPEC.md                            @femboypuppy
+
+# Security-sensitive: the server (auth, permissions), the plugin sandbox, importers (untrusted files).
+/apps/server/                       @femboypuppy
+/packages/plugins/                  @femboypuppy
+/packages/importers/                @femboypuppy
+/packages/markdown/                 @femboypuppy
+
+# Releases and supply chain: workflows, dependency updates, the container image.
+/.github/                           @femboypuppy
+/Dockerfile                         @femboypuppy
+/scripts/                           @femboypuppy

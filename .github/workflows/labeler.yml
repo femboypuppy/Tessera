@@ -1,0 +1,26 @@
+# Labels pull requests by the paths they change (rules in `.github/labeler.yml`).
+#
+# `pull_request_target` runs in the base repository's context so fork pull requests can be
+# labeled too. That is safe here because this workflow never checks out or runs the pull
+# request's code: the labeler only reads the list of changed files through the API.
+name: Labeler
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  label:
+    name: Label
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          configuration-path: .github/labeler.yml

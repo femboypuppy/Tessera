@@ -278,7 +278,12 @@ export function ScrollArea({
   return (
     <ScrollAreaPrimitive.Root className={cn('relative overflow-hidden', className)} {...props}>
       <ScrollAreaPrimitive.Viewport
-        className={cn('size-full rounded-[inherit]', viewportClassName)}
+        // Keyboard users can focus the region to scroll it (WCAG scrollable-region-focusable).
+        tabIndex={0}
+        className={cn(
+          'size-full rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-focus',
+          viewportClassName,
+        )}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

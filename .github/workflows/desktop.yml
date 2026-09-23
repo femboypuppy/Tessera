@@ -1,0 +1,122 @@
+# Desktop builds (Tauri 2) for macOS (Apple silicon and Intel), Windows and Linux.
+#
+# - Tags: `release.yml` calls this workflow for every `v*` tag with the draft release's ID, and the
+#   bundles (plus the updater's `latest.json` when a signing key is configured) go to that release.
+# - Manual runs and pull requests that touch the desktop app: the bundles are workflow artifacts.
+#
+# Secrets (all optional; see HANDOFF/ci.md): TAURI_SIGNING_PRIVATE_KEY and
+# TAURI_SIGNING_PRIVATE_KEY_PASSWORD sign updater bundles; APPLE_CERTIFICATE,
+# APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD and APPLE_TEAM_ID
+# sign and notarize the macOS app.
+name: Desktop
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      release-id:
+        description: ID of the draft GitHub Release to upload the bundles to.
+        type: string
+        required: true
+      tag:
+        description: The release tag (for the updater's download URLs).
+        type: string
+        required: true
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'apps/web/src/features/desktop/**'
+      - '.github/workflows/desktop.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      # Uploading to the draft release (tag builds only).
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            target: aarch64-apple-darwin
+          - name: macOS (Intel)
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - name: Windows (x64)
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+          # 22.04 keeps the AppImage and .deb compatible with older glibc versions.
+          - name: Linux (x64)
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Linux system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev patchelf
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Rust toolchain
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add "$TARGET"
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+          key: ${{ matrix.target }}
+      # Updater bundles need the signing key, so they are only built when it is configured. The
+      # action splits `args` like a shell, so the inline JSON is single-quoted.
+      - name: Build options
+        id: options
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+        run: |
+          args="--target $TARGET"
+          if [ "$HAS_UPDATER_KEY" = "true" ]; then
+            args="$args --config '{\"bundle\":{\"createUpdaterArtifacts\":true}}'"
+          fi
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+      - name: Tauri build
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: pnpm exec tauri
+          args: ${{ steps.options.outputs.args }}
+          # Empty outside tag builds, so the action only builds and the bundles become artifacts.
+          releaseId: ${{ inputs.release-id }}
+          tagName: ${{ inputs.tag }}
+          releaseDraft: ${{ inputs.release-id != '' }}
+          uploadWorkflowArtifacts: ${{ inputs.release-id == '' }}
+          workflowArtifactNamePattern: tessera-[platform]-[arch]-[bundle]

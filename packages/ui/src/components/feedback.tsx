@@ -139,6 +139,31 @@ function initials(name: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
+// Presence colors are literal hex values (USER_COLORS in core), so the text color is computed from
+// them. This near-black clears 4.5:1 on every presence color that white doesn't.
+const DARK_TEXT = '#111110';
+
+/** Relative luminance (WCAG 2.x) of a `#rgb` or `#rrggbb` color, or null for anything else. */
+function luminance(color: string): number | null {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim())?.[1];
+  if (!hex) return null;
+  const full = hex.length === 3 ? [...hex].map((digit) => digit + digit).join('') : hex;
+  const [r = 0, g = 0, b = 0] = [0, 2, 4].map((at) => {
+    const channel = parseInt(full.slice(at, at + 2), 16) / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** White or near-black, whichever contrasts more with `background` (white when unknown). */
+export function readableTextColor(background: string | undefined): string {
+  const bg = background === undefined ? null : luminance(background);
+  if (bg === null) return '#ffffff';
+  const onWhite = 1.05 / (bg + 0.05);
+  const onDark = (bg + 0.05) / ((luminance(DARK_TEXT) ?? 0) + 0.05);
+  return onDark > onWhite ? DARK_TEXT : '#ffffff';
+}
+
 /** A person's avatar: an image, or initials on their presence color. */
 export function Avatar({
   name,
@@ -160,11 +185,15 @@ export function Avatar({
   return (
     <AvatarPrimitive.Root
       className={cn(
-        'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold text-white select-none',
+        'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold select-none',
         dimension,
         className,
       )}
-      style={{ backgroundColor: color ?? 'var(--tess-fg-subtle)', ...style }}
+      style={{
+        backgroundColor: color ?? 'var(--tess-fg-subtle)',
+        color: readableTextColor(color),
+        ...style,
+      }}
       title={name}
     >
       {src ? (

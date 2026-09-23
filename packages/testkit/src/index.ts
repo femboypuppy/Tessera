@@ -1,7 +1,14 @@
 /**
- * @tessera/testkit — the seeded workspace generator and shared test fixtures (Agent 09).
+ * @tessera/testkit: test tooling for every package (Agent 09).
  *
- * Until Agent 09's generator lands, use `createTestAppContext` from `@tessera/core/testing`.
- * See HANDOFF/architect.md.
+ * - `@tessera/testkit` / `/generator`: the seeded workspace generator.
+ * - `@tessera/testkit/runtime`: in-memory and seeded runtimes and sessions.
+ * - `@tessera/testkit/react`: render helpers with every provider (jsdom tests).
+ * - `@tessera/testkit/playwright`: Playwright fixtures and helpers (end-to-end tests).
+ * - `@tessera/testkit/ci`: the workflow tooling behind `scripts/`.
+ *
+ * The seeded harness app lives in `harness/` (`pnpm --filter @tessera/testkit harness`).
  */
-export const TESTKIT_PACKAGE = '@tessera/testkit';
+export * from './generator';
+export * from './runtime';
+export type { HarnessPage, HarnessState } from './harness-state';
