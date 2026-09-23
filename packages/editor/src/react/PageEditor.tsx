@@ -4,6 +4,7 @@ import { Button, EmptyState, Skeleton } from '@tessera/ui';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { AlertTriangle } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { clipboard } from '../clipboard/clipboard';
 import { CodeHighlight } from '../code/highlight';
 import { contributedExtensions } from '../contributed';
 import { editorExtensions } from '../editor-extensions';
@@ -67,6 +68,7 @@ function EditorView({
           pageLinkCommand(controller),
           links(controller),
           mediaDrop(controller),
+          ...clipboard(controller),
           blockHandle(controller),
           blockSelection(controller),
           ...contributedExtensions(contributions, ctx),

@@ -8,29 +8,26 @@ import {
 import type { Fragment, Node as PMNode } from '@tiptap/pm/model';
 import { t } from '../i18n';
 
-/** Wraps a node that can't stand alone in a document (list items, rows, cells, summaries). */
-function standalone(node: PMNode, parentType: string | null): AnyNodeJSON {
-  const json = node.toJSON() as AnyNodeJSON;
+/** The wrapper a node needs to stand alone in a document, or null when it can. */
+function wrapperFor(node: PMNode, parentType: string | null): string | null {
   switch (node.type.name) {
     case 'listItem':
-      return { type: parentType === 'orderedList' ? 'orderedList' : 'bulletList', content: [json] };
+      return parentType === 'orderedList' ? 'orderedList' : 'bulletList';
     case 'taskItem':
-      return { type: 'taskList', content: [json] };
+      return 'taskList';
     case 'tableRow':
-      return { type: 'table', content: [json] };
     case 'tableCell':
     case 'tableHeader':
-      return { type: 'table', content: [{ type: 'tableRow', content: [json] }] };
-    case 'toggleSummary':
-      return { type: 'paragraph', content: json.content };
+      return 'table';
     default:
-      return json;
+      return null;
   }
 }
 
 /**
- * Turns editor nodes into a valid document: list items get a list around them, rows a table,
- * inline content a paragraph. `parentType` is the type of the nodes' original parent.
+ * Turns editor nodes into a valid document: consecutive list items get one list around them,
+ * rows and cells a table, summaries and inline content a paragraph. `parentType` is the type of
+ * the nodes' original parent (it tells bulleted and numbered items apart).
  */
 export function nodesToDocJSON(
   nodes: readonly PMNode[] | Fragment,
@@ -38,10 +35,35 @@ export function nodesToDocJSON(
 ): DocJSON {
   const list: PMNode[] = [];
   nodes.forEach((node: PMNode) => list.push(node));
-  const inline = list.every((node) => node.isInline);
-  const content = inline
-    ? [{ type: 'paragraph', content: list.map((node) => node.toJSON() as AnyNodeJSON) }]
-    : list.map((node) => standalone(node, parentType));
+  if (list.every((node) => node.isInline)) {
+    return normalizeDocJSON({
+      type: 'doc',
+      content: [{ type: 'paragraph', content: list.map((node) => node.toJSON() as AnyNodeJSON) }],
+    });
+  }
+  const content: AnyNodeJSON[] = [];
+  let group: { type: string; items: AnyNodeJSON[] } | null = null;
+  for (const node of list) {
+    const wrapper = wrapperFor(node, parentType);
+    const json = node.toJSON() as AnyNodeJSON;
+    if (!wrapper) {
+      group = null;
+      content.push(
+        node.type.name === 'toggleSummary' ? { type: 'paragraph', content: json.content } : json,
+      );
+      continue;
+    }
+    // Cells become a one-row table; rows and items join the group of their kind.
+    const item =
+      node.type.name === 'tableCell' || node.type.name === 'tableHeader'
+        ? { type: 'tableRow', content: [json] }
+        : json;
+    if (group && group.type === wrapper) group.items.push(item);
+    else {
+      group = { type: wrapper, items: [item] };
+      content.push({ type: wrapper, content: group.items });
+    }
+  }
   return normalizeDocJSON({ type: 'doc', content });
 }
 
