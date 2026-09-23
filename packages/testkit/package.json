@@ -8,13 +8,20 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./generator": "./src/generator/index.ts",
+    "./runtime": "./src/runtime/index.ts",
+    "./react": "./src/react/index.tsx",
+    "./playwright": "./src/playwright/index.ts",
     "./ci": "./src/ci/index.ts"
   },
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p ../../scripts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p harness && tsc --noEmit -p ../../scripts",
     "lint": "eslint . ../../scripts --max-warnings 0",
+    "harness": "vite --config harness/vite.config.ts",
+    "harness:build": "vite build --config harness/vite.config.ts",
+    "harness:preview": "vite preview --config harness/vite.config.ts",
     "ci:local": "tsx ../../scripts/ci/local.ts"
   },
   "dependencies": {

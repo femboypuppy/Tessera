@@ -1,0 +1,6 @@
+/*
+ * The web app's stylesheet. Tailwind finds the app's own classes by scanning the Vite root, which
+ * is this folder for the harness, so the app's sources are listed explicitly.
+ */
+@import '../../../apps/web/src/styles.css';
+@source '../../../apps/web/src/**/*.{ts,tsx}';
