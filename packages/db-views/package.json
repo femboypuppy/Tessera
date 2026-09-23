@@ -8,7 +8,14 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./query": "./src/query/index.ts"
+    "./query": "./src/query/index.ts",
+    "./csv": "./src/csv/csv.ts",
+    "./operations": "./src/model/operations.ts",
+    "./database-body": "./src/entries/database-body.tsx",
+    "./row-properties": "./src/entries/row-properties.tsx",
+    "./linked-from": "./src/entries/linked-from.tsx",
+    "./inline-database": "./src/entries/inline-database.tsx",
+    "./actions": "./src/entries/actions.ts"
   },
   "scripts": {
     "build": "tsdown",
