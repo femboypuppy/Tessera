@@ -205,7 +205,8 @@ own `RichSearchHit` and `RichBacklink` types) and would simply move them into co
 - **Root `pnpm test` on a saturated machine**: two of the Architect's tests (`packages/ui`
   EmojiPicker, `apps/web` App shell) hit the 5 s default timeout while 20 other agents' Node
   processes kept the CPU at 100%; they pass with a longer timeout and don't touch this branch's code
-  (the App shell test runs with no features). Nothing in this branch changes them.
+  (the App shell test runs with no features). Nothing in this branch changes them. Once the
+  machine was quieter, the full root run passed: 46 files, 342 tests.
 - Checked at phone width (390 px): palette, backlinks sheet, graph with focus, search page.
 
 ## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)
