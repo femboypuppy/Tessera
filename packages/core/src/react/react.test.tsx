@@ -99,7 +99,7 @@ describe('React bindings', () => {
       () => {
         useEvent('page.created', ({ page }) => seen.push(page.title));
         return {
-          setting: useSetting(ctx.settings.device, 'editor.fullWidth', false),
+          setting: useSetting<boolean>(ctx.settings.device, 'editor.fullWidth', false),
           commands: useCommands(),
           items: useContributions('topBarItems'),
           user: useCurrentUser(),
