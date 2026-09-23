@@ -39,7 +39,7 @@ All four milestones of `agents/05-search-graph.md` are done and committed.
 Feature folders: `apps/web/src/features/search/index.ts` (+ `index.test.ts` covering all three
 features), `apps/web/src/features/graph/index.ts`, `apps/web/src/features/backlinks/index.ts`.
 
-Tests: 18 Vitest files in `packages/search` (71 tests) and 1 in `apps/web/src/features/search`
+Tests: 11 Vitest files in `packages/search` (71 tests) and 1 in `apps/web/src/features/search`
 (4 tests). e2e in `e2e/search/`: `palette.spec.ts` (5), `backlinks.spec.ts` (3), `graph.spec.ts` (4),
 `search.screenshots.ts`, and an opt-in performance run (`search.perf.ts`, `perf.config.ts`).
 
