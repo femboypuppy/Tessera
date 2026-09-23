@@ -107,7 +107,8 @@ describe('collectCommits and previousTag', () => {
     commit('feat: add x');
     commit('fix: repair x\n\nWith a body.');
     git('tag', 'v0.2.0');
-  });
+    // Twelve git processes: seconds on a busy Windows machine, past Vitest's 10 s hook default.
+  }, 60_000);
   afterAll(() => rmSync(repo, { recursive: true, force: true }));
 
   it('finds the previous tag, or none for the first release', () => {

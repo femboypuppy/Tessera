@@ -194,7 +194,9 @@ diagnostics).
   Chromium and Firefox (2 shards each, merged report), Lighthouse (`/`: 100/100/100/91,
   `/dev/ui`: 97/96/100/91 for performance, accessibility, best practices, SEO) and the audit all
   passed; the unit job then failed only on the two Architect jsdom timeouts above, which led to
-  `--testTimeout=20000` in CI (see Follow-ups 3).
+  `--testTimeout=20000` in CI (see Follow-ups 3). A second Linux run at the final commit, meant to
+  confirm that the unit job now passes, was stopped when the shared machine ran out of memory, so
+  the first `ci.yml` run on GitHub after the merge is the confirmation.
 - **Workflows that only run on GitHub** (desktop, docker, docs deploy, release, CodeQL, labeler,
   Dependabot) were verified with actionlint (+ shellcheck) and the policy test, not executed.
   `desktop.yml` expects `@tauri-apps/cli` in `apps/desktop` (it is) and Agent 07's

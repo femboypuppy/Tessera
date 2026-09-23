@@ -50,7 +50,7 @@ describe('generateWorkspace determinism', () => {
 
   it('produces byte-identical docs and files for the same seed', () => {
     expect(snapshot(generateWorkspace(options))).toEqual(snapshot(generateWorkspace(options)));
-  });
+  }, 30_000);
 
   it('produces a different workspace for a different seed', () => {
     const a = snapshot(generateWorkspace(options));

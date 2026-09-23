@@ -189,7 +189,8 @@ describe('local workflow runner', () => {
     });
     expect(planned.jobs.map((run) => run.id)).toEqual(['changes', 'build', 'build', 'consume']);
     expect(dry.join('\n')).toContain('· Make small');
-  });
+    // Spawns git for the event context (SHA, branch, merge base): seconds on a busy machine.
+  }, 30_000);
 });
 
 describe('workflow helpers', () => {
