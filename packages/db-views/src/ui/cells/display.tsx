@@ -185,7 +185,21 @@ export const CellDisplay = memo(function CellDisplay({
           {formatInstant(value, property.date, queryCtx)}
         </span>
       ) : null;
-    case 'formula':
-      return null;
+    case 'formula': {
+      // Results show like the cells of their kind: numbers, checkboxes, dates or text.
+      if (typeof value === 'number') {
+        return (
+          <span className={cn(text, 'ml-auto text-right tabular-nums')}>
+            {formatNumber(value, undefined, queryCtx.locale)}
+          </span>
+        );
+      }
+      if (typeof value === 'boolean') return <CheckboxVisual checked={value} />;
+      if (typeof value === 'string') return value ? <span className={text}>{value}</span> : null;
+      const date = readDateValue(value);
+      return date ? (
+        <span className={text}>{formatDateValue(date, undefined, queryCtx)}</span>
+      ) : null;
+    }
   }
 });

@@ -1,9 +1,4 @@
-import {
-  updateProperty,
-  type PropertyDefinition,
-  type PropertyType,
-  type ResolvedRow,
-} from '@tessera/core';
+import type { PropertyDefinition, PropertyType, ResolvedRow } from '@tessera/core';
 import { useAppContext, usePages } from '@tessera/core/react';
 import {
   Callout,
@@ -20,9 +15,15 @@ import {
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { t } from '../i18n';
-import { addDatabaseProperty, setCell, type DatabaseRef } from '../model/operations';
+import {
+  addDatabaseProperty,
+  renameProperty,
+  setCell,
+  type DatabaseRef,
+} from '../model/operations';
 import type { DatabaseSnapshot } from '../model/store';
 import { readCell } from '../query/cells';
+import { withFormulaValues } from '../query/formula/rows';
 import type { QueryContext } from '../query/types';
 import { CellDisplay } from './cells/display';
 import {
@@ -36,6 +37,7 @@ import {
 } from './cells/editors';
 import { PICKABLE_TYPES, PropertyIcon, displayTitle, typeLabel } from './common';
 import { runAction, useAfterMenuClose, useDatabase, useQueryContext } from './hooks';
+import { FormulaDialog } from './formula-dialog';
 import { OptionsDialog } from './options-dialog';
 import { PropertyMenuItems } from './property-menu';
 import { RenameInput } from './table/header-cell';
@@ -74,6 +76,7 @@ function PropertyRow({
   const ctx = useAppContext();
   const [editing, setEditing] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [formulaOpen, setFormulaOpen] = useState(false);
   const afterMenu = useAfterMenuClose();
   const value = readCell(row, property);
   const empty =
@@ -113,7 +116,7 @@ function PropertyRow({
             className="mx-0"
             onDone={(next) => {
               if (next !== null && next.trim() !== property.name)
-                runAction(ctx, () => updateProperty(database.doc, property.id, { name: next }));
+                runAction(ctx, () => renameProperty(database, property.id, next));
               setRenaming(false);
             }}
           />
@@ -141,6 +144,7 @@ function PropertyRow({
                 actions={{
                   rename: () => afterMenu.schedule(() => setRenaming(true)),
                   editOptions: () => setOptionsOpen(true),
+                  editFormula: () => afterMenu.schedule(() => setFormulaOpen(true)),
                 }}
               />
             </DropdownMenuContent>
@@ -181,10 +185,13 @@ function PropertyRow({
                 disabled={readOnly}
                 onClick={() => {
                   if (editable) setEditing(true);
+                  else if (property.type === 'formula' && !readOnly) setFormulaOpen(true);
                 }}
                 className={cn(
                   'flex w-full min-w-0 items-start rounded-md px-1.5 text-left hover:bg-hover focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
-                  !editable && 'cursor-default hover:bg-transparent',
+                  !editable &&
+                    (property.type !== 'formula' || readOnly) &&
+                    'cursor-default hover:bg-transparent',
                 )}
               >
                 {display}
@@ -202,6 +209,17 @@ function PropertyRow({
       </div>
       {optionsOpen ? (
         <OptionsDialog open onOpenChange={setOptionsOpen} database={database} property={property} />
+      ) : null}
+      {formulaOpen ? (
+        <FormulaDialog
+          open
+          onOpenChange={setFormulaOpen}
+          database={database}
+          property={property}
+          properties={snapshot.properties}
+          rows={[row, ...snapshot.rows.filter((candidate) => candidate.id !== row.id)]}
+          queryCtx={queryCtx}
+        />
       ) : null}
     </div>
   );
@@ -233,8 +251,10 @@ export function RowPropertiesPanel({ pageId, readOnly }: { pageId: string; readO
       </Callout>
     );
   }
-  const row = snapshot.rows.find((candidate) => candidate.id === pageId);
-  if (!row) return null;
+  const stored = snapshot.rows.find((candidate) => candidate.id === pageId);
+  if (!stored) return null;
+  // With its formula results (cached per row, so this stays cheap).
+  const [row = stored] = withFormulaValues([stored], snapshot.properties, queryCtx);
   const properties = snapshot.properties.filter((property) => property.type !== 'title');
   const add = (type: PropertyType) =>
     runAction(ctx, () => {

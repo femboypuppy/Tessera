@@ -56,7 +56,7 @@ export const VIEW_ICONS: Readonly<Record<ViewType, LucideIcon>> = {
   list: LayoutList,
 };
 
-/** Property types people can pick (formulas stay reserved until a formula engine ships). */
+/** Property types people can pick. */
 export const PICKABLE_TYPES: readonly PropertyType[] = [
   'text',
   'number',
@@ -69,6 +69,7 @@ export const PICKABLE_TYPES: readonly PropertyType[] = [
   'relation',
   'createdTime',
   'updatedTime',
+  'formula',
 ];
 
 export function PropertyIcon({ type, className }: { type: PropertyType; className?: string }) {

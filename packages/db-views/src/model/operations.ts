@@ -44,6 +44,8 @@ import type * as Y from 'yjs';
 import { t } from '../i18n';
 import { isValidStoredValue } from '../query/cells';
 import { planTypeChange } from '../query/convert';
+import { renamePropertyInFormula } from '../query/formula/compile';
+import { withFormulaValues } from '../query/formula/rows';
 import { parseCellText } from '../query/parse';
 import type { QueryContext, QueryRow } from '../query/types';
 import { addRowsInBulk } from './bulk';
@@ -433,6 +435,24 @@ export interface NewPropertyInput {
   relationTarget?: string | null;
 }
 
+/**
+ * Renames a property and rewrites the formulas that read it (`prop("Old")` → `prop("New")`), in
+ * one transaction.
+ */
+export function renameProperty(ref: DatabaseRef, propertyId: string, name: string): void {
+  const property = getProperty(ref.doc, propertyId);
+  if (!property || property.name === name) return;
+  ref.doc.transact(() => {
+    updateProperty(ref.doc, propertyId, { name });
+    for (const other of listProperties(ref.doc)) {
+      const expression = other.formula?.expression;
+      if (other.type !== 'formula' || !expression) continue;
+      const next = renamePropertyInFormula(expression, property.name, name);
+      if (next !== expression) updateProperty(ref.doc, other.id, { formula: { expression: next } });
+    }
+  });
+}
+
 /** Adds a property (named after its type when no name is given), visible in the given view. */
 export function addDatabaseProperty(ref: DatabaseRef, input: NewPropertyInput): PropertyDefinition {
   let created: PropertyDefinition | undefined;
@@ -532,7 +552,10 @@ export async function changePropertyType(
     await unlinkTwoWay(ctx, ref.doc, property);
   }
   const current = getProperty(ref.doc, propertyId) ?? property;
-  const plan = planTypeChange(rows, current, type, queryCtx);
+  // A formula's results become the new type's values (computed now, as the view shows them).
+  const source =
+    current.type === 'formula' ? withFormulaValues(rows, listProperties(ref.doc), queryCtx) : rows;
+  const plan = planTypeChange(source, current, type, queryCtx);
   return runUndoable(ref.doc, () => {
     updateProperty(ref.doc, propertyId, type === 'relation' ? { type, relation: {} } : { type });
     for (const { rowId, change } of plan.updates) {

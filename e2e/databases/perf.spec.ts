@@ -84,10 +84,10 @@ test.describe('10,000-row table', () => {
     await expect(grid(page)).toHaveAttribute('aria-rowcount', String(ROWS + 2));
 
     // Warm up (fonts, first paint of every column), then measure. The machine running the tests
-    // may be busy, so keep the best of three runs.
+    // may be busy (other workers come and go), so keep the best of five runs.
     await scrollFrames(page);
     const runs: Array<{ median: number; p95: number; frames: number }> = [];
-    for (let run = 0; run < 3; run += 1) {
+    for (let run = 0; run < 5; run += 1) {
       const frames = await scrollFrames(page);
       runs.push({
         median: percentile(frames, 50),

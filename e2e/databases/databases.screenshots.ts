@@ -5,7 +5,7 @@ import { addView, choose, grid, header, openWorkspace } from './helpers';
 
 /**
  * `pnpm screenshots e2e/databases` writes the databases screenshots used by the docs and README:
- * `table`, `board`, `calendar`, `gallery` and `filter-builder`, light and dark.
+ * `table`, `board`, `calendar`, `gallery`, `filter-builder` and `formula-editor`, light and dark.
  */
 const OUT = fileURLToPath(new URL('../../assets/screenshots/databases/', import.meta.url));
 
@@ -375,6 +375,21 @@ test('databases screenshots', async ({ page }) => {
   await addView(page, 'Calendar');
   await expect(page.getByRole('button', { name: /^Offline mode for mobile,/ })).toBeVisible();
   await snap(page, 'calendar');
+
+  // The formula editor: a status line for each task.
+  await page.getByRole('tab', { name: 'Table', exact: true }).click();
+  await page.getByRole('button', { name: 'Add a property' }).click();
+  await page.getByRole('menuitem', { name: 'Formula', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Formula: Formula' });
+  await editor
+    .getByRole('textbox', { name: 'Formula' })
+    .fill(
+      'if(prop("Shipped"), "Shipped", if(empty(prop("Due")), "Not scheduled", if(prop("Due") < today(), "Overdue", dateBetween(prop("Due"), today(), "days") + " days left")))',
+    );
+  await expect(editor.getByText('Overdue', { exact: true })).toBeVisible();
+  await snap(page, 'formula-editor', { blur: false });
+  await editor.getByRole('button', { name: 'Save formula' }).click();
+  await expect(editor).toBeHidden();
 
   // A reading list gallery -------------------------------------------------------------------------
   await importCsv(

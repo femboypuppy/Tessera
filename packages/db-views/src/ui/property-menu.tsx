@@ -30,6 +30,7 @@ import {
   Pencil,
   Rows3,
   Settings2,
+  Sigma,
   Trash2,
 } from 'lucide-react';
 import { t } from '../i18n';
@@ -65,6 +66,7 @@ const CURRENCIES = [
 export interface PropertyMenuActions {
   rename: () => void;
   editOptions?: () => void;
+  editFormula?: () => void;
   sort?: (direction: 'asc' | 'desc') => void;
   filter?: () => void;
   groupBy?: () => void;
@@ -100,7 +102,9 @@ export function PropertyMenuItems({
   const isTitle = property.type === 'title';
   const update = (patch: Parameters<typeof updateProperty>[2]) =>
     runAction(ctx, () => updateProperty(database.doc, property.id, patch));
-  const changeType = (type: PropertyType) =>
+  const changeType = (type: PropertyType) => {
+    // A new formula needs an expression: open the editor once the menu has closed.
+    if (type === 'formula') actions.editFormula?.();
     runAction(ctx, async () => {
       const handle = await changePropertyType(ctx, database, rows, property.id, type, queryCtx);
       if (!handle) return;
@@ -109,6 +113,7 @@ export function PropertyMenuItems({
         action: { label: t('undo'), onClick: handle.undo },
       });
     });
+  };
   const databases = pages
     .all()
     .filter((page) => page.kind === 'database' && !pages.isTrashed(page.id));
@@ -240,6 +245,11 @@ export function PropertyMenuItems({
       {(property.type === 'select' || property.type === 'multiSelect') && actions.editOptions ? (
         <DropdownMenuItem icon={<Settings2 />} onSelect={actions.editOptions}>
           {t('options')}
+        </DropdownMenuItem>
+      ) : null}
+      {property.type === 'formula' && actions.editFormula ? (
+        <DropdownMenuItem icon={<Sigma />} onSelect={actions.editFormula}>
+          {t('editFormula')}
         </DropdownMenuItem>
       ) : null}
       {property.type === 'relation' ? (

@@ -41,9 +41,9 @@ export function exportColumns(
   view: Pick<ViewConfig, 'type' | 'properties'>,
 ): PropertyDefinition[] {
   const entries = resolveViewProperties(properties, view);
-  return (view.type === 'table' ? entries.filter((entry) => entry.visible) : entries)
-    .map((entry) => entry.property)
-    .filter((property) => property.type !== 'formula');
+  return (view.type === 'table' ? entries.filter((entry) => entry.visible) : entries).map(
+    (entry) => entry.property,
+  );
 }
 
 /** "Export view as CSV": the rows the view shows, in its order, as a CSV download. */

@@ -38,6 +38,7 @@ import {
   ensureOption,
   materializeViewProperties,
   movePropertyInView,
+  renameProperty,
   setAllPropertiesVisible,
   setCell,
   setCellsFromText,
@@ -465,6 +466,57 @@ describe('properties', () => {
     );
     expect(getProperty(ref.doc, points.id)?.relation?.targetDatabaseId).toBeNull();
     toRelation?.undo();
+    store.release();
+  });
+
+  it('renames properties and the formulas that read them', async () => {
+    const ref = await database();
+    const pages = addProperty(ref.doc, { name: 'Pages', type: 'number' });
+    const perDay = addProperty(ref.doc, {
+      name: 'Per day',
+      type: 'formula',
+      formula: { expression: 'prop("Pages") / 30 + length(prop("Name"))' },
+    });
+    const other = addProperty(ref.doc, {
+      name: 'Other',
+      type: 'formula',
+      formula: { expression: '"Pages"' },
+    });
+    renameProperty(ref, pages.id, 'Page count');
+    expect(getProperty(ref.doc, pages.id)?.name).toBe('Page count');
+    expect(getProperty(ref.doc, perDay.id)?.formula?.expression).toBe(
+      'prop("Page count") / 30 + length(prop("Name"))',
+    );
+    expect(getProperty(ref.doc, other.id)?.formula?.expression).toBe('"Pages"');
+    // Same name, or a property that is gone: nothing happens.
+    renameProperty(ref, pages.id, 'Page count');
+    renameProperty(ref, 'ghost', 'x');
+    expect(getProperty(ref.doc, perDay.id)?.formula?.expression).toContain('Page count');
+  });
+
+  it('turns a formula into stored values of another type', async () => {
+    const ref = await database();
+    const pages = addProperty(ref.doc, { name: 'Pages', type: 'number' });
+    const label = addProperty(ref.doc, {
+      name: 'Label',
+      type: 'formula',
+      formula: { expression: 'if(prop("Pages") > 400, "Long", "Short")' },
+    });
+    const dune = await addRow(app.ctx, ref, { title: 'Dune', values: { [pages.id]: 688 } });
+    const store = acquireDatabaseStore(ref.doc, app.ctx.workspace.pages);
+    const handle = await changePropertyType(
+      app.ctx,
+      ref,
+      store.store.getSnapshot().rows,
+      label.id,
+      'text',
+      testContext(),
+    );
+    expect(getProperty(ref.doc, label.id)?.type).toBe('text');
+    expect(getRow(ref.doc, dune.id)?.values[label.id]).toBe('Long');
+    handle?.undo();
+    expect(getProperty(ref.doc, label.id)?.type).toBe('formula');
+    expect(getRow(ref.doc, dune.id)?.values[label.id]).toBeUndefined();
     store.release();
   });
 

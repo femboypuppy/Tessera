@@ -3,7 +3,6 @@ import {
   type JsonValue,
   type PropertyDefinition,
   type PropertyType,
-  type StoredPropertyType,
 } from '@tessera/core';
 import { readCell } from './cells';
 import { cellToText } from './format';
@@ -36,7 +35,8 @@ function isEmptyValue(value: JsonValue | undefined): boolean {
  * stored value in place: it is empty, unchecked, invalid for the current type (a leftover of an
  * earlier type, which becomes readable again when the type matches, as SPEC 4.5 asks) or it does
  * not convert. Conversions go through text, so `42` becomes `"42"` and back, option IDs become
- * names and back, and dates become `YYYY-MM-DD`.
+ * names and back, and dates become `YYYY-MM-DD`. A formula's computed result (`raw` is then the
+ * row's `formulas` entry) converts like a stored value, so turning a formula into text keeps it.
  */
 export function convertValue(
   raw: JsonValue | undefined,
@@ -46,12 +46,13 @@ export function convertValue(
   ctx: QueryContext,
 ): ConvertedValue | null {
   if (raw === undefined || target === property.type || !isStoredPropertyType(target)) return null;
-  if (!isStoredPropertyType(property.type)) return null;
+  const computed = property.type === 'formula';
+  if (!computed && !isStoredPropertyType(property.type)) return null;
   const current = readCell(row, property);
   // Empty, invalid (left over from an earlier type) and unchecked values stay where they are.
   if (isEmptyValue(current) || current === false) return null;
 
-  const from: StoredPropertyType = property.type;
+  const from = property.type;
   // Conversions that keep option identity (both types share the options map). Options that were
   // deleted meanwhile are dropped.
   const known = new Set(property.options?.map((option) => option.id));
@@ -61,9 +62,10 @@ export function convertValue(
     const first = current.find((id) => typeof id === 'string' && known.has(id));
     return typeof first === 'string' ? { kind: 'set', value: first } : null;
   }
-  if (from === 'number' && target === 'checkbox' && typeof current === 'number')
+  if ((from === 'number' || computed) && target === 'checkbox' && typeof current === 'number')
     return { kind: 'set', value: current !== 0 };
-  if (from === 'checkbox' && target === 'number') return { kind: 'set', value: current ? 1 : 0 };
+  if ((from === 'checkbox' || computed) && target === 'number' && typeof current === 'boolean')
+    return { kind: 'set', value: current ? 1 : 0 };
   if (target === 'checkbox') {
     const text = cellToText(current, property, ctx);
     const checked = parseBooleanText(text, { numeric: true });
@@ -100,7 +102,8 @@ export function planTypeChange(
 ): TypeChangePlan {
   const updates: TypeChangePlan['updates'] = [];
   for (const row of rows) {
-    const change = convertValue(row.values[property.id], row, property, target, ctx);
+    const raw = property.type === 'formula' ? row.formulas?.[property.id] : row.values[property.id];
+    const change = convertValue(raw, row, property, target, ctx);
     if (change) updates.push({ rowId: row.id, change });
   }
   return { updates };

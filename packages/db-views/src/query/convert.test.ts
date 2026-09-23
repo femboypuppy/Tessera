@@ -101,3 +101,30 @@ describe('planTypeChange', () => {
     });
   });
 });
+
+describe('formula results', () => {
+  const formula = property('f', 'formula', { formula: { expression: 'x' } });
+  const plan = (result: JsonValue, target: PropertyType) =>
+    planTypeChange([row('a', {}, { id: 'a', formulas: { f: result } })], formula, target, ctx)
+      .updates[0]?.change ?? null;
+
+  it('become the values of the new type', () => {
+    expect(plan(42, 'text')).toEqual({ kind: 'set', value: '42' });
+    expect(plan(42, 'number')).toEqual({ kind: 'set', value: 42 });
+    expect(plan(0.5, 'checkbox')).toEqual({ kind: 'set', value: true });
+    expect(plan(true, 'number')).toEqual({ kind: 'set', value: 1 });
+    expect(plan(true, 'checkbox')).toEqual({ kind: 'set', value: true });
+    expect(plan('Long', 'select')).toEqual({ kind: 'options', names: ['Long'] });
+    expect(plan({ start: '2026-01-21' }, 'date')).toEqual({
+      kind: 'set',
+      value: { start: '2026-01-21' },
+    });
+    expect(plan({ start: '2026-01-21' }, 'text')).toEqual({ kind: 'set', value: '2026-01-21' });
+  });
+
+  it('leave nothing behind when empty or false', () => {
+    expect(plan(false, 'text')).toBeNull();
+    expect(plan('', 'text')).toBeNull();
+    expect(planTypeChange([row('a', {}, { id: 'a' })], formula, 'text', ctx).updates).toEqual([]);
+  });
+});

@@ -58,6 +58,7 @@ import { PICKABLE_TYPES, PropertyIcon, typeLabel } from '../common';
 import { POPOVER_EDITOR_TYPES, TEXT_EDITOR_TYPES, type EditMove } from '../cells/editors';
 import { useDragAccessibility, useDragSensors } from '../dnd';
 import { runAction, useAfterMenuClose } from '../hooks';
+import { FormulaDialog } from '../formula-dialog';
 import { OptionsDialog } from '../options-dialog';
 import { fromTsv, toHtmlTable, toTsv } from './clipboard';
 import { HeaderCell } from './header-cell';
@@ -155,6 +156,7 @@ export function TableView({
   const [footerMenu, setFooterMenu] = useState<number | null>(null);
   const [rowMenu, setRowMenu] = useState<{ key: string; x: number; y: number } | null>(null);
   const [optionsFor, setOptionsFor] = useState<string | null>(null);
+  const [formulaFor, setFormulaFor] = useState<string | null>(null);
   const lastGrid = useRef<GridSelection | null>(null);
   const afterMenu = useAfterMenuClose();
   const dragging = useRef(false);
@@ -316,6 +318,11 @@ export function TableView({
     const column = columns[pos.col];
     if (!item || !column || readOnly) return;
     const type = column.property.type;
+    if (type === 'formula') {
+      // Formula cells are computed: "editing" one edits its formula.
+      setFormulaFor(column.property.id);
+      return;
+    }
     if (type === 'checkbox') {
       toggleCheckbox(item.row, pos.col);
       return;
@@ -825,6 +832,9 @@ export function TableView({
   const optionsProperty = optionsFor
     ? snapshot.properties.find((property) => property.id === optionsFor)
     : undefined;
+  const formulaProperty = formulaFor
+    ? snapshot.properties.find((property) => property.id === formulaFor)
+    : undefined;
 
   return (
     <div className="relative">
@@ -917,6 +927,8 @@ export function TableView({
                     actions={{
                       rename: () => afterMenu.schedule(() => setRenaming(column.property.id)),
                       editOptions: () => setOptionsFor(column.property.id),
+                      editFormula: () =>
+                        afterMenu.schedule(() => setFormulaFor(column.property.id)),
                       sort: (direction) => onSortBy(column.property.id, direction),
                       filter: () => onFilterBy(column.property.id),
                       groupBy: () => onGroupBy(column.property.id),
@@ -943,7 +955,12 @@ export function TableView({
                           type,
                           view: { id: view.id, index: Number.MAX_SAFE_INTEGER },
                         });
-                        afterMenu.schedule(() => setRenaming(property.id));
+                        // A new formula starts in the formula editor; other types start renamed.
+                        afterMenu.schedule(() =>
+                          type === 'formula'
+                            ? setFormulaFor(property.id)
+                            : setRenaming(property.id),
+                        );
                       })
                     }
                   />
@@ -1095,6 +1112,22 @@ export function TableView({
           }}
           database={database}
           property={optionsProperty}
+        />
+      ) : null}
+      {formulaProperty ? (
+        <FormulaDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              setFormulaFor(null);
+              focusGrid();
+            }
+          }}
+          database={database}
+          property={formulaProperty}
+          properties={snapshot.properties}
+          rows={result.rows}
+          queryCtx={queryCtx}
         />
       ) : null}
     </div>

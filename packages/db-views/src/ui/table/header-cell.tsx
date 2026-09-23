@@ -1,11 +1,11 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { updateProperty, type PropertyDefinition, type ResolvedRow } from '@tessera/core';
+import type { PropertyDefinition, ResolvedRow } from '@tessera/core';
 import { useAppContext } from '@tessera/core/react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, cn } from '@tessera/ui';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { t } from '../../i18n';
-import type { DatabaseRef } from '../../model/operations';
+import { renameProperty, type DatabaseRef } from '../../model/operations';
 import type { QueryContext } from '../../query/types';
 import { PropertyIcon } from '../common';
 import { runAction } from '../hooks';
@@ -118,7 +118,7 @@ export function HeaderCell({
           label={t('propertyName')}
           onDone={(value) => {
             if (value !== null && value.trim() !== property.name)
-              runAction(ctx, () => updateProperty(database.doc, property.id, { name: value }));
+              runAction(ctx, () => renameProperty(database, property.id, value));
             onRenameEnd();
           }}
         />
