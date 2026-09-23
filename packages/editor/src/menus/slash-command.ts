@@ -47,7 +47,12 @@ export function slashCommand(controller: EditorController) {
           },
           render: suggestionRenderer<SlashItem>(controller, slashPluginKey, (props) => {
             // Typing on past a query that matches nothing closes the menu (it was just text).
-            if (props.items.length === 0 && (/\s$/.test(props.query) || props.query.length > 24)) {
+            // Items arrive asynchronously: an empty list while loading means nothing yet.
+            if (
+              !props.loading &&
+              props.items.length === 0 &&
+              (/\s$/.test(props.query) || props.query.length > 24)
+            ) {
               queueMicrotask(() => {
                 if (!props.editor.isDestroyed) exitSuggestion(props.editor.view, slashPluginKey);
               });

@@ -26,10 +26,19 @@ export function suggestionRenderer<T extends MenuItem>(
     const update = (props: SuggestionProps<T, T>, reset: boolean) => {
       const base = build(props);
       const previous = controller.menu.get();
+      // Items arrive asynchronously; while they load, keep showing the previous rows (no flash of
+      // "No results" on every keystroke).
+      const loading = props.loading && props.items.length === 0;
+      const reuse = loading && previous?.kind === base.kind ? previous : null;
+      const sections = reuse ? reuse.sections : base.sections;
+      const flat = reuse ? reuse.flat : base.flat;
       const keep = !reset && previous?.kind === base.kind && previous.query === base.query;
-      const active = keep ? Math.min(previous.active, Math.max(0, base.flat.length - 1)) : 0;
+      const active = keep ? Math.min(previous.active, Math.max(0, flat.length - 1)) : 0;
       controller.menu.set({
         ...base,
+        sections,
+        flat,
+        loading,
         active,
         getRect: props.clientRect ?? null,
         select: (item) => props.command(item as T),

@@ -33,6 +33,8 @@ export interface SuggestionMenuState<T extends MenuItem = MenuItem> {
   getRect: (() => DOMRect | null) | null;
   /** Shown when nothing matches. */
   emptyLabel: string;
+  /** True while the first results are still loading (nothing to show yet). */
+  loading?: boolean;
   select(item: T): void;
 }
 

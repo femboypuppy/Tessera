@@ -64,7 +64,8 @@ export function SuggestionMenu({
     if (active instanceof HTMLElement) active.scrollIntoView?.({ block: 'nearest' });
   }, [state]);
 
-  if (!state) return null;
+  // Nothing to show until the first results arrive (a moment after the trigger).
+  if (!state || (state.loading && state.flat.length === 0)) return null;
   let index = -1;
   return createPortal(
     <div

@@ -64,8 +64,15 @@ export function blockHandle(controller: EditorController) {
                 controller.handle.set(null);
                 return;
               }
-              const block = blockAtCoords(view, x, y);
               const current = controller.handle.get();
+              // Moving left toward the handle (over list markers, a toggle's chevron, the gutter)
+              // keeps the handle on its block as long as the pointer stays on that block's band.
+              if (current && view.state.doc.nodeAt(current.pos) === current.node) {
+                const dom = view.nodeDOM(current.pos);
+                const rect = dom instanceof HTMLElement ? dom.getBoundingClientRect() : null;
+                if (rect && x < rect.left && y >= rect.top && y <= rect.bottom) return;
+              }
+              const block = blockAtCoords(view, x, y);
               if (!block) controller.handle.set(null);
               else if (!current || current.pos !== block.pos || current.node !== block.node)
                 controller.handle.set(block);
