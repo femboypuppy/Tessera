@@ -142,8 +142,10 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # Coverage instrumentation slows the jsdom UI tests past Vitest's 5 s default on shared
+      # runners; the timeout only guards against hangs (HANDOFF/ci.md, follow-up 3).
       - name: Vitest with coverage
-        run: pnpm test:coverage
+        run: pnpm test:coverage --testTimeout=20000
       - name: Coverage summary
         if: ${{ !cancelled() }}
         run: node scripts/ci/coverage-summary.ts coverage/coverage-summary.json
