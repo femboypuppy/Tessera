@@ -1,0 +1,38 @@
+{
+  "name": "@tessera/search",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tessera search, command palette, backlinks and graph view.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@tessera/core": "workspace:*",
+    "@tessera/ui": "workspace:*",
+    "graphology": "0.26.0",
+    "graphology-layout": "0.6.1",
+    "graphology-layout-forceatlas2": "0.10.1",
+    "graphology-types": "0.24.8",
+    "lucide-react": "1.47.0",
+    "minisearch": "7.2.0",
+    "sigma": "3.0.3",
+    "yjs": "13.6.32"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}

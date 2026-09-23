@@ -1,0 +1,30 @@
+{
+  "name": "@tessera/importers",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tessera importers and exporters: Notion, Obsidian, markdown folders, zip archives and JSON backups.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@tessera/core": "workspace:*",
+    "@tessera/markdown": "workspace:*",
+    "fflate": "0.8.3",
+    "papaparse": "5.7.0",
+    "yaml": "2.9.1",
+    "yjs": "13.6.32"
+  },
+  "devDependencies": {
+    "@types/papaparse": "5.5.2",
+    "fast-check": "4.10.2"
+  }
+}

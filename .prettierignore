@@ -1,0 +1,16 @@
+pnpm-lock.yaml
+node_modules
+dist
+build
+coverage
+playwright-report
+test-results
+blob-report
+docs/.vitepress/cache
+docs/.vitepress/dist
+apps/desktop/src-tauri/target
+apps/desktop/src-tauri/gen
+# Prose is not reformatted: docs, handoffs and sample workspaces keep their exact layout.
+*.md
+packages/importers/fixtures
+examples/demo-workspace

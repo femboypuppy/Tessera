@@ -1,0 +1,54 @@
+{
+  "name": "@tessera/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tessera contracts: data model, canonical document schema, interfaces, extension points and in-memory stubs.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./testing/setup-dom": "./src/testing/setup-dom.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "fractional-indexing": "4.0.0",
+    "nanoid": "6.0.1",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-transform": "1.12.1",
+    "prosemirror-view": "1.42.5",
+    "y-prosemirror": "1.3.7",
+    "y-protocols": "1.0.7",
+    "yjs": "13.6.32",
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}

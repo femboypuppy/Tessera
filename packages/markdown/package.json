@@ -1,0 +1,34 @@
+{
+  "name": "@tessera/markdown",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tessera markdown engine: markdown and HTML to and from the canonical document schema.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@tessera/core": "workspace:*",
+    "@types/mdast": "4.0.4",
+    "dompurify": "3.4.15",
+    "mdast-util-to-string": "4.0.0",
+    "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.1.0",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "fast-check": "4.10.2"
+  }
+}
