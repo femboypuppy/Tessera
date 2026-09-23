@@ -1,0 +1,111 @@
+/*
+ * Tessera's docs theme: the VitePress default theme with the app's colors
+ * (packages/ui/src/styles/tokens.css). One indigo accent, calm neutral surfaces.
+ */
+
+:root {
+  --vp-c-brand-1: #4a4ac2; /* --tess-accent-text */
+  --vp-c-brand-2: #5151cd; /* --tess-accent-hover */
+  --vp-c-brand-3: #5b5bd6; /* --tess-accent */
+  --vp-c-brand-soft: rgb(91 91 214 / 0.14);
+
+  --vp-c-text-1: #1f1e1d; /* --tess-fg */
+  --vp-c-text-2: #6b6a66; /* --tess-fg-muted */
+  --vp-c-bg-alt: #f7f7f5; /* --tess-bg-subtle */
+  --vp-c-divider: #e9e9e7; /* --tess-border */
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #4a4ac2 20%, #8e8af0);
+  --vp-home-hero-image-background-image: radial-gradient(
+    circle,
+    rgb(91 91 214 / 0.35) 0%,
+    rgb(91 91 214 / 0) 70%
+  );
+  --vp-home-hero-image-filter: blur(56px);
+
+  --vp-button-brand-bg: #5b5bd6;
+  --vp-button-brand-hover-bg: #5151cd;
+  --vp-button-brand-active-bg: #4a4ac2;
+}
+
+.dark {
+  --vp-c-brand-1: #b1a9ff; /* dark --tess-accent-text */
+  --vp-c-brand-2: #8e8af0; /* dark --tess-focus */
+  --vp-c-brand-3: #5b5bd6;
+  --vp-c-brand-soft: rgb(110 106 222 / 0.18);
+
+  --vp-c-bg: #191919; /* dark --tess-bg */
+  --vp-c-bg-alt: #202020; /* dark --tess-bg-subtle */
+  --vp-c-bg-elv: #252525; /* dark --tess-surface */
+  --vp-c-bg-soft: #202020;
+  --vp-c-text-1: #ebebea;
+  --vp-c-text-2: #a3a3a0;
+  --vp-c-divider: #2f2f2f;
+
+  --vp-home-hero-name-background: linear-gradient(120deg, #b1a9ff 20%, #6a67e2);
+  --vp-button-brand-hover-bg: #6a67e2;
+}
+
+.tess-screenshot {
+  margin: 20px 0;
+}
+
+.tess-screenshot img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(15 15 15 / 0.08);
+}
+
+.tess-screenshot figcaption {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  text-align: center;
+}
+
+.tess-screenshot .tess-screenshot-dark,
+.dark .tess-screenshot .tess-screenshot-light {
+  display: none;
+}
+
+.dark .tess-screenshot .tess-screenshot-dark {
+  display: block;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.4em;
+  border: 1px solid var(--vp-c-divider);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--vp-c-bg-alt);
+  font-family: var(--vp-font-family-base);
+  font-size: 0.85em;
+  line-height: 1.6;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+/* The hero mark: large, on the brand glow. */
+.VPHero .image-src {
+  width: 200px;
+  height: 200px;
+}
+
+@media (min-width: 960px) {
+  .VPHero .image-src {
+    width: 280px;
+    height: 280px;
+  }
+}
