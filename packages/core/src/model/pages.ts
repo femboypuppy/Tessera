@@ -6,8 +6,8 @@ import { createPageIndex, type PageIndex } from './page-index';
 import {
   isValidIcon,
   normalizeTitle,
-  pageCoverSchema,
   PAGE_KINDS,
+  parsePageCover,
   type PageCover,
   type PageKind,
   type PageMeta,
@@ -62,8 +62,8 @@ export function readPageMeta(id: string, value: unknown): PageMeta | null {
   };
   const icon = str(map.get('icon'));
   if (icon) meta.icon = icon;
-  const cover = pageCoverSchema.safeParse(map.get('cover'));
-  if (cover.success) meta.cover = cover.data;
+  const cover = parsePageCover(map.get('cover'));
+  if (cover) meta.cover = cover;
   const createdBy = str(map.get('createdBy'));
   if (createdBy) meta.createdBy = createdBy;
   const updatedBy = str(map.get('updatedBy'));
@@ -253,7 +253,7 @@ export function createPage(
   if (input.icon !== undefined && !isValidIcon(input.icon)) {
     throw new ValidationError('Page icons must be a single emoji', [input.icon]);
   }
-  if (input.cover !== undefined && !pageCoverSchema.safeParse(input.cover).success) {
+  if (input.cover !== undefined && !parsePageCover(input.cover)) {
     throw new ValidationError('Invalid page cover');
   }
   const parentId = input.parentId ?? null;
@@ -384,8 +384,7 @@ export function setCover(
   cover: PageCover | null,
   options: MutationOptions = {},
 ): void {
-  if (cover !== null && !pageCoverSchema.safeParse(cover).success)
-    throw new ValidationError('Invalid page cover');
+  if (cover !== null && !parsePageCover(cover)) throw new ValidationError('Invalid page cover');
   ws.transact(() => {
     const map = pageMap(ws, id);
     if (cover === null) map.delete('cover');

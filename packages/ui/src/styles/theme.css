@@ -1,0 +1,168 @@
+/*
+ * Maps the design tokens to Tailwind v4 utilities. `inline` keeps the var() references, so the
+ * utilities follow the active theme. Examples: bg-bg, bg-bg-subtle, bg-surface, bg-hover, text-fg,
+ * text-fg-muted, border-border, bg-accent, text-accent-fg, text-accent-text, ring-focus,
+ * bg-tag-blue-bg, text-tag-blue-fg, rounded-md, shadow-popover, duration-fast, ease-out.
+ */
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme inline {
+  --color-bg: var(--tess-bg);
+  --color-bg-subtle: var(--tess-bg-subtle);
+  --color-surface: var(--tess-surface);
+  --color-surface-raised: var(--tess-surface-raised);
+  --color-overlay: var(--tess-overlay);
+  --color-hover: var(--tess-hover);
+  --color-active: var(--tess-active);
+  --color-selected: var(--tess-selected);
+
+  --color-fg: var(--tess-fg);
+  --color-fg-muted: var(--tess-fg-muted);
+  --color-fg-subtle: var(--tess-fg-subtle);
+  --color-fg-disabled: var(--tess-fg-disabled);
+
+  --color-border: var(--tess-border);
+  --color-border-strong: var(--tess-border-strong);
+
+  --color-accent: var(--tess-accent);
+  --color-accent-hover: var(--tess-accent-hover);
+  --color-accent-fg: var(--tess-accent-fg);
+  --color-accent-subtle: var(--tess-accent-subtle);
+  --color-accent-text: var(--tess-accent-text);
+  --color-focus: var(--tess-focus);
+
+  --color-danger: var(--tess-danger);
+  --color-danger-hover: var(--tess-danger-hover);
+  --color-danger-fg: var(--tess-danger-fg);
+  --color-danger-subtle: var(--tess-danger-subtle);
+  --color-danger-text: var(--tess-danger-text);
+  --color-success: var(--tess-success);
+  --color-success-subtle: var(--tess-success-subtle);
+  --color-success-text: var(--tess-success-text);
+  --color-warning: var(--tess-warning);
+  --color-warning-subtle: var(--tess-warning-subtle);
+  --color-warning-text: var(--tess-warning-text);
+  --color-info: var(--tess-info);
+  --color-info-subtle: var(--tess-info-subtle);
+  --color-info-text: var(--tess-info-text);
+
+  --color-tag-default-bg: var(--tess-tag-default-bg);
+  --color-tag-default-fg: var(--tess-tag-default-fg);
+  --color-tag-gray-bg: var(--tess-tag-gray-bg);
+  --color-tag-gray-fg: var(--tess-tag-gray-fg);
+  --color-tag-brown-bg: var(--tess-tag-brown-bg);
+  --color-tag-brown-fg: var(--tess-tag-brown-fg);
+  --color-tag-orange-bg: var(--tess-tag-orange-bg);
+  --color-tag-orange-fg: var(--tess-tag-orange-fg);
+  --color-tag-yellow-bg: var(--tess-tag-yellow-bg);
+  --color-tag-yellow-fg: var(--tess-tag-yellow-fg);
+  --color-tag-green-bg: var(--tess-tag-green-bg);
+  --color-tag-green-fg: var(--tess-tag-green-fg);
+  --color-tag-blue-bg: var(--tess-tag-blue-bg);
+  --color-tag-blue-fg: var(--tess-tag-blue-fg);
+  --color-tag-purple-bg: var(--tess-tag-purple-bg);
+  --color-tag-purple-fg: var(--tess-tag-purple-fg);
+  --color-tag-pink-bg: var(--tess-tag-pink-bg);
+  --color-tag-pink-fg: var(--tess-tag-pink-fg);
+  --color-tag-red-bg: var(--tess-tag-red-bg);
+  --color-tag-red-fg: var(--tess-tag-red-fg);
+
+  --font-sans: var(--tess-font-sans);
+  --font-mono: var(--tess-font-mono);
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.25rem;
+
+  --radius-sm: var(--tess-radius-sm);
+  --radius-md: var(--tess-radius-md);
+  --radius-lg: var(--tess-radius-lg);
+  --radius-xl: var(--tess-radius-xl);
+
+  --shadow-subtle: var(--tess-shadow-sm);
+  --shadow-popover: var(--tess-shadow-md);
+  --shadow-dialog: var(--tess-shadow-lg);
+
+  --ease-out: var(--tess-ease-out);
+  --ease-in-out: var(--tess-ease-in-out);
+
+  --animate-fade-in: tess-fade-in var(--tess-duration-fast) var(--tess-ease-out);
+  --animate-fade-out: tess-fade-out var(--tess-duration-fast) var(--tess-ease-out);
+  --animate-pop-in: tess-pop-in var(--tess-duration-normal) var(--tess-ease-out);
+  --animate-pop-out: tess-pop-out var(--tess-duration-fast) var(--tess-ease-out);
+  --animate-slide-in-right: tess-slide-in-right var(--tess-duration-normal) var(--tess-ease-out);
+  --animate-slide-in-left: tess-slide-in-left var(--tess-duration-normal) var(--tess-ease-out);
+  --animate-toast-in: tess-toast-in var(--tess-duration-normal) var(--tess-ease-out);
+  --animate-shimmer: tess-shimmer 1.4s ease-in-out infinite;
+  --animate-spin: tess-spin 0.8s linear infinite;
+}
+
+@theme {
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 260ms;
+}
+
+@keyframes tess-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tess-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes tess-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(2px);
+  }
+}
+
+@keyframes tess-pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes tess-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@keyframes tess-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+
+@keyframes tess-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes tess-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes tess-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

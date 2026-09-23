@@ -21,5 +21,11 @@ export default defineConfig({
   },
   server: { port: 5173 },
   preview: { port: 4173 },
-  build: { target: 'es2022', sourcemap: true },
+  build: {
+    target: 'es2022',
+    sourcemap: true,
+    // The budget (SPEC.md) is 250 KB gzip for the startup JS. At the usual ~3.2:1 ratio that is
+    // about 750 KB minified, so the warning fires when the shell chunk nears the budget.
+    chunkSizeWarningLimit: 750,
+  },
 });

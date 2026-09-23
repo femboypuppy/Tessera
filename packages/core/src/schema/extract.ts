@@ -1,5 +1,6 @@
 import type { JsonValue } from '../json';
 import { walkDocJSON } from './docjson';
+import { headingSlug } from './slug';
 import { tagKey } from './tags';
 import type { AnyNodeJSON, DocJSON } from './types';
 
@@ -112,22 +113,6 @@ export function extractPlainText(doc: DocJSON, options: ExtractOptions = {}): st
   return extractTextBlocks(doc, options)
     .map((block) => block.text)
     .join('\n');
-}
-
-/**
- * URL fragment slug for a heading: lowercase, spaces to `-`, letters/digits/dashes only (unicode
- * letters kept).
- *
- * @example
- * headingSlug('Launch Plan: Q3!'); // 'launch-plan-q3'
- */
-export function headingSlug(text: string): string {
-  return text
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, '')
-    .trim()
-    .replace(/[\s-]+/g, '-');
 }
 
 /** A heading found by {@link extractHeadings}. */

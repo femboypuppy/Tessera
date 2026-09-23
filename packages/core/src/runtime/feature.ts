@@ -33,6 +33,11 @@ export interface PageBodyProps {
   pageId: string;
   page: PageMeta;
   readOnly: boolean;
+  /**
+   * Where the navigation that opened the page asked to scroll (`ctx.navigate(id, { heading })` or
+   * `{ blockId }`), or null. The body scrolls to it once its content is loaded.
+   */
+  target: { heading?: string; blockId?: string } | null;
   /** Moves focus to the page title, caret at the start or end. */
   focusTitle(position?: 'start' | 'end'): void;
   /** Registers what happens when the title asks the body to take focus. Returns an unregister function. */

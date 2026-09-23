@@ -1,6 +1,5 @@
 import { AbortError, throwIfAborted, toError } from '../errors';
 import type { PageMeta } from '../model/page-meta';
-import { readDocJSON, writeDocJSON } from '../schema/ydoc';
 import type { DocHandle } from '../runtime/doc-manager';
 import type { WorkspaceApi } from '../runtime/app-context';
 import type { CurrentUser } from '../runtime/user';
@@ -363,6 +362,8 @@ export function createBasicMarkdownImporter(): Importer {
     },
     async run(files, context, onProgress, signal) {
       const started = Date.now();
+      // Loaded on demand: keeps ProseMirror out of the shell bundle.
+      const { writeDocJSON } = await import('../schema/ydoc');
       const report: ImportReport = {
         importerId: id,
         rootPageId: null,
@@ -475,6 +476,7 @@ export function createBasicMarkdownExporter(): Exporter {
     scopes: ['workspace', 'subtree', 'page'],
     async run(scope, context, sink, onProgress, signal) {
       const started = Date.now();
+      const { readDocJSON } = await import('../schema/ydoc');
       const snapshot = context.workspace.pages.getSnapshot();
       const roots: PageMeta[] =
         scope.kind === 'workspace'

@@ -1,6 +1,3 @@
-import { z } from 'zod';
-import { ID_PATTERN } from '../ids';
-
 /** What a page's body is. `database` pages render a database; their rows are child pages. */
 export const PAGE_KINDS = ['page', 'database'] as const;
 export type PageKind = (typeof PAGE_KINDS)[number];
@@ -54,30 +51,48 @@ export interface PageMeta {
 /** Maximum title length. Longer titles are truncated by the helpers. */
 export const MAX_TITLE_LENGTH = 2000;
 
-/** zod schema for {@link PageCover}. */
-export const pageCoverSchema = z.object({
-  kind: z.enum(['preset', 'asset', 'url']),
-  value: z.string().min(1).max(2048),
-  positionY: z.number().min(0).max(100).optional(),
-});
+/** Cover kinds. */
+export const PAGE_COVER_KINDS = ['preset', 'asset', 'url'] as const;
 
-/** zod schema for {@link PageMeta}. Use it at trust boundaries (imports, plugin API, server). */
-export const pageMetaSchema = z.object({
-  id: z.string().regex(ID_PATTERN),
-  kind: z.enum(PAGE_KINDS),
-  title: z.string().max(MAX_TITLE_LENGTH),
-  icon: z.string().min(1).max(64).optional(),
-  cover: pageCoverSchema.optional(),
-  parentId: z.string().regex(ID_PATTERN).nullable(),
-  order: z.string().min(1).max(256),
-  createdAt: z.number().int().nonnegative(),
-  updatedAt: z.number().int().nonnegative(),
-  createdBy: z.string().max(128).optional(),
-  updatedBy: z.string().max(128).optional(),
-  trashedAt: z.number().int().nonnegative().optional(),
-  trashedBy: z.string().max(128).optional(),
-  favorite: z.boolean().optional(),
-});
+/** Maximum length of {@link PageCover.value}. */
+export const MAX_COVER_VALUE_LENGTH = 2048;
+
+/**
+ * Validates a cover and returns a clean copy (unknown keys dropped), or null when it isn't a
+ * valid {@link PageCover}. Same rules as `pageCoverSchema`, without zod, for hot paths.
+ *
+ * @example
+ * parsePageCover({ kind: 'preset', value: 'aurora' }); // { kind: 'preset', value: 'aurora' }
+ * parsePageCover({ kind: 'video', value: 'x' }); // null
+ */
+export function parsePageCover(value: unknown): PageCover | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+  const input = value as Record<string, unknown>;
+  const kind = input.kind;
+  if (kind !== 'preset' && kind !== 'asset' && kind !== 'url') return null;
+  const coverValue = input.value;
+  if (
+    typeof coverValue !== 'string' ||
+    coverValue.length < 1 ||
+    coverValue.length > MAX_COVER_VALUE_LENGTH
+  ) {
+    return null;
+  }
+  const cover: PageCover = { kind, value: coverValue };
+  const positionY = input.positionY;
+  if (positionY !== undefined) {
+    if (
+      typeof positionY !== 'number' ||
+      !Number.isFinite(positionY) ||
+      positionY < 0 ||
+      positionY > 100
+    ) {
+      return null;
+    }
+    cover.positionY = positionY;
+  }
+  return cover;
+}
 
 /** Keys of {@link PageMeta}. */
 export type PageMetaField = keyof PageMeta;
