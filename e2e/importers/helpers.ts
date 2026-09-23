@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { crc32, inflateRawSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { expect, type Locator, type Page } from '@playwright/test';
@@ -191,4 +193,13 @@ export function researchVault(notes: number): Array<[string, string]> {
     files.push([`Research vault/${topic}/${title(index)}.md`, body]);
   }
   return files;
+}
+
+/** Every file under a folder as `[relative path, bytes]`, for zipping. */
+export function folderEntries(folder: string, prefix = ''): Array<[string, Buffer]> {
+  return readdirSync(folder, { withFileTypes: true }).flatMap((entry): Array<[string, Buffer]> => {
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const full = join(folder, entry.name);
+    return entry.isDirectory() ? folderEntries(full, path) : [[path, readFileSync(full)]];
+  });
 }

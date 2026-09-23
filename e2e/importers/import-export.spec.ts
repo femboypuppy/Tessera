@@ -3,11 +3,14 @@ import { expect, test } from '@playwright/test';
 import {
   createWorkspace,
   expandTreeItem,
+  fixturePath,
+  folderEntries,
   importFolder,
   openFromTree,
   pageTree,
   readZip,
   sidebar,
+  writeZip,
 } from './helpers';
 
 test.describe('import', () => {
@@ -88,6 +91,50 @@ test.describe('import', () => {
     await page.getByRole('button', { name: 'Back to page' }).click();
     await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue('Launch plan');
     await expect(sidebar(page)).toBeVisible();
+  });
+});
+
+test.describe('drop', () => {
+  test('imports a Notion export zip dropped on the dialog', async ({ page }) => {
+    await createWorkspace(page, 'From Notion');
+    await sidebar(page).getByRole('button', { name: 'Import', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Import' });
+    const zip = writeZip(folderEntries(fixturePath('notion-export')));
+    const dropZone = dialog.getByTestId('import-drop-zone');
+    const transfer = await page.evaluateHandle(
+      (bytes) => {
+        const data = new DataTransfer();
+        data.items.add(
+          new File([new Uint8Array(bytes)], 'Export-5b1c2d3e-8f4a-4c1b-9d2e-7a6b5c4d3e2f.zip', {
+            type: 'application/zip',
+          }),
+        );
+        return data;
+      },
+      [...zip],
+    );
+    await dropZone.dispatchEvent('dragenter', { dataTransfer: transfer });
+    await expect(dropZone).toHaveAttribute('data-dropping', 'true');
+    await expect(dialog.getByText('Drop to import')).toBeVisible();
+    await dropZone.dispatchEvent('dragover', { dataTransfer: transfer });
+    await dropZone.dispatchEvent('drop', { dataTransfer: transfer });
+
+    // Detected as Notion; the page is named for Notion, not for the archive.
+    await expect(dialog.getByRole('combobox', { name: 'Source' })).toHaveText(/Notion/);
+    await expect(dialog.getByLabel('New page for the import')).toHaveValue('Notion import');
+    await expect(dialog.getByRole('region', { name: 'Files to import' })).toContainText(
+      '2 databases',
+    );
+    await dialog.getByRole('button', { name: /^Import \d+ files$/ }).click();
+    const report = page.getByRole('dialog', { name: 'Import complete' });
+    await expect(report).toBeVisible({ timeout: 30_000 });
+    await expect(report.getByTestId('count-Databases')).toHaveText('Databases2');
+    await report.getByRole('button', { name: 'Open imported pages' }).click();
+    await expandTreeItem(page, 'Notion import');
+    // Notion's IDs are gone from the titles.
+    await expect(
+      pageTree(page).getByRole('treeitem', { name: 'Workspace Home', exact: true }),
+    ).toBeVisible();
   });
 });
 
