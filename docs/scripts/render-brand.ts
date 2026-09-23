@@ -9,9 +9,11 @@
  * 3. Renders PNGs of every SVG with Playwright (Chromium), a favicon.ico, a legibility sheet that
  *    shows the mark at 16, 32 and 64 px on light and dark backgrounds, and the 1280×640 social
  *    preview from assets/brand/social-preview.html.
- * 4. Copies the favicon set and the logo into docs/public/ for the docs site.
+ * 4. Creates the placeholder assets/demo.gif (with ffmpeg) if no demo exists yet.
+ * 5. Copies the favicon set and the logo into docs/public/ for the docs site.
  */
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as fontkit from 'fontkit';
@@ -118,6 +120,55 @@ function legibilitySheet(colors: BrandColors, mark: string, icon: string): strin
   </body></html>`;
 }
 
+/** The frame shown at `assets/demo.gif` until the polish phase records the real demo. */
+function demoPlaceholderHtml(colors: BrandColors, icon: string): string {
+  return `<!doctype html><html><head><style>
+    body{margin:0;width:1280px;height:720px;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:20px;background:${colors.bgDark};color:${colors.fgDark};
+      font:500 22px system-ui,sans-serif;text-align:center}
+    svg{width:96px;height:96px}
+    h1{margin:8px 0 0;font-size:44px;font-weight:700;letter-spacing:-.02em}
+    p{margin:0;opacity:.65;max-width:720px;line-height:1.5}
+    code{font:600 18px ui-monospace,monospace;padding:4px 10px;border-radius:6px;background:#ffffff14}
+  </style></head><body>
+    ${icon}
+    <h1>Demo recording coming soon</h1>
+    <p>Placeholder. A 20-second demo of Tessera replaces this image before the first release.</p>
+    <code>assets/demo.gif</code>
+  </body></html>`;
+}
+
+/**
+ * Converts the placeholder frame to `assets/demo.gif` with ffmpeg. Never overwrites an existing
+ * GIF, because the polish phase puts the real recording there.
+ */
+async function writeDemoPlaceholder() {
+  const target = path.join(repoDir, 'assets', 'demo.gif');
+  try {
+    await access(target);
+    console.info('assets/demo.gif exists; left untouched');
+    return;
+  } catch {
+    // Missing: create the placeholder below.
+  }
+  const result = spawnSync(
+    'ffmpeg',
+    [
+      '-loglevel',
+      'error',
+      '-i',
+      path.join(pngDir, 'demo-placeholder.png'),
+      '-vf',
+      'scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64[p];[b][p]paletteuse',
+      target,
+    ],
+    { stdio: 'inherit' },
+  );
+  if (result.error || result.status !== 0) {
+    console.warn('ffmpeg is not available; assets/demo.gif was not created');
+  }
+}
+
 async function main() {
   const colors = brandColorsFromTokens(await readFile(tokensPath, 'utf8'));
   await mkdir(pngDir, { recursive: true });
@@ -198,9 +249,15 @@ async function main() {
     });
     if (!interLoaded) throw new Error('Inter did not load; run `pnpm --dir docs install` first');
     await social.screenshot({ path: path.join(brandDir, 'social-preview.png') });
+
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setContent(demoPlaceholderHtml(colors, svgs['app-icon.svg']));
+    await page.screenshot({ path: path.join(pngDir, 'demo-placeholder.png') });
   } finally {
     await browser.close();
   }
+
+  await writeDemoPlaceholder();
 
   await copyFile(path.join(brandDir, 'favicon.svg'), path.join(publicDir, 'favicon.svg'));
   await copyFile(path.join(brandDir, 'favicon.ico'), path.join(publicDir, 'favicon.ico'));
