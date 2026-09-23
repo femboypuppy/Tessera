@@ -1,0 +1,536 @@
+{
+  "version": 1,
+  "topNode": "doc",
+  "nodes": {
+    "blockquote": {
+      "content": "block+",
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "color": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "bulletList": {
+      "content": "listItem+",
+      "groups": [
+        "block",
+        "list"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    },
+    "callout": {
+      "content": "block+",
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "emoji": {
+          "hasDefault": true,
+          "default": "💡"
+        },
+        "tone": {
+          "hasDefault": true,
+          "default": "default"
+        }
+      }
+    },
+    "codeBlock": {
+      "content": "text*",
+      "groups": [
+        "block"
+      ],
+      "marks": "",
+      "inline": false,
+      "atom": false,
+      "code": true,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "language": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "doc": {
+      "content": "block+",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    },
+    "embed": {
+      "content": null,
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "data": {
+          "hasDefault": true,
+          "default": null
+        },
+        "kind": {
+          "hasDefault": true,
+          "default": null
+        },
+        "ref": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "hardBreak": {
+      "content": null,
+      "groups": [
+        "inline"
+      ],
+      "marks": null,
+      "inline": true,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    },
+    "heading": {
+      "content": "inline*",
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "color": {
+          "hasDefault": true,
+          "default": null
+        },
+        "level": {
+          "hasDefault": true,
+          "default": 1
+        }
+      }
+    },
+    "horizontalRule": {
+      "content": null,
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    },
+    "image": {
+      "content": null,
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "alt": {
+          "hasDefault": true,
+          "default": null
+        },
+        "assetId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "src": {
+          "hasDefault": true,
+          "default": null
+        },
+        "title": {
+          "hasDefault": true,
+          "default": null
+        },
+        "width": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "listItem": {
+      "content": "paragraph block*",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "color": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "orderedList": {
+      "content": "listItem+",
+      "groups": [
+        "block",
+        "list"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "start": {
+          "hasDefault": true,
+          "default": 1
+        }
+      }
+    },
+    "pageLink": {
+      "content": null,
+      "groups": [
+        "inline"
+      ],
+      "marks": null,
+      "inline": true,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockRef": {
+          "hasDefault": true,
+          "default": null
+        },
+        "heading": {
+          "hasDefault": true,
+          "default": null
+        },
+        "label": {
+          "hasDefault": true,
+          "default": null
+        },
+        "pageId": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "paragraph": {
+      "content": "inline*",
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "color": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "table": {
+      "content": "tableRow+",
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": "table",
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "tableCell": {
+      "content": "paragraph+",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": "cell",
+      "attrs": {
+        "colspan": {
+          "hasDefault": true,
+          "default": 1
+        },
+        "colwidth": {
+          "hasDefault": true,
+          "default": null
+        },
+        "rowspan": {
+          "hasDefault": true,
+          "default": 1
+        }
+      }
+    },
+    "tableHeader": {
+      "content": "paragraph+",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": "header_cell",
+      "attrs": {
+        "colspan": {
+          "hasDefault": true,
+          "default": 1
+        },
+        "colwidth": {
+          "hasDefault": true,
+          "default": null
+        },
+        "rowspan": {
+          "hasDefault": true,
+          "default": 1
+        }
+      }
+    },
+    "tableRow": {
+      "content": "(tableCell | tableHeader)*",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": "row",
+      "attrs": {}
+    },
+    "tag": {
+      "content": null,
+      "groups": [
+        "inline"
+      ],
+      "marks": null,
+      "inline": true,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "name": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "taskItem": {
+      "content": "paragraph block*",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "checked": {
+          "hasDefault": true,
+          "default": false
+        },
+        "color": {
+          "hasDefault": true,
+          "default": null
+        }
+      }
+    },
+    "taskList": {
+      "content": "taskItem+",
+      "groups": [
+        "block",
+        "list"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    },
+    "text": {
+      "content": null,
+      "groups": [
+        "inline"
+      ],
+      "marks": null,
+      "inline": true,
+      "atom": true,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    },
+    "toggle": {
+      "content": "toggleSummary block*",
+      "groups": [
+        "block"
+      ],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {
+        "blockId": {
+          "hasDefault": true,
+          "default": null
+        },
+        "color": {
+          "hasDefault": true,
+          "default": null
+        },
+        "open": {
+          "hasDefault": true,
+          "default": false
+        }
+      }
+    },
+    "toggleSummary": {
+      "content": "inline*",
+      "groups": [],
+      "marks": null,
+      "inline": false,
+      "atom": false,
+      "code": false,
+      "tableRole": null,
+      "attrs": {}
+    }
+  },
+  "marks": {
+    "bold": {
+      "attrs": {},
+      "excludes": null,
+      "inclusive": true,
+      "spanning": true,
+      "code": false
+    },
+    "code": {
+      "attrs": {},
+      "excludes": "_",
+      "inclusive": true,
+      "spanning": true,
+      "code": true
+    },
+    "highlight": {
+      "attrs": {
+        "color": {
+          "hasDefault": true,
+          "default": null
+        }
+      },
+      "excludes": null,
+      "inclusive": true,
+      "spanning": true,
+      "code": false
+    },
+    "italic": {
+      "attrs": {},
+      "excludes": null,
+      "inclusive": true,
+      "spanning": true,
+      "code": false
+    },
+    "link": {
+      "attrs": {
+        "href": {
+          "hasDefault": true,
+          "default": null
+        },
+        "title": {
+          "hasDefault": true,
+          "default": null
+        }
+      },
+      "excludes": null,
+      "inclusive": false,
+      "spanning": true,
+      "code": false
+    },
+    "strike": {
+      "attrs": {},
+      "excludes": null,
+      "inclusive": true,
+      "spanning": true,
+      "code": false
+    },
+    "underline": {
+      "attrs": {},
+      "excludes": null,
+      "inclusive": true,
+      "spanning": true,
+      "code": false
+    }
+  }
+}

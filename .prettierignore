@@ -14,3 +14,5 @@ apps/desktop/src-tauri/gen
 *.md
 packages/importers/fixtures
 examples/demo-workspace
+# Generated and verified by a test (toMatchFileSnapshot); must stay byte-exact.
+packages/core/src/schema/schema-description.json
