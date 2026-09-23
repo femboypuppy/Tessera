@@ -5,7 +5,7 @@ from written briefs, with a human owner deciding what to build, reviewing the re
 the calls. This page describes the process honestly: what the agents did, how they coordinated,
 and what that means for the code you're reading.
 
-It's optional reading. The owner decides whether to link it from the README.
+It's optional reading, linked from the README's footer.
 
 > [!NOTE]
 > This write-up was drafted by the docs agent (Agent 10) *during* the parallel phase, before the

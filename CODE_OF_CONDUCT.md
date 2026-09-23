@@ -59,9 +59,8 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement privately, by
-email to the project owner ([@femboypuppy](https://github.com/femboypuppy)) at
-the address on their GitHub profile.
+reported to the community leaders responsible for enforcement at
+[femboypuppy@tutanota.de](mailto:femboypuppy@tutanota.de).
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
