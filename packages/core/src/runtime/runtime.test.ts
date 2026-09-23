@@ -9,6 +9,7 @@ import { defineService, SERVICE_PRIORITY, type AnyServiceRegistration } from '..
 import { createTestAppContext } from '../testing/index';
 import type { TesseraEvents } from './events';
 import { defineFeature } from './feature';
+import { SETTING_KEYS } from './settings';
 
 type Recorded = { [K in keyof TesseraEvents]: [K, TesseraEvents[K]] }[keyof TesseraEvents];
 
@@ -215,6 +216,27 @@ describe('workspace session', () => {
     await dispose();
   });
 
+  it('switches the user ID when the device setting changes (sign-in)', async () => {
+    const { ctx, runtime, dispose } = await createTestAppContext();
+    const deviceId = ctx.currentUser.id;
+    expect(ctx.settings.device.get(SETTING_KEYS.userId)).toBe(deviceId);
+    const seen = record(ctx);
+    ctx.settings.device.set(SETTING_KEYS.userId, 'account-42');
+    expect(ctx.currentUser.id).toBe('account-42');
+    expect(runtime.getCurrentUser().id).toBe('account-42');
+    expect(seen).toEqual(
+      expect.arrayContaining([
+        ['user.changed', { user: expect.objectContaining({ id: 'account-42' }) }],
+      ]),
+    );
+    const page = ctx.workspace.createPage({ title: 'Signed in' });
+    expect(page.createdBy).toBe('account-42');
+    // An invalid value falls back to the device ID instead of breaking authorship.
+    ctx.settings.device.set(SETTING_KEYS.userId, '');
+    expect(ctx.currentUser.id).toBe(deviceId);
+    await dispose();
+  });
+
   it('delegates UI calls to the shell bridge', async () => {
     const { ctx, shell, dispose } = await createTestAppContext();
     ctx.navigate('abc', { heading: 'Intro' });
@@ -223,6 +245,7 @@ describe('workspace session', () => {
     ctx.openSidePanel('backlinks');
     ctx.closeSidePanel();
     ctx.toast('Saved');
+    ctx.switchWorkspace('workspace-2');
     shell.confirmAnswer = false;
     expect(await ctx.confirm({ title: 'Delete?', destructive: true })).toBe(false);
     expect(shell.navigations).toEqual([
@@ -231,6 +254,7 @@ describe('workspace session', () => {
     ]);
     expect(shell.panels).toEqual(['backlinks', null]);
     expect(shell.toasts).toEqual([{ title: 'Saved' }]);
+    expect(shell.workspaceSwitches).toEqual(['workspace-2']);
     await dispose();
   });
 });
@@ -242,8 +266,13 @@ describe('features', () => {
     const run = vi.fn();
     const feature = defineFeature({
       id: 'demo',
-      routes: [{ path: '/demo', component: Body }],
+      routes: [
+        { path: '/demo', component: Body },
+        { path: '/capture', component: Body, layout: 'bare' },
+      ],
       pageBodies: { page: Body },
+      pageFooterSections: [{ id: 'demo-footer', component: Body }],
+      overlays: [{ id: 'demo-overlay', component: Body }],
       pageSidePanels: [
         { id: 'demo-panel', title: 'Demo', order: 2, component: Body },
         { id: 'first', title: 'First', order: 1, component: Body },
@@ -256,9 +285,12 @@ describe('features', () => {
       },
     });
     const { ctx, shell, session, dispose } = await createTestAppContext({ features: [feature] });
-    expect(ctx.contributions.list('routes').map((r) => [r.path, r.featureId])).toEqual([
-      ['/demo', 'demo'],
+    expect(ctx.contributions.list('routes').map((r) => [r.path, r.featureId, r.layout])).toEqual([
+      ['/demo', 'demo', undefined],
+      ['/capture', 'demo', 'bare'],
     ]);
+    expect(ctx.contributions.list('pageFooterSections').map((c) => c.id)).toEqual(['demo-footer']);
+    expect(ctx.contributions.list('overlays').map((c) => c.id)).toEqual(['demo-overlay']);
     expect(ctx.contributions.list('pageBodies').map((r) => r.kind)).toEqual(['page']);
     expect(ctx.contributions.list('pageSidePanels').map((p) => p.id)).toEqual([
       'first',
@@ -277,14 +309,19 @@ describe('features', () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 
-  it('isolates a feature whose activate throws', async () => {
+  it('isolates a feature whose activate throws, including what it registered before failing', async () => {
     const onError = vi.fn();
     const Body = () => null;
+    const onPageCreated = vi.fn();
     const broken = defineFeature({
       id: 'broken',
       pageSidePanels: [{ id: 'broken-panel', title: 'Broken', component: Body }],
       commands: [{ id: 'broken.cmd', title: 'Broken', run: () => undefined }],
-      activate: () => {
+      activate: (ctx) => {
+        ctx.commands.register({ id: 'broken.dynamic', title: 'Dynamic', run: () => undefined });
+        ctx.contributions.register('overlays', { id: 'broken-overlay', component: Body }, 'broken');
+        ctx.blocks.register({ kind: 'broken-kind', component: Body });
+        ctx.events.on('page.created', onPageCreated);
         throw new Error('activation failed');
       },
     });
@@ -299,6 +336,11 @@ describe('features', () => {
     expect(session.featureErrors.get('broken')?.message).toBe('activation failed');
     expect(ctx.contributions.list('pageSidePanels')).toEqual([]);
     expect(ctx.commands.has('broken.cmd')).toBe(false);
+    expect(ctx.commands.has('broken.dynamic')).toBe(false);
+    expect(ctx.contributions.list('overlays')).toEqual([]);
+    expect(ctx.blocks.resolve('broken-kind')).toBeUndefined();
+    ctx.workspace.createPage({ title: 'After the failure' });
+    expect(onPageCreated).not.toHaveBeenCalled();
     expect(ctx.commands.has('healthy.cmd')).toBe(true);
     expect(onError).toHaveBeenCalledWith(expect.any(Error), { area: 'feature', source: 'broken' });
     await dispose();

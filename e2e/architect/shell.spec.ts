@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createPage, createWorkspace, pageTree } from './helpers';
+import { createPage, createWorkspace, pageTree, readDiagnostics } from './helpers';
 
 test('switches theme with the shortcut and from settings, and remembers it', async ({ page }) => {
   const sidebar = await createWorkspace(page, 'Themes');
@@ -91,6 +91,39 @@ test('adds an icon, a cover and a favorite', async ({ page }) => {
     'aria-pressed',
     'true',
   );
+});
+
+test('publishes diagnostics for tests and bug reports', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Create an empty workspace' })).toBeVisible();
+  expect(await readDiagnostics(page)).toBeNull();
+
+  await createWorkspace(page, 'Diagnostics');
+  const diagnostics = await readDiagnostics(page);
+  expect(diagnostics?.features).toEqual([
+    'editor',
+    'sync',
+    'databases',
+    'search',
+    'graph',
+    'backlinks',
+    'plugins',
+    'import-export',
+    'desktop',
+  ]);
+  expect(diagnostics?.failedFeatures).toEqual([]);
+  expect(diagnostics?.commands).toEqual(
+    expect.arrayContaining(['shell.newPage', 'shell.toggleTheme']),
+  );
+  expect(Object.keys(diagnostics?.services ?? {}).sort()).toEqual([
+    'assetStore',
+    'docStore',
+    'linkIndex',
+    'markdownCodec',
+    'searchIndex',
+    'syncProvider',
+    'workspaceRegistry',
+  ]);
 });
 
 test('isolates a crashing feature', async ({ page }) => {

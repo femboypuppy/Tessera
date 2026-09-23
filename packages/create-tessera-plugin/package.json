@@ -1,0 +1,24 @@
+{
+  "name": "create-tessera-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Scaffolds a Tessera plugin: pnpm create tessera-plugin my-plugin.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "bin": {
+    "create-tessera-plugin": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@tessera/core": "workspace:*"
+  }
+}

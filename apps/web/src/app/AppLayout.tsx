@@ -142,6 +142,27 @@ function useSidebarPreferences(ctx: AppContext) {
   }, [ctx]);
 }
 
+/** Always-mounted feature overlays (command palette, import dialog). */
+function Overlays() {
+  const overlays = useContributions('overlays');
+  return (
+    <>
+      {overlays.map((overlay) => {
+        const Component = overlay.component;
+        return (
+          <FeatureBoundary
+            key={`${overlay.featureId}:${overlay.id}`}
+            featureId={overlay.featureId}
+            className="fixed bottom-4 left-4 z-[var(--tess-z-toast)] max-w-sm bg-surface shadow-popover"
+          >
+            <Component />
+          </FeatureBoundary>
+        );
+      })}
+    </>
+  );
+}
+
 /** The workspace screen: sidebar, top bar, routed main view and side panel. */
 export function AppLayout() {
   const ctx = useAppContext();
@@ -149,12 +170,33 @@ export function AppLayout() {
   const sidebarOpen = useUiStore((state) => state.sidebarOpen);
   const drawerOpen = useUiStore((state) => state.drawerOpen);
   const sidePanel = useUiStore((state) => state.sidePanel);
-  const routes = useContributions('routes');
+  const allRoutes = useContributions('routes');
+  const location = useLocation();
   useShellCommands(ctx);
   useGlobalShortcuts(ctx);
   useNavigationTracking(ctx);
   useSidebarPreferences(ctx);
   usePreloadViews();
+
+  // A `bare` feature route fills the window on its own (quick capture, print views).
+  const bareRoute = allRoutes.find(
+    (route) =>
+      route.layout === 'bare' && matchPath({ path: route.path, end: true }, location.pathname),
+  );
+  if (bareRoute) {
+    const Component = bareRoute.component;
+    return (
+      <main id="main" className="h-dvh overflow-y-auto bg-bg text-fg">
+        <FeatureBoundary featureId={bareRoute.featureId} className="m-6">
+          <Suspense fallback={<ViewLoading />}>
+            <Component />
+          </Suspense>
+        </FeatureBoundary>
+        <Overlays />
+      </main>
+    );
+  }
+  const routes = allRoutes.filter((route) => route.layout !== 'bare');
 
   return (
     <div className="flex h-dvh overflow-hidden bg-bg text-fg">
@@ -232,6 +274,7 @@ export function AppLayout() {
         </div>
       ) : null}
       <ShortcutsDialog />
+      <Overlays />
     </div>
   );
 }

@@ -12,14 +12,23 @@ type NavigateFn = (to: string, options?: { replace?: boolean; state?: unknown })
 
 /**
  * Creates the {@link ShellBridge} the runtime uses for UI calls. `setNavigate` binds React
- * Router's navigate function once the router is mounted.
+ * Router's navigate function once the router is mounted; `setSwitchWorkspace` binds the
+ * workspace root's switcher.
  */
-export function createShellBridge(): ShellBridge & { setNavigate(fn: NavigateFn): void } {
+export function createShellBridge(): ShellBridge & {
+  setNavigate(fn: NavigateFn): void;
+  setSwitchWorkspace(fn: (workspaceId: string) => void): void;
+} {
   let navigateFn: NavigateFn = (to) => window.history.pushState(null, '', to);
+  let switchWorkspaceFn: (workspaceId: string) => void = () => undefined;
   return {
     setNavigate(fn) {
       navigateFn = fn;
     },
+    setSwitchWorkspace(fn) {
+      switchWorkspaceFn = fn;
+    },
+    switchWorkspace: (workspaceId) => switchWorkspaceFn(workspaceId),
     navigate(pageId, options = {}) {
       const target: NavigationTarget = {};
       if (options.heading) target.heading = options.heading;

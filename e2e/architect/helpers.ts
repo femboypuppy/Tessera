@@ -45,3 +45,23 @@ export async function treeOutline(page: Page): Promise<string[]> {
       ),
     );
 }
+
+/** What `window.__tessera.diagnostics()` returns (apps/web/src/app/diagnostics.ts). */
+export interface Diagnostics {
+  version: number;
+  workspaceId: string;
+  features: string[];
+  failedFeatures: string[];
+  services: Record<string, string>;
+  contributions: Record<string, string[]>;
+  commands: string[];
+  blockKinds: string[];
+}
+
+/** Reads the diagnostics of the open workspace, or null when none is open. */
+export async function readDiagnostics(page: Page): Promise<Diagnostics | null> {
+  return page.evaluate(() => {
+    const api = (window as unknown as { __tessera?: { diagnostics(): Diagnostics } }).__tessera;
+    return api ? api.diagnostics() : null;
+  });
+}

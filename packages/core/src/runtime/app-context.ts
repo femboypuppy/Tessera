@@ -67,6 +67,8 @@ export interface ConfirmOptions {
 export interface ShellBridge {
   navigate(pageId: string, options?: NavigateOptions): void;
   navigateTo(path: string, options?: { replace?: boolean }): void;
+  /** Opens a workspace in the shell (see {@link AppContext.switchWorkspace}). */
+  switchWorkspace(workspaceId: string): void;
   getCurrentPageId(): string | null;
   openSidePanel(id: string): void;
   closeSidePanel(): void;
@@ -156,6 +158,16 @@ export interface AppContext {
   navigate(pageId: string, options?: NavigateOptions): void;
   /** Navigates to a route (`/graph`, `/search?q=x`, `/settings/plugins`). */
   navigateTo(path: string, options?: { replace?: boolean }): void;
+  /**
+   * Makes the shell open a workspace from the `WorkspaceRegistry`, closing this session (this
+   * context stops working). With the current workspace's ID it reopens it, which resolves its
+   * services again: call it after connecting the workspace to a server.
+   *
+   * @example
+   * const info = await ctx.services.workspaceRegistry.create({ name, path: folder });
+   * ctx.switchWorkspace(info.id);
+   */
+  switchWorkspace(workspaceId: string): void;
   getCurrentPageId(): string | null;
   openSidePanel(id: string): void;
   closeSidePanel(): void;

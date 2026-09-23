@@ -7,14 +7,19 @@ import type { BlockRendererRegistration } from './blocks';
 import type { Command } from './commands';
 
 /**
- * A route under the app layout (sidebar and top bar stay). Paths must not collide with the
- * shell's: `/`, `/p/*`, `/trash`, `/settings/*`, `/dev/*`. Lazy-load heavy screens with
- * `React.lazy`.
+ * A route contributed by a feature. Paths must not collide with the shell's: `/`, `/p/*`,
+ * `/trash`, `/settings/*`, `/dev/*`. Lazy-load heavy screens with `React.lazy`.
  */
 export interface FeatureRoute {
   /** For example `/graph` or `/search`. */
   path: string;
   component: ComponentType;
+  /**
+   * `app` (default): rendered in the main area, with the sidebar and top bar. `bare`: the
+   * component fills the window on its own (the desktop quick-capture window, print views). The
+   * workspace session and global shortcuts still work.
+   */
+  layout?: 'app' | 'bare';
 }
 
 /** A block in the sidebar. `top` sections sit under the search button; `bottom` above "Trash". */
@@ -69,6 +74,9 @@ export interface PageSectionContribution {
 /** Buttons in the top bar when a page is open (presence avatars, share, history). */
 export type PageHeaderActionContribution = PageSectionContribution;
 
+/** Rendered after the page body (the optional backlinks footer). Same props as top sections. */
+export type PageFooterSectionContribution = PageSectionContribution;
+
 /** Props of a side panel. */
 export interface SidePanelProps {
   pageId: string | null;
@@ -121,6 +129,22 @@ export interface OnboardingActionContribution {
 }
 
 /**
+ * An always-mounted component for UI that commands open: the command palette, the import and
+ * export dialogs, a workspace picker. It renders nothing until opened (keep its open state in your
+ * own store, set by your command) and uses `Dialog` or `Sheet` from `packages/ui`. Keep it light
+ * and lazy-load the dialog's content: overlays are part of the startup bundle.
+ *
+ * @example
+ * overlays: [{ id: 'palette', component: CommandPaletteHost }],
+ * commands: [{ id: COMMANDS.openPalette, shortcut: 'Mod+K', run: () => usePaletteStore.getState().open() }],
+ */
+export interface OverlayContribution {
+  id: string;
+  order?: number;
+  component: ComponentType;
+}
+
+/**
  * Behavior added to the editor by other features (keymaps, decorations, ProseMirror plugins).
  * `create` returns a TipTap `Extension` built with the editor's `@tiptap/core` version. It must not
  * add nodes or marks: the schema is fixed by `@tessera/core`.
@@ -138,12 +162,14 @@ export interface ContributionMap {
   sidebarSections: SidebarSectionContribution;
   pageBodies: PageBodyContribution;
   pageTopSections: PageSectionContribution;
+  pageFooterSections: PageFooterSectionContribution;
   pageHeaderActions: PageHeaderActionContribution;
   pageSidePanels: SidePanelContribution;
   topBarItems: TopBarItemContribution;
   settingsPanels: SettingsPanelContribution;
   onboardingActions: OnboardingActionContribution;
   editorExtensions: EditorExtensionContribution;
+  overlays: OverlayContribution;
 }
 
 export type ContributionKind = keyof ContributionMap;
@@ -231,7 +257,9 @@ export function createContributionRegistry(): ContributionRegistry {
  * boundary, and an `activate` that throws disables only its own feature.
  *
  * Lifecycle: static contributions and services are read at startup; `activate(ctx)` runs each time
- * a workspace opens (after services resolve), and its returned cleanup runs when it closes.
+ * a workspace opens (after services resolve), and its returned cleanup runs when it closes. If
+ * `activate` throws, everything the feature registered (statically, or through `ctx` during
+ * `activate`) is removed and the rest of the app keeps working.
  *
  * @example
  * export const backlinksFeature = defineFeature({
@@ -247,6 +275,7 @@ export interface FeatureModule {
   commands?: Command[];
   pageBodies?: Partial<Record<PageKind, ComponentType<PageBodyProps>>>;
   pageTopSections?: PageSectionContribution[];
+  pageFooterSections?: PageFooterSectionContribution[];
   pageHeaderActions?: PageHeaderActionContribution[];
   pageSidePanels?: SidePanelContribution[];
   topBarItems?: TopBarItemContribution[];
@@ -254,6 +283,7 @@ export interface FeatureModule {
   editorExtensions?: EditorExtensionContribution[];
   settingsPanels?: SettingsPanelContribution[];
   onboardingActions?: OnboardingActionContribution[];
+  overlays?: OverlayContribution[];
   importers?: Importer[];
   exporters?: Exporter[];
   services?: AnyServiceRegistration[];
