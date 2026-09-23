@@ -35,7 +35,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { FolderInfo } from '../backend/protocol';
 import { t } from '../i18n';
-import { displayPath, joinPath, revealLabel } from '../lib/paths';
+import { displayPath, joinPath, parentPath, revealLabel } from '../lib/paths';
 import { getBackend } from '../runtime';
 import type { DesktopWorkspace } from '../stores/workspace-registry';
 import {
@@ -77,9 +77,10 @@ export function WorkspacePicker({ initialView }: { initialView: 'list' | 'new' }
   const [view, setView] = useState(initialView);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [busy, setBusy] = useState(false);
+  // New workspaces go to ~/Tessera, so its parent is the home folder (shown as ~).
   const home = useMemo(() => {
     const root = registry?.defaultFolder;
-    return root ? root.replace(/[\\/][^\\/]+[\\/]?$/, '') : null;
+    return root ? parentPath(root) : null;
   }, [registry]);
 
   const load = useCallback(async () => {

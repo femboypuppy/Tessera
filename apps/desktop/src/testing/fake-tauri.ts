@@ -188,6 +188,9 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
     reload();
     emitLocal(data.event, data.payload);
   });
+  // A channel left open keeps the old document alive after a navigation (Firefox then hangs
+  // closing the browser context).
+  (g as unknown as Window).addEventListener?.('pagehide', () => channel?.close(), { once: true });
   const emitAll = (event: string, payload: unknown) => {
     emitLocal(event, payload);
     channel?.postMessage({ event, payload });
@@ -218,8 +221,10 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
     const value = headers[name];
     return value === undefined ? null : decodeURIComponent(value);
   };
+  // `ArrayBuffer.isView`, not `instanceof`: bytes can come from another realm (jsdom in tests).
   const bytesOf = (payload: unknown): Uint8Array => {
-    if (payload instanceof Uint8Array) return payload;
+    if (ArrayBuffer.isView(payload))
+      return new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength);
     if (payload instanceof ArrayBuffer) return new Uint8Array(payload);
     if (Array.isArray(payload)) return Uint8Array.from(payload as number[]);
     throw fail('invalid', 'expected a binary body');
@@ -711,7 +716,7 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
       calls.push({ cmd, args });
       const handler = commands[cmd];
       if (!handler) throw `command ${cmd} not found`;
-      const plain = args instanceof Uint8Array || Array.isArray(args) ? {} : ((args ?? {}) as Json);
+      const plain = ArrayBuffer.isView(args) || Array.isArray(args) ? {} : ((args ?? {}) as Json);
       // Handlers can trigger listeners that invoke again: save right after the synchronous part,
       // and never reload in between (only messages from other pages reload the state).
       const result = handler(plain, opts, args);
