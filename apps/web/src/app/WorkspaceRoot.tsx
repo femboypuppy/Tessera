@@ -22,6 +22,7 @@ import { t } from '../i18n';
 import { FullScreenLoading } from './FullScreenLoading';
 import { AppLayout } from './AppLayout';
 import { createShellBridge } from './bridge';
+import { installDiagnostics } from './diagnostics';
 import { FatalErrorScreen } from './FatalError';
 import { Onboarding } from './Onboarding';
 
@@ -66,7 +67,28 @@ export function WorkspaceRoot({ runtime }: { runtime: AppRuntime }) {
 
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // Bumped to reopen the current workspace (features call ctx.switchWorkspace with its ID).
+  const [openCount, setOpenCount] = useState(0);
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' });
+  const activeIdRef = useRef<string | null>(null);
+  activeIdRef.current = activeId;
+
+  useLayoutEffect(() => {
+    bridge.setSwitchWorkspace((id) => {
+      void runtime.workspaceRegistry.get(id).then((info) => {
+        if (!info) {
+          toast({ variant: 'error', title: t('workspaceNotFound') });
+          return;
+        }
+        if (id === activeIdRef.current) {
+          setOpenCount((count) => count + 1);
+        } else {
+          void navigate('/');
+          setActiveId(id);
+        }
+      });
+    });
+  }, [bridge, navigate, runtime]);
   const pendingAction = useRef<OnboardingActionContribution | null>(null);
   const sessionRef = useRef<WorkspaceSession | null>(null);
 
@@ -135,7 +157,13 @@ export function WorkspaceRoot({ runtime }: { runtime: AppRuntime }) {
         void session.close();
       }
     };
-  }, [activeId, runtime, bridge]);
+  }, [activeId, openCount, runtime, bridge]);
+
+  // `window.__tessera.diagnostics()` for end-to-end tests and bug reports.
+  useEffect(() => {
+    if (phase.kind !== 'ready') return undefined;
+    return installDiagnostics(runtime, phase.session);
+  }, [phase, runtime]);
 
   const switchTo = useCallback(
     (id: string) => {

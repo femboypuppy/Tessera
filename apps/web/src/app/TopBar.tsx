@@ -1,5 +1,11 @@
 import { formatShortcut, SETTING_KEYS, type AppContext, type PageMeta } from '@tessera/core';
-import { useAncestors, useAppContext, useContributions, usePage } from '@tessera/core/react';
+import {
+  useAncestors,
+  useAppContext,
+  useContributions,
+  usePage,
+  usePages,
+} from '@tessera/core/react';
 import {
   cn,
   DropdownMenu,
@@ -186,6 +192,8 @@ export function TopBar() {
   const sidebarOpen = useUiStore((state) => state.sidebarOpen);
   const pageId = useUiStore((state) => state.currentPageId);
   const page = usePage(pageId);
+  // Pages in the trash (directly or through an ancestor) are read-only.
+  const readOnly = usePages().isTrashed(pageId ?? '');
   const items = useContributions('topBarItems');
   const headerActions = useContributions('pageHeaderActions');
   const showToggle = compact || !sidebarOpen;
@@ -232,7 +240,7 @@ export function TopBar() {
                     featureId={action.featureId}
                     className="p-1"
                   >
-                    <Component pageId={page.id} page={page} readOnly={false} />
+                    <Component pageId={page.id} page={page} readOnly={readOnly} />
                   </FeatureBoundary>
                 );
               })

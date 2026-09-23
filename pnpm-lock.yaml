@@ -280,6 +280,12 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
 
+  packages/create-tessera-plugin:
+    dependencies:
+      '@tessera/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/db-views:
     dependencies:
       '@dnd-kit/core':

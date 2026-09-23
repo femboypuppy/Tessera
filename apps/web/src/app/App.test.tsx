@@ -1,5 +1,13 @@
-import { createAppRuntime, MemorySettingsStore, type AppRuntime } from '@tessera/core';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import {
+  createAppRuntime,
+  defineFeature,
+  MemorySettingsStore,
+  type AppContext,
+  type AppRuntime,
+  type FeatureModule,
+  type PageSectionProps,
+} from '@tessera/core';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from './App';
@@ -29,6 +37,15 @@ afterEach(async () => {
   cleanup();
   await runtime.dispose();
 });
+
+async function useFeatures(features: FeatureModule[]): Promise<void> {
+  await runtime.dispose();
+  runtime = await createAppRuntime({
+    features,
+    deviceSettings: new MemorySettingsStore(),
+    defaultUserName: 'You',
+  });
+}
 
 async function createWorkspace(user: UserEvent, name: string): Promise<HTMLElement> {
   render(<App runtime={runtime} />);
@@ -158,5 +175,66 @@ describe('the app shell', () => {
       .map((heading) => heading.textContent);
     expect(groups).toEqual(['Navigation', 'Page', 'View', 'Help']);
     expect(within(dialog).getByText('Toggle dark mode')).toBeInTheDocument();
+  });
+});
+
+describe('feature extension points', () => {
+  function Footer({ page }: PageSectionProps) {
+    return <p>Footer for {page.title}</p>;
+  }
+
+  it('renders overlays, page footer sections and bare routes', async () => {
+    const user = userEvent.setup();
+    let ctx: AppContext | null = null;
+    await useFeatures([
+      defineFeature({
+        id: 'demo',
+        overlays: [{ id: 'palette', component: () => <p>Palette host</p> }],
+        pageFooterSections: [{ id: 'footer', component: Footer }],
+        routes: [{ path: '/capture', component: () => <p>Quick capture</p>, layout: 'bare' }],
+        activate: (context) => {
+          ctx = context;
+        },
+      }),
+    ]);
+    const sidebar = await createWorkspace(user, 'Extensions');
+    expect(screen.getByText('Palette host')).toBeInTheDocument();
+
+    await createPage(user, sidebar, 'Launch plan');
+    expect(await screen.findByText('Footer for Launch plan')).toBeInTheDocument();
+
+    act(() => ctx?.navigateTo('/capture'));
+    expect(await screen.findByText('Quick capture')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Sidebar' })).not.toBeInTheDocument();
+    expect(screen.getByText('Palette host')).toBeInTheDocument();
+  });
+
+  it('switches to another workspace and reopens the current one on request', async () => {
+    const user = userEvent.setup();
+    const opened: AppContext[] = [];
+    await useFeatures([
+      defineFeature({ id: 'demo', activate: (context) => void opened.push(context) }),
+    ]);
+    await createWorkspace(user, 'First');
+    const second = await runtime.workspaceRegistry.create({ name: 'Second' });
+
+    act(() => opened[0]?.switchWorkspace(second.id));
+    await waitFor(() => expect(opened).toHaveLength(2));
+    expect(opened[1]?.workspace.info.name).toBe('Second');
+    expect(await screen.findByRole('button', { name: 'Switch workspace' })).toHaveTextContent(
+      'Second',
+    );
+
+    // The current workspace's ID reopens it (services resolve again).
+    act(() => opened[1]?.switchWorkspace(second.id));
+    await waitFor(() => expect(opened).toHaveLength(3));
+    expect(opened[2]?.workspace.info.id).toBe(second.id);
+
+    // An unknown ID leaves everything as it is.
+    act(() => opened[2]?.switchWorkspace('missing-workspace'));
+    expect(
+      await screen.findByText('That workspace is no longer on this device'),
+    ).toBeInTheDocument();
+    expect(opened).toHaveLength(3);
   });
 });

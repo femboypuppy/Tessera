@@ -151,6 +151,7 @@ export const en = {
   notFound: 'Nothing here',
   notFoundHint: 'This address doesn’t match anything in Tessera.',
   featureFailedToStart: 'The {feature} feature failed to start',
+  workspaceNotFound: 'That workspace is no longer on this device',
   actionFailed: 'Something went wrong: {message}',
   savingFailed: 'Changes could not be saved on this device',
 } as const;

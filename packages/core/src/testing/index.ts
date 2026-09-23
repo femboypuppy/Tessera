@@ -37,6 +37,8 @@ export interface RecordingShell extends ShellBridge {
   }>;
   readonly toasts: ToastOptions[];
   readonly confirms: ConfirmOptions[];
+  /** Workspace IDs passed to `switchWorkspace`. */
+  readonly workspaceSwitches: string[];
   /** Side panel requests (null = closed). */
   readonly panels: Array<string | null>;
   /** What `getCurrentPageId` returns (navigate updates it). */
@@ -51,6 +53,7 @@ export function createRecordingShell(): RecordingShell {
     navigations: [],
     toasts: [],
     confirms: [],
+    workspaceSwitches: [],
     panels: [],
     currentPageId: null,
     confirmAnswer: true,
@@ -61,6 +64,9 @@ export function createRecordingShell(): RecordingShell {
     navigateTo(path, options) {
       shell.navigations.push(options ? { path, options } : { path });
       shell.currentPageId = null;
+    },
+    switchWorkspace(workspaceId) {
+      shell.workspaceSwitches.push(workspaceId);
     },
     getCurrentPageId: () => shell.currentPageId,
     openSidePanel(id) {

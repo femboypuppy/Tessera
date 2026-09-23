@@ -139,6 +139,7 @@ export function PageView() {
   const snapshot = usePages();
   const page = snapshot.get(pageId);
   const topSections = useContributions('pageTopSections');
+  const footerSections = useContributions('pageFooterSections');
   const display = useDisplayProps(pageId);
   const bodyFocus = useRef<((position: 'start' | 'end') => void) | null>(null);
   const state = location.state as { focusTitle?: boolean; target?: NavigationTarget } | null;
@@ -174,6 +175,7 @@ export function PageView() {
   const trashed = snapshot.isTrashed(page.id);
   const readOnly = trashed;
   const sections = topSections.filter((section) => !section.when || section.when(page, ctx));
+  const footers = footerSections.filter((section) => !section.when || section.when(page, ctx));
 
   return (
     <article
@@ -217,6 +219,19 @@ export function PageView() {
           target={state?.target ?? null}
           registerFocusHandler={registerFocusHandler}
         />
+        {footers.map((section) => {
+          const Section = section.component;
+          return (
+            <FeatureBoundary
+              key={`${section.featureId}:${section.id}`}
+              featureId={section.featureId}
+              resetKeys={[page.id]}
+              className="mt-10"
+            >
+              <Section pageId={page.id} page={page} readOnly={readOnly} />
+            </FeatureBoundary>
+          );
+        })}
       </div>
     </article>
   );

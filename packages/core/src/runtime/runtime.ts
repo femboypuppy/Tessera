@@ -1,7 +1,7 @@
 import type * as Y from 'yjs';
 import type { addRow, initDatabaseDoc } from '../database/database-doc';
 import { InvalidOperationError, NotFoundError, toError } from '../errors';
-import { newId } from '../ids';
+import { isValidId, newId } from '../ids';
 import { databaseDocName, pageDocName, workspaceDocName } from '../model/doc-names';
 import type { PagesChange } from '../model/observe-pages';
 import { getPageProps, setPageProps } from '../model/page-doc';
@@ -149,19 +149,20 @@ export async function createAppRuntime(options: AppRuntimeOptions): Promise<AppR
   const platform = options.platform ?? detectPlatform();
   const deviceSettings = options.deviceSettings ?? new LocalStorageSettingsStore();
 
-  let userId = deviceSettings.get(SETTING_KEYS.userId);
-  if (typeof userId !== 'string' || !userId) {
-    userId = newId();
-    deviceSettings.set(SETTING_KEYS.userId, userId);
-  }
-  const stableUserId = userId;
+  // The user ID is a device setting: a nanoid on first run, replaced by the account ID when the
+  // sync feature signs in (it sets SETTING_KEYS.userId, and `user.changed` follows).
+  const savedUserId = deviceSettings.get(SETTING_KEYS.userId);
+  const deviceUserId = isValidId(savedUserId) ? savedUserId : newId();
+  if (savedUserId !== deviceUserId) deviceSettings.set(SETTING_KEYS.userId, deviceUserId);
   const getCurrentUser = (): CurrentUser => {
+    const savedId = deviceSettings.get(SETTING_KEYS.userId);
+    const id = isValidId(savedId) ? savedId : deviceUserId;
     const name = deviceSettings.get(SETTING_KEYS.userName);
     const color = deviceSettings.get(SETTING_KEYS.userColor);
     return {
-      id: stableUserId,
+      id,
       name: typeof name === 'string' ? name : (options.defaultUserName ?? ''),
-      color: typeof color === 'string' ? color : colorForId(stableUserId),
+      color: typeof color === 'string' ? color : colorForId(id),
     };
   };
 
@@ -262,6 +263,50 @@ interface SessionInput {
   memoryAssets: () => MemoryAssetBackend;
   report: (error: unknown, context: RuntimeErrorContext) => void;
   options: AppRuntimeOptions;
+}
+
+/**
+ * The context a feature's `activate` receives: the session context, with registrations (commands,
+ * blocks, contributions, importers, exporters, event handlers) recorded in `offs` so the runtime
+ * can undo them if activation fails. Everything else is the shared context.
+ */
+function scopeContext(context: AppContext, offs: Array<() => void>): AppContext {
+  const track = (off: () => void) => {
+    offs.push(off);
+    return off;
+  };
+  const scoped: Partial<AppContext> = {
+    commands: {
+      ...context.commands,
+      register: (command) => track(context.commands.register(command)),
+      registerMany: (list) => track(context.commands.registerMany(list)),
+    },
+    blocks: {
+      ...context.blocks,
+      register: (registration) => track(context.blocks.register(registration)),
+      registerSlashMenuItems: (items) => track(context.blocks.registerSlashMenuItems(items)),
+    },
+    contributions: {
+      ...context.contributions,
+      register: (kind, item, featureId) =>
+        track(context.contributions.register(kind, item, featureId)),
+    },
+    importers: {
+      ...context.importers,
+      register: (importer) => track(context.importers.register(importer)),
+    },
+    exporters: {
+      ...context.exporters,
+      register: (exporter) => track(context.exporters.register(exporter)),
+    },
+    events: {
+      ...context.events,
+      on: (type, handler) => track(context.events.on(type, handler)),
+      once: (type, handler) => track(context.events.once(type, handler)),
+    },
+  };
+  // Inherit everything else (including the live `currentUser` getter) from the session context.
+  return Object.assign(Object.create(context) as AppContext, scoped);
 }
 
 function affectedByTrash(snapshot: PagesSnapshot, pageId: string): string[] {
@@ -660,6 +705,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
     platform: runtime.platform,
     navigate: (pageId, navigateOptions) => bridge.navigate(pageId, navigateOptions),
     navigateTo: (path, navigateOptions) => bridge.navigateTo(path, navigateOptions),
+    switchWorkspace: (workspaceId) => bridge.switchWorkspace(workspaceId),
     getCurrentPageId: () => bridge.getCurrentPageId(),
     openSidePanel: (id) => bridge.openSidePanel(id),
     closeSidePanel: () => bridge.closeSidePanel(),
@@ -687,12 +733,14 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       add('routes', feature.routes);
       add('sidebarSections', feature.sidebarSections);
       add('pageTopSections', feature.pageTopSections);
+      add('pageFooterSections', feature.pageFooterSections);
       add('pageHeaderActions', feature.pageHeaderActions);
       add('pageSidePanels', feature.pageSidePanels);
       add('topBarItems', feature.topBarItems);
       add('settingsPanels', feature.settingsPanels);
       add('onboardingActions', feature.onboardingActions);
       add('editorExtensions', feature.editorExtensions);
+      add('overlays', feature.overlays);
       for (const [kind, component] of Object.entries(feature.pageBodies ?? {})) {
         if (component)
           offs.push(
@@ -714,8 +762,11 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
   }
   for (const feature of runtime.features) {
     if (!feature.activate) continue;
+    // Whatever the feature registers while activating is tracked, so a failure removes it all.
+    const offs = registrationsByFeature.get(feature.id) ?? [];
+    registrationsByFeature.set(feature.id, offs);
     try {
-      const cleanup = await feature.activate(context);
+      const cleanup = await feature.activate(scopeContext(context, offs));
       if (typeof cleanup === 'function') cleanups.push({ featureId: feature.id, cleanup });
     } catch (error) {
       const err = toError(error);
