@@ -688,8 +688,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       ]);
       let created: PageMeta[] = [];
       try {
-        // Values first, so a bad value creates no pages.
-        for (const input of rowInputs) helpers.checkRowValues(handle.doc, input.values ?? {});
+        // addRows validates every value before writing; on an error the pages go again.
         created = createPages(
           workspaceDoc,
           rowInputs.map((input) => {

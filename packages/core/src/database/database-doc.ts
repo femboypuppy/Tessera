@@ -718,13 +718,19 @@ function writeValues(
   map: Y.Map<unknown>,
   values: Record<string, JsonValue | null | undefined>,
   options: MutationOptions,
+  /** The caller already validated every value (bulk writes validate all rows first). */
+  prevalidated = false,
 ): void {
   // Validate every value before the first write (Yjs cannot roll back a half-applied transaction).
   const checked = Object.entries(values).map(
     ([propertyId, value]) =>
       [
         propertyId,
-        value === null || value === undefined ? null : checkValue(db, propertyId, value),
+        value === null || value === undefined
+          ? null
+          : prevalidated
+            ? value
+            : checkValue(db, propertyId, value),
       ] as const,
   );
   let valuesMap = map.get('values');
@@ -848,7 +854,7 @@ export function addRows(
       map.set('order', orders[i]);
       map.set('values', new Y.Map<unknown>());
       rows.set(ids[i] as string, map);
-      writeValues(db, map, input.values ?? {}, options);
+      writeValues(db, map, input.values ?? {}, options, true);
     });
   }, options.origin);
   return ids.map((id) => getRow(db, id)).filter((row): row is DatabaseRow => row !== undefined);
