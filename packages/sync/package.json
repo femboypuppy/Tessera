@@ -2,12 +2,19 @@
   "name": "@tessera/sync",
   "version": "0.0.0",
   "private": true,
-  "description": "Tessera storage and sync: IndexedDB persistence, multi-tab sync and the Hocuspocus client.",
+  "description": "Tessera storage and sync: IndexedDB persistence, multi-tab sync, the Hocuspocus client, presence and version history.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./stores": "./src/stores/index.ts",
+    "./provider": "./src/provider/index.ts",
+    "./socket": "./src/provider/socket.ts",
+    "./client": "./src/client/index.ts",
+    "./activate": "./src/feature/activate.ts",
+    "./ui": "./src/ui/entry.tsx",
+    "./i18n": "./src/i18n/registration.ts"
   },
   "scripts": {
     "build": "tsdown",
@@ -20,7 +27,6 @@
     "@tessera/core": "workspace:*",
     "@tessera/ui": "workspace:*",
     "lucide-react": "1.47.0",
-    "y-indexeddb": "9.0.12",
     "y-protocols": "1.0.7",
     "yjs": "13.6.32",
     "zod": "4.6.5"
@@ -30,6 +36,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
     "fake-indexeddb": "6.2.5",
     "react": "19.3.0",
     "react-dom": "19.3.0"

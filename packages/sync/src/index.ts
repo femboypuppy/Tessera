@@ -1,7 +1,8 @@
 /**
  * @tessera/sync — browser persistence and sync (Agent 03).
  *
- * Provides the IndexedDB DocStore, AssetStore and WorkspaceRegistry (priority 50) and the
- * Hocuspocus SyncProvider, registered through `apps/web/src/features/sync`. See HANDOFF/architect.md.
+ * The root entry holds only light registration code: `syncServices` (the IndexedDB stores and
+ * the Hocuspocus provider behind dynamic imports). Heavy code lives in subpaths:
+ * `@tessera/sync/stores`, `/provider`, `/activate` and `/ui`. See HANDOFF/sync.md.
  */
-export const SYNC_PACKAGE = '@tessera/sync';
+export { syncServices } from './feature/services';
