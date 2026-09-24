@@ -237,9 +237,12 @@ describe('EmojiPicker', () => {
     const onSelect = vi.fn();
     render(<EmojiPicker onSelect={onSelect} onRemove={vi.fn()} />);
     const search = screen.getByRole('searchbox', { name: 'Search emoji' });
-    await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: 'grinning face' }).length).toBeGreaterThan(0),
-    );
+    // Find the button by its label, then check its role and accessible name: the same assertion
+    // as getAllByRole('button', { name }), which computes the accessible name of all ~1,870
+    // buttons and took 10 s of this test in jsdom.
+    const [grinning] = await screen.findAllByLabelText('grinning face');
+    expect(grinning).toHaveRole('button');
+    expect(grinning).toHaveAccessibleName('grinning face');
     await userEvent.type(search, 'rocket');
     const rocket = await screen.findByRole('button', { name: 'rocket' });
     fireEvent.keyDown(search, { key: 'ArrowDown' });

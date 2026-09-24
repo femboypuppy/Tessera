@@ -78,77 +78,87 @@ export interface Account {
 /** Opens Settings → "Sync & account". */
 export async function openSyncSettings(app: TesseraApp): Promise<Locator> {
   await app.sidebar().getByRole('button', { name: 'Settings' }).click();
-  await app.page
-    .getByRole('link', { name: /sync & account/i })
-    .or(app.page.getByRole('tab', { name: /sync & account/i }))
-    .first()
-    .click();
+  await app.page.getByRole('button', { name: 'Sync & account', exact: true }).click();
   const panel = app.page.getByRole('main');
-  await expect(panel.getByRole('heading', { name: /sync & account/i }).first()).toBeVisible();
+  await expect(panel.getByRole('heading', { name: 'Sync & account' }).first()).toBeVisible({
+    timeout: 20_000,
+  });
   return panel;
 }
 
-/** Connects the open workspace to a server, signs in and uploads it ("Upload and sync"). */
+/** In the connect form: the server's address, then Continue. */
+async function enterServer(scope: Locator, serverUrl: string): Promise<void> {
+  await scope.getByLabel('Server address').fill(serverUrl);
+  await scope.getByRole('button', { name: 'Continue', exact: true }).click();
+}
+
+/**
+ * Connects the open workspace to a server from Settings → Sync & account, signs in with the
+ * account and uploads the workspace ("Upload and sync").
+ */
 export async function connectAndUpload(
   app: TesseraApp,
   serverUrl: string,
   account: Account,
 ): Promise<void> {
   const panel = await openSyncSettings(app);
-  await panel.getByRole('textbox', { name: /server address/i }).fill(serverUrl);
-  await panel
-    .getByRole('button', { name: /connect/i })
-    .first()
-    .click();
-  await panel.getByRole('tab', { name: /sign in/i }).click();
-  await panel.getByRole('textbox', { name: /email/i }).fill(account.email);
-  await panel.getByLabel(/password/i).fill(account.password);
-  await panel.getByRole('button', { name: /^sign in$/i }).click();
-  await panel.getByRole('button', { name: /upload and sync/i }).click();
-  await expect(syncStatus(app)).toHaveText(/synced/i, { timeout: 30_000 });
+  await panel.getByRole('button', { name: 'Connect to a server' }).click();
+  await enterServer(panel, serverUrl);
+  const signIn = panel.getByRole('form', { name: 'Sign in' });
+  await signIn.getByLabel('Email').fill(account.email);
+  await signIn.getByLabel('Password').fill(account.password);
+  await signIn.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await panel.getByRole('button', { name: 'Upload and sync' }).click();
+  await expect(syncStatus(app)).toHaveAttribute('data-sync-status', 'synced', {
+    timeout: 30_000,
+  });
 }
 
-/** Creates an invite link from the sync settings and returns it. */
+/** Creates an invite link in Settings → Sync & account and returns it. */
 export async function createInviteLink(app: TesseraApp): Promise<string> {
   const panel = await openSyncSettings(app);
-  await panel.getByRole('button', { name: /create invite link/i }).click();
-  const field = panel.getByRole('textbox', { name: /invite link/i }).first();
+  await panel.getByRole('button', { name: 'Create invite link' }).click();
+  const field = panel.getByRole('textbox', { name: 'Invite link' });
   await expect(field).toHaveValue(/^https?:\/\//);
   return field.inputValue();
 }
 
-/** From the first-run screen: joins a server with an invite, creating the account on the way. */
+/**
+ * Opens an invite link the way an invitee does: the server serves the app, and the link carries
+ * the invite. From the first-run screen, "Join a workspace on a server" creates the account and
+ * opens the workspace the invite is for.
+ */
 export async function joinWithInvite(
   app: TesseraApp,
   serverUrl: string,
   invite: string,
   account: Account,
+  workspaceName: string,
 ): Promise<void> {
-  await app.page.goto('/');
-  await app.page
-    .getByRole('button', { name: /join|server/i })
-    .first()
+  await app.page.goto(invite);
+  await app.page.getByRole('button', { name: /Join a workspace on a server/ }).click();
+  const panel = app.page.getByRole('main');
+  await enterServer(panel, serverUrl);
+  await panel.getByRole('tab', { name: 'Create account' }).click();
+  const form = panel.getByRole('form', { name: 'Create account' });
+  await form.getByLabel('Name', { exact: true }).fill(account.name);
+  await form.getByLabel('Email').fill(account.email);
+  await form.getByLabel('Password').fill(account.password);
+  // Servers with invite-only sign-ups ask for the link again when the app wasn't opened with it.
+  const inviteField = form.getByLabel('Invite link');
+  if (await inviteField.isVisible()) await inviteField.fill(invite);
+  await form.getByRole('button', { name: 'Create account', exact: true }).click();
+  await panel
+    .getByRole('listitem')
+    .filter({ hasText: workspaceName })
+    .getByRole('button', { name: /^(Join and open|Open)$/ })
     .click();
-  const dialog = app.page.getByRole('dialog').or(app.page.getByRole('main')).first();
-  await dialog.getByRole('textbox', { name: /server address/i }).fill(serverUrl);
-  await dialog
-    .getByRole('button', { name: /connect/i })
-    .first()
-    .click();
-  await dialog.getByRole('tab', { name: /create account/i }).click();
-  await dialog.getByRole('textbox', { name: /name/i }).first().fill(account.name);
-  await dialog.getByRole('textbox', { name: /email/i }).fill(account.email);
-  await dialog.getByLabel(/password/i).fill(account.password);
-  await dialog.getByRole('textbox', { name: /invite link/i }).fill(invite);
-  await dialog.getByRole('button', { name: /^create account$/i }).click();
-  await dialog.getByRole('button', { name: /join and open/i }).click();
-  await expect(syncStatus(app)).toHaveText(/synced/i, { timeout: 30_000 });
+  await expect(syncStatus(app)).toHaveAttribute('data-sync-status', 'synced', {
+    timeout: 30_000,
+  });
 }
 
-/** The sync status in the top bar ("Synced", "Offline", "Connecting…"). */
+/** The sync status button in the top bar; `data-sync-status` holds its state. */
 export function syncStatus(app: TesseraApp): Locator {
-  return app.page
-    .getByRole('banner')
-    .getByRole('button', { name: /synced|offline|connecting|syncing|local|error/i })
-    .first();
+  return app.page.getByRole('button', { name: /^Sync status:/ });
 }

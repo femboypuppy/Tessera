@@ -78,31 +78,40 @@ export const test = base.extend<TesseraFixtures, TesseraWorkerFixtures>({
     { scope: 'worker', timeout: 120_000 },
   ],
 
-  seededWorkspace: async ({ page, harness, seedOptions }, provide) => {
-    const url = harness.url(seedOptions);
-    await page.goto(url);
-    await page.waitForFunction(
-      () => window.__tesseraHarness?.ready === true || Boolean(window.__tesseraHarness?.error),
-      null,
-      { timeout: 90_000 },
-    );
-    const state = await page.evaluate((): SeededState | { error: string } => {
-      const harnessState = window.__tesseraHarness;
-      if (!harnessState) return { error: 'The harness did not start' };
-      if (harnessState.error) return { error: harnessState.error };
-      const { ctx: _ctx, markdownFiles: _files, ...rest } = harnessState;
-      return rest;
-    });
-    if ('error' in state && typeof state.error === 'string' && !('pages' in state)) {
-      throw new Error(`The seeded harness failed: ${state.error}`);
-    }
-    await provide({ app: new TesseraApp(page), state: state as SeededState, url });
-  },
+  seededWorkspace: [
+    async ({ page, harness, seedOptions }, provide) => {
+      const url = harness.url(seedOptions);
+      await page.goto(url);
+      await page.waitForFunction(
+        () => window.__tesseraHarness?.ready === true || Boolean(window.__tesseraHarness?.error),
+        null,
+        { timeout: 90_000 },
+      );
+      const state = await page.evaluate((): SeededState | { error: string } => {
+        const harnessState = window.__tesseraHarness;
+        if (!harnessState) return { error: 'The harness did not start' };
+        if (harnessState.error) return { error: harnessState.error };
+        const { ctx: _ctx, markdownFiles: _files, ...rest } = harnessState;
+        return rest;
+      });
+      if ('error' in state && typeof state.error === 'string' && !('pages' in state)) {
+        throw new Error(`The seeded harness failed: ${state.error}`);
+      }
+      await provide({ app: new TesseraApp(page), state: state as SeededState, url });
+    },
+    // Loading the whole app from the harness's dev server and generating the workspace gets its
+    // own budget (36 s here once the editor was registered), so it doesn't eat the test's.
+    { timeout: 120_000 },
+  ],
 
   syncServer: [
     // eslint-disable-next-line no-empty-pattern -- Playwright requires a destructuring pattern even without dependencies.
-    async ({}, provide) => {
-      const server = await startSyncServer();
+    async ({}, provide, workerInfo) => {
+      // The app under test runs on another origin than the server: allow it (CORS_ORIGINS).
+      const baseURL = workerInfo.project.use.baseURL;
+      const server = await startSyncServer(
+        baseURL ? { corsOrigins: [new URL(baseURL).origin] } : {},
+      );
       await provide(server);
       await server.stop();
     },

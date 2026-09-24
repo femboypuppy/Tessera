@@ -19,9 +19,24 @@ export default defineConfig({
     fileURLToPath(new URL('../node_modules/.vite-harness', import.meta.url)),
   plugins: [react(), tailwindcss()],
   resolve: {
-    dedupe: ['react', 'react-dom', 'yjs'],
+    dedupe: [
+      'react',
+      'react-dom',
+      'yjs',
+      'y-protocols',
+      'y-prosemirror',
+      'prosemirror-model',
+      'prosemirror-state',
+      'prosemirror-transform',
+      'prosemirror-view',
+    ],
   },
-  server: { port: 4190 },
+  server: {
+    port: 4190,
+    // Transform the app's modules when the dev server starts (the worker fixture waits for that),
+    // not during a test's first page load.
+    warmup: { clientFiles: ['./main.tsx'] },
+  },
   preview: { port: 4191 },
   build: {
     outDir: fileURLToPath(new URL('./dist', import.meta.url)),

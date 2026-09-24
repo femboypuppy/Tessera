@@ -32,7 +32,7 @@ test('two people edit one workspace, offline and back online', async ({ collabor
   const invite = await test.step('Alice creates an invite link', () => createInviteLink(aliceApp));
 
   await test.step('Bob joins with the invite and sees Alice’s page', async () => {
-    await joinWithInvite(bobApp, server.url, invite, bob);
+    await joinWithInvite(bobApp, server.url, invite, bob, 'Launch team');
     await bobApp.openPage('Launch checklist');
     await expect(editor(bobApp.page)).toContainText('Fuel the second stage.');
   });
@@ -48,7 +48,9 @@ test('two people edit one workspace, offline and back online', async ({ collabor
 
   await test.step('Alice goes offline and keeps writing', async () => {
     await aliceApp.page.context().setOffline(true);
-    await expect(syncStatus(aliceApp)).toHaveText(/offline/i, { timeout: 30_000 });
+    await expect(syncStatus(aliceApp)).toHaveAttribute('data-sync-status', 'offline', {
+      timeout: 30_000,
+    });
     await editor(aliceApp.page).click();
     await aliceApp.page.keyboard.press('ControlOrMeta+End');
     await aliceApp.page.keyboard.press('Enter');
@@ -58,7 +60,9 @@ test('two people edit one workspace, offline and back online', async ({ collabor
 
   await test.step('back online, Alice’s offline edits reach Bob', async () => {
     await aliceApp.page.context().setOffline(false);
-    await expect(syncStatus(aliceApp)).toHaveText(/synced/i, { timeout: 30_000 });
+    await expect(syncStatus(aliceApp)).toHaveAttribute('data-sync-status', 'synced', {
+      timeout: 30_000,
+    });
     await expect(editor(bobApp.page)).toContainText('Written on the plane.', { timeout: 30_000 });
     await expect(editor(aliceApp.page)).toContainText('Check the weather at the Cape.');
   });

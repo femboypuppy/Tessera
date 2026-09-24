@@ -14,7 +14,7 @@ const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
 const ENTRY = path.join(REPO, 'apps', 'server', 'src', 'main.ts');
 
 export interface SyncServer {
-  /** `http://127.0.0.1:<port>` */
+  /** `http://localhost:<port>` */
   url: string;
   dataDir: string;
   /** Output so far, for failure messages. */
@@ -50,13 +50,16 @@ export async function startSyncServer(
   options: { port?: number; corsOrigins?: string[]; webDir?: string; timeoutMs?: number } = {},
 ): Promise<SyncServer> {
   const port = options.port ?? (await freePort());
-  const url = `http://127.0.0.1:${port}`;
+  // `localhost`, like the app under test: the same site, so the browser sends the server's
+  // SameSite=Lax session cookie with the app's requests (127.0.0.1 would be another site).
+  const url = `http://localhost:${port}`;
   const dataDir = mkdtempSync(path.join(tmpdir(), 'tessera-server-'));
   const webDir = options.webDir ?? path.join(REPO, 'apps', 'web', 'dist');
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PORT: String(port),
-    HOST: '127.0.0.1',
+    // Both IPv4 and IPv6: `localhost` may resolve to either.
+    HOST: '::',
     DATA_DIR: dataDir,
     PUBLIC_URL: url,
     SIGNUP_MODE: 'open',
