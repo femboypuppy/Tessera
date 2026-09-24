@@ -352,6 +352,7 @@ describe('browser protections', () => {
       '<!doctype html><meta property="csp-nonce" nonce="__TAURI_SCRIPT_NONCE__"><title>Tessera</title>',
     );
     writeFileSync(path.join(web, 'assets', 'app-abc123.js'), 'console.log(1)');
+    writeFileSync(path.join(web, 'sw.js'), 'self.addEventListener("fetch", () => {})');
     writeFileSync(path.join(t.dataDir, 'secret.txt'), 'top secret');
     const withWeb = await server({ webDir: web }, {}, undefined);
     const index = await fetch(`${withWeb.url}/p/some-page`);
@@ -373,6 +374,8 @@ describe('browser protections', () => {
     const asset = await fetch(`${withWeb.url}/assets/app-abc123.js`);
     expect(asset.headers.get('cache-control')).toContain('immutable');
     expect(asset.headers.get('content-type')).toContain('text/javascript');
+    // The service worker is checked for a new version on every load.
+    expect((await fetch(`${withWeb.url}/sw.js`)).headers.get('cache-control')).toBe('no-cache');
     for (const attempt of [
       '/../secret.txt',
       '/%2e%2e/secret.txt',

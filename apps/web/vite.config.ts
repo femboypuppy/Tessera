@@ -1,14 +1,42 @@
+import { createHash } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 /** The Tessera server `pnpm dev` runs next to the app (`apps/server/src/dev.ts`). */
 const devServer = process.env.TESSERA_DEV_SERVER ?? 'http://localhost:8787';
 
+/**
+ * Writes `sw.js` (`service-worker.js` with this build's version and files), which caches the
+ * app for offline cold starts. Builds only; the app registers it in production (`offline.ts`).
+ */
+function serviceWorker(): Plugin {
+  const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+  return {
+    name: 'tessera-service-worker',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      const built = Object.keys(bundle).filter(
+        (file) => !file.endsWith('.map') && file !== 'index.html',
+      );
+      const files = [...built, ...readdirSync(here('./public'))].sort();
+      const version = createHash('sha256').update(files.join('\n')).digest('hex').slice(0, 12);
+      const source = readFileSync(here('./service-worker.js'), 'utf8');
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sw.js',
+        source: `const BUILD = ${JSON.stringify({ version, files })};\n${source}`,
+      });
+    },
+  };
+}
+
 // Packages ship TypeScript source; Vite compiles them like app code. Yjs and ProseMirror must be
 // single instances (duplicate copies break `instanceof` checks and Yjs warns), hence `dedupe`.
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), serviceWorker()],
   resolve: {
     dedupe: [
       'react',

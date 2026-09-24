@@ -779,6 +779,13 @@ await dispose();
   menu, favorites, the page tree and "New page" are read-only.
 - **Links to places.** `/p/<pageId>#block-<blockId>` and `/p/<pageId>#<heading-slug>` (what
   `ctx.navigate` writes and "Copy link" copies) open the page scrolled to that block or heading.
+- **Offline.** Production builds register a service worker (`apps/web/service-worker.js`, built
+  to `/sw.js` with the build's file list): it caches the shell and every built file at install,
+  answers page loads network-first (the cached shell when offline) and built files cache-first,
+  and never touches other origins, `/api/` or `/sync`. A new version waits until the old one's tabs
+  close. Not in dev or in the desktop app (its files are local).
+- **Validation.** zod runs `jitless` (`apps/web/src/zod-config.ts`, imported first): the app's CSP
+  forbids `eval`, so its JIT probe only caused a CSP violation.
 
 ## 8. Design system (`packages/ui`)
 
@@ -866,6 +873,12 @@ Every agent also owns `HANDOFF/<area>.md`, `assets/screenshots/<area>/` and `e2e
 - **e2e ports.** Each worktree gets its own port (`playwright.config.ts` maps `<repo>-<area>`
   folders to 4210–4290), so parallel agents never share a server. `E2E_DEV=1` uses the Vite dev
   server instead of a production build; `E2E_PORT` overrides the port.
+- **e2e environment.** Service workers are blocked (requests they answer bypass `page.route`);
+  `e2e/architect/offline.spec.ts` turns them on. Firefox gets a 90 s test budget (the same steps
+  run two to three times slower there). Specs assert the features they need with
+  `app.expectFeatures(…)`, which fails, never skips. `TESSERA_E2E_SERVER_URL` (with
+  `TESSERA_E2E_SETUP_CODE`) points the `syncServer` and `collaborators` fixtures at a running
+  server, such as `docker compose up`.
 - **Dependencies.** Prefer what's installed (section 13). Add new ones only to a `package.json` you
   own, pinned exactly, MIT/Apache-2.0/BSD/ISC, justified in HANDOFF.
 - **Commits.** Conventional Commits (`feat(editor): add slash menu`), small and often, on your branch.

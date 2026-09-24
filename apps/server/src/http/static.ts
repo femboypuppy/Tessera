@@ -128,7 +128,10 @@ export function serveWebApp(
       'Content-Type': TYPES[extension] ?? 'application/octet-stream',
       'Content-Length': String(statSync(file).size),
     });
-    if (decoded.startsWith('/assets/')) {
+    if (decoded === '/sw.js') {
+      // The browser checks it for a new version of the app on every load.
+      headers.set('Cache-Control', 'no-cache');
+    } else if (decoded.startsWith('/assets/')) {
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
       headers.set('Cache-Control', 'public, max-age=3600');

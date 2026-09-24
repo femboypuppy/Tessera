@@ -7,6 +7,7 @@ import { App } from './app/App';
 import { renderFatalError } from './app/FatalError';
 import { followTheme } from './app/theme';
 import { initI18n, t } from './i18n';
+import { registerServiceWorker } from './offline';
 import './styles.css';
 
 async function start(): Promise<void> {
@@ -29,6 +30,7 @@ async function start(): Promise<void> {
       <App runtime={runtime} />
     </StrictMode>,
   );
+  registerServiceWorker();
 }
 
 start().catch((error: unknown) => renderFatalError(error));

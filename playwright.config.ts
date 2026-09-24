@@ -56,6 +56,9 @@ export default defineConfig({
     locale: 'en-US',
     timezoneId: 'UTC',
     trace: 'retain-on-failure',
+    // Requests a service worker answers bypass `page.route`, so specs run without it; the offline
+    // spec turns it on (e2e/architect/offline.spec.ts).
+    serviceWorkers: 'block',
     screenshot: 'only-on-failure',
     video: 'off',
   },

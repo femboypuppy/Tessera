@@ -58,6 +58,7 @@ Every agent also owns `HANDOFF/<area>.md`, `assets/screenshots/<area>/` and `e2e
 
 `pnpm dev` · `pnpm build` · `pnpm test` · `pnpm test:e2e` · `pnpm typecheck` · `pnpm lint` · `pnpm format`
 
+- `pnpm build` builds every package, the web app, the server and, when Rust is installed, the desktop app (`tauri build --no-bundle`; `TESSERA_SKIP_DESKTOP=1` skips it; installers: `pnpm --filter @tessera/desktop build:app`).
 - `pnpm dev` runs the web app (http://localhost:5173) and the server (port 8787, data in `apps/server/data`) together; the app reaches the server through Vite's `/api` and `/sync` proxy, so "Connect to a server" finds it on the app's own origin. `pnpm --filter @tessera/web dev` runs the app alone.
 - Run one package: `pnpm --filter @tessera/<name> <script>` (`test`, `typecheck`, `lint`, `build`). The plugin scaffolder's name is `create-tessera-plugin`.
 - Run only your e2e specs: `pnpm test:e2e e2e/<area>`. First time on a machine: `pnpm test:e2e:install`. `E2E_DEV=1` tests against the dev server instead of a production build.
