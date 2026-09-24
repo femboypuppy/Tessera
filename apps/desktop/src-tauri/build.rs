@@ -1,0 +1,60 @@
+/// The app's own commands, declared so capabilities can allow them per window (`allow-<name>`
+/// with dashes). Keep in sync with `generate_handler!` in `src/lib.rs`.
+const COMMANDS: &[&str] = &[
+    "app_info",
+    "app_quit",
+    "flush_done",
+    "open_external",
+    "links_take",
+    "menu_set",
+    "window_set_title",
+    "window_zoom",
+    "window_toggle_fullscreen",
+    "window_show_main",
+    "prefs_get",
+    "prefs_set",
+    "updates_mark_checked",
+    "capture_show",
+    "capture_ready",
+    "capture_hide",
+    "registry_list",
+    "registry_upsert",
+    "registry_remove",
+    "registry_touch",
+    "folder_inspect",
+    "folder_suggest",
+    "folder_pick",
+    "folder_reveal",
+    "workspace_attach",
+    "workspace_detach",
+    "workspace_status",
+    "workspace_set_name",
+    "workspace_merge_conflict",
+    "doc_load",
+    "doc_store",
+    "doc_compact",
+    "doc_delete",
+    "doc_list",
+    "asset_put",
+    "asset_get",
+    "asset_info",
+    "asset_list",
+    "asset_delete",
+    "mirror_begin",
+    "mirror_write",
+    "mirror_finish",
+    "secret_get",
+    "secret_set",
+    "secret_delete",
+    "secret_servers",
+    "updater_check",
+    "updater_install",
+];
+
+fn main() {
+    tauri_build::try_build(
+        tauri_build::Attributes::new()
+            .app_manifest(tauri_build::AppManifest::new().commands(COMMANDS)),
+    )
+    .expect("failed to run tauri-build");
+}

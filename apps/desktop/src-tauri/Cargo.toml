@@ -1,0 +1,61 @@
+[package]
+name = "tessera-desktop"
+version = "0.1.0"
+description = "Tessera desktop app: a local-first knowledge app in a Tauri 2 window."
+authors = ["Tessera contributors"]
+license = "MIT"
+repository = "https://github.com/femboypuppy/Tessera"
+edition = "2021"
+rust-version = "1.80"
+publish = false
+
+[lib]
+# `_lib` suffix: on Windows a lib and a bin with the same name collide (cargo#8519).
+name = "tessera_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "=2.6.3", features = [] }
+
+[dependencies]
+# Keep `tauri` on the same minor as `@tauri-apps/api` (apps/desktop/package.json).
+tauri = { version = "=2.11.6", features = ["tray-icon", "image-png"] }
+tauri-plugin-deep-link = "2.4.10"
+tauri-plugin-dialog = "2.7.3"
+tauri-plugin-log = "2.9.2"
+tauri-plugin-opener = "2.5.5"
+tauri-plugin-updater = "2.12.0"
+tauri-plugin-window-state = "2.4.1"
+base64 = "0.22.1"
+log = "0.4.34"
+percent-encoding = "2.3.2"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sha2 = "0.10.9"
+thiserror = "2.0.20"
+url = "2.5.8"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2.3.2"
+tauri-plugin-single-instance = { version = "2.4.5", features = ["deep-link"] }
+
+# Tokens for sync servers go to the OS keychain: Keychain on macOS, Credential Manager on Windows,
+# the Secret Service (GNOME Keyring, KWallet) on Linux through a pure-Rust D-Bus client.
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3.6.3", features = ["apple-native"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3.6.3", features = ["windows-native"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3.6.3", features = ["async-secret-service", "crypto-rust", "tokio"] }
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

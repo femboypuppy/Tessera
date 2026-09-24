@@ -2,6 +2,9 @@
  * Starts the Tessera server (`apps/server`) for tests: a real process on a free port, with its
  * data in a temporary folder that is deleted afterwards. Configuration uses the server's
  * environment variables (PORT, HOST, DATA_DIR, PUBLIC_URL, SIGNUP_MODE, CORS_ORIGINS, WEB_DIR).
+ *
+ * `TESSERA_E2E_SERVER_URL` points the tests at a server that is already running instead (the
+ * Docker image: `docker compose up`), with the setup code it logged in `TESSERA_E2E_SETUP_CODE`.
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -46,9 +49,41 @@ function run(args: string[], env: NodeJS.ProcessEnv): ChildProcess {
   });
 }
 
+/** The server `TESSERA_E2E_SERVER_URL` names, or null to start one. */
+export function externalServerUrl(): string | null {
+  const url = process.env.TESSERA_E2E_SERVER_URL;
+  return url ? new URL(url).origin : null;
+}
+
+/**
+ * A server someone else started: nothing is started or stopped, its data is its own, and the
+ * owner is created with the first-run form (`POST /api/auth/setup`) and the server's setup code.
+ */
+function externalServer(url: string, setupCode: string): SyncServer {
+  return {
+    url,
+    dataDir: '',
+    logs: () => `(the server at ${url} was started outside the tests; see its own logs)`,
+    async createOwner(account) {
+      const response = await fetch(`${url}/api/auth/setup`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: url },
+        body: JSON.stringify({ ...account, setupCode }),
+      });
+      if (!response.ok)
+        throw new Error(
+          `POST ${url}/api/auth/setup answered ${response.status}: ${await response.text()}`,
+        );
+    },
+    async stop() {},
+  };
+}
+
 export async function startSyncServer(
   options: { port?: number; corsOrigins?: string[]; webDir?: string; timeoutMs?: number } = {},
 ): Promise<SyncServer> {
+  const external = externalServerUrl();
+  if (external) return externalServer(external, process.env.TESSERA_E2E_SETUP_CODE ?? '');
   const port = options.port ?? (await freePort());
   // `localhost`, like the app under test: the same site, so the browser sends the server's
   // SameSite=Lax session cookie with the app's requests (127.0.0.1 would be another site).

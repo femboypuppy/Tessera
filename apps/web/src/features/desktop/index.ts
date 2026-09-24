@@ -1,9 +1,8 @@
-import { defineFeature } from '@tessera/core';
+import { createDesktopFeature } from '@tessera/desktop';
 
 /**
- * Desktop (Agent 07). Registers the Tauri DocStore, AssetStore and WorkspaceRegistry (priority 100, available only inside Tauri); logic lives in `@tessera/desktop`. In a browser this feature does nothing.
- *
- * Keep this file thin: registration only, heavy code behind dynamic `import()`.
- * See HANDOFF/architect.md for the contracts this feature plugs into.
+ * Desktop (Agent 07). Inside the Tauri app: folder-based storage (SQLite + files, priority 100),
+ * the workspace picker, quick capture, native menus, deep links and Settings → Desktop, all loaded
+ * on demand (`@tessera/desktop`). In a browser the feature is empty and loads nothing.
  */
-export const desktopFeature = defineFeature({ id: 'desktop' });
+export const desktopFeature = createDesktopFeature();

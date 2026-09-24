@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-doc-list"
+description = "Enables the doc_list command without any pre-configured scope."
+commands.allow = ["doc_list"]
+
+[[permission]]
+identifier = "deny-doc-list"
+description = "Denies the doc_list command without any pre-configured scope."
+commands.deny = ["doc_list"]

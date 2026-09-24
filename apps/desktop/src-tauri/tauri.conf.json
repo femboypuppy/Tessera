@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Tessera",
+  "version": "0.1.0",
+  "identifier": "app.tessera.desktop",
+  "build": {
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../../web/dist",
+    "beforeDevCommand": "pnpm --filter @tessera/web dev",
+    "beforeBuildCommand": "pnpm --filter @tessera/web build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Tessera",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 400,
+        "minHeight": 480,
+        "center": true,
+        "visible": false,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' blob:",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: blob: https: tessera-asset: http://tessera-asset.localhost",
+        "media-src": "'self' blob: tessera-asset: http://tessera-asset.localhost",
+        "font-src": "'self' data: blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost http: https: ws: wss:",
+        "frame-src": "'self' blob: https:",
+        "worker-src": "'self' blob:",
+        "object-src": "'none'",
+        "base-uri": "'self'",
+        "form-action": "'self'"
+      },
+      "devCsp": null,
+      "dangerousDisableAssetCspModification": ["style-src"],
+      "assetProtocol": {
+        "enable": false
+      },
+      "freezePrototype": false
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "publisher": "Tessera contributors",
+    "homepage": "https://github.com/femboypuppy/Tessera",
+    "license": "MIT",
+    "category": "Productivity",
+    "shortDescription": "Local-first notes, docs and databases",
+    "longDescription": "Tessera is an open-source, local-first knowledge app: Notion-style blocks and databases, Obsidian-style links and graph, real-time collaboration with your own server, and plugins. Your workspaces are folders on your computer.",
+    "copyright": "Copyright © 2026 Tessera contributors",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "createUpdaterArtifacts": false,
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "section": "editors"
+      },
+      "rpm": {
+        "release": "1"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["tessera"]
+      }
+    },
+    "updater": {
+      "endpoints": ["https://github.com/femboypuppy/Tessera/releases/latest/download/latest.json"],
+      "pubkey": "REPLACE_WITH_TAURI_SIGNING_PUBLIC_KEY",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

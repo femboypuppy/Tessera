@@ -1,0 +1,52 @@
+# The image builds apps/web and apps/server from a clean install: only sources and manifests
+# go into the build context. Owner: Agent 07 (Desktop & self-host).
+
+# Dependencies and build output (reinstalled and rebuilt inside the image)
+**/node_modules
+**/dist
+**/build
+**/.vite
+**/.rolldown
+**/*.tsbuildinfo
+coverage
+
+# The desktop app's Rust side, and its build output (gigabytes)
+apps/desktop/src-tauri
+
+# Tests, reports and screenshots
+e2e
+test-results
+playwright-report
+blob-report
+assets/screenshots
+
+# Docs site, examples and notes (not part of the server image)
+docs
+examples
+HANDOFF
+agents
+*.md
+!apps/server/README.md
+
+# Local data, secrets and editor files
+data
+.env
+.env.*
+!.env.example
+**/*.db
+**/*.db-wal
+**/*.db-shm
+.git
+.github
+.claude
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+*.log
+
+# Deployment files are not needed to build the image
+deploy
+docker-compose*.yml
+Dockerfile
+.dockerignore

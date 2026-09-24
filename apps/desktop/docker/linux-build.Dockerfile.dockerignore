@@ -1,0 +1,28 @@
+# Build context of linux-build.Dockerfile (takes precedence over the root .dockerignore, which
+# leaves out the Rust side).
+**/node_modules
+**/dist
+**/.vite
+**/.rolldown
+**/*.tsbuildinfo
+coverage
+apps/desktop/src-tauri/target
+apps/desktop/src-tauri/gen/schemas
+e2e
+test-results
+playwright-report
+blob-report
+assets/screenshots
+docs
+examples
+HANDOFF
+agents
+data
+.env
+.env.*
+.git
+.github
+.claude
+.idea
+.vscode
+*.log

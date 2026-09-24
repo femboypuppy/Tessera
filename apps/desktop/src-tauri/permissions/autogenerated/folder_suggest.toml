@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-folder-suggest"
+description = "Enables the folder_suggest command without any pre-configured scope."
+commands.allow = ["folder_suggest"]
+
+[[permission]]
+identifier = "deny-folder-suggest"
+description = "Denies the folder_suggest command without any pre-configured scope."
+commands.deny = ["folder_suggest"]

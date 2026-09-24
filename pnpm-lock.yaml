@@ -95,10 +95,28 @@ importers:
       '@tessera/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@tessera/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      lucide-react:
+        specifier: 1.47.0
+        version: 1.47.0(react@19.3.0)
+      yjs:
+        specifier: 13.6.32
+        version: 13.6.32
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
       '@tauri-apps/cli':
         specifier: 2.11.5
         version: 2.11.5
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
 
   apps/server:
     dependencies:

@@ -1,0 +1,73 @@
+# Tessera, self-hosted in one command:
+#
+#   cp .env.example .env         # then edit it (at least PUBLIC_URL)
+#   docker compose up -d
+#
+# With automatic HTTPS (Caddy, Let's Encrypt), once DNS points TESSERA_DOMAIN at this machine:
+#
+#   docker compose --profile https up -d
+#
+# Guides: deploy/README.md. Data lives in the `tessera-data` volume; back it up with
+# deploy/backup/backup.sh.
+
+name: tessera
+
+services:
+  tessera:
+    image: ghcr.io/femboypuppy/tessera:${TESSERA_VERSION:-latest}
+    # `docker compose up --build` builds from this checkout instead of pulling.
+    build: .
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATA_DIR: /data
+      PORT: 8787
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8787}
+      SIGNUP_MODE: ${SIGNUP_MODE:-invite}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      # Behind the Caddy profile, set TESSERA_BIND=127.0.0.1 so only Caddy is reachable.
+      - ${TESSERA_BIND:-0.0.0.0}:${TESSERA_PORT:-8787}:8787
+    volumes:
+      - tessera-data:/data
+    # Hardening: the app only writes to /data (and /tmp).
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    profiles: [https]
+    restart: unless-stopped
+    depends_on:
+      tessera:
+        condition: service_healthy
+    environment:
+      # Your domain (set it in .env). `localhost` serves a locally trusted certificate for tests.
+      TESSERA_DOMAIN: ${TESSERA_DOMAIN:-localhost}
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  tessera-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,67 @@
+# Tessera for CasaOS (App Store format: a Compose file with x-casaos metadata).
+# See deploy/appstores/README.md.
+name: tessera
+
+services:
+  tessera:
+    image: ghcr.io/femboypuppy/tessera:latest
+    container_name: tessera
+    restart: unless-stopped
+    # Started as root so the entrypoint can give /DATA/AppData/tessera to the app user (uid 1000);
+    # the server then runs unprivileged.
+    user: '0:0'
+    environment:
+      DATA_DIR: /data
+      PUBLIC_URL: http://casaos.local:8787
+      SIGNUP_MODE: invite
+      MAX_UPLOAD_MB: '25'
+      LOG_LEVEL: info
+    ports:
+      - target: 8787
+        published: '8787'
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /DATA/AppData/$AppID/data
+        target: /data
+    security_opt:
+      - no-new-privileges:true
+    x-casaos:
+      envs:
+        - container: PUBLIC_URL
+          description:
+            en_us: The address people use to reach Tessera (invite links, the desktop app).
+        - container: SIGNUP_MODE
+          description:
+            en_us: 'Who can create an account: invite, open or closed.'
+      ports:
+        - container: '8787'
+          description:
+            en_us: Web app and sync server
+      volumes:
+        - container: /data
+          description:
+            en_us: The database and attachments. Back this folder up.
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: tessera
+  author: Tessera contributors
+  developer: Tessera contributors
+  category: Productivity
+  icon: https://raw.githubusercontent.com/femboypuppy/Tessera/main/apps/desktop/src-tauri/icons/icon.png
+  tagline:
+    en_us: Local-first notes, docs and databases
+  description:
+    en_us: >-
+      Tessera is an open-source knowledge app: Notion-style pages and databases, Obsidian-style
+      links, backlinks and a graph, real-time collaboration and plugins. This app is the sync
+      server and the web app. After installing, open the terminal of the app and run
+      `su-exec node tessera-server create-owner` to create the first account.
+  title:
+    en_us: Tessera
+  port_map: '8787'
+  scheme: http
+  index: /

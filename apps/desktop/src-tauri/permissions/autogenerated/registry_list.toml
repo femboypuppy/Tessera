@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-registry-list"
+description = "Enables the registry_list command without any pre-configured scope."
+commands.allow = ["registry_list"]
+
+[[permission]]
+identifier = "deny-registry-list"
+description = "Denies the registry_list command without any pre-configured scope."
+commands.deny = ["registry_list"]

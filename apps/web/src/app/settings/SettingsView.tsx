@@ -14,7 +14,16 @@ import {
   Select,
   Separator,
 } from '@tessera/ui';
-import { Info, Keyboard, Monitor, Moon, SlidersHorizontal, Sun, Trash2 } from 'lucide-react';
+import {
+  FolderMinus,
+  Info,
+  Keyboard,
+  Monitor,
+  Moon,
+  SlidersHorizontal,
+  Sun,
+  Trash2,
+} from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { availableLocales, localeName, t } from '../../i18n';
@@ -69,15 +78,25 @@ function GeneralSettings() {
       void control.rename(current.id, workspaceName.trim());
   };
 
+  // A folder workspace (the desktop app) is only forgotten: the registry never deletes a folder.
+  const inFolder = Boolean(control.current?.path);
   const removeWorkspace = async () => {
     const current = control.current;
     if (!current) return;
-    const confirmed = await ctx.confirm({
-      title: t('deleteWorkspaceConfirm', { name: current.name }),
-      description: t('deleteWorkspaceHint'),
-      confirmLabel: t('deleteWorkspace'),
-      destructive: true,
-    });
+    const confirmed = await ctx.confirm(
+      inFolder
+        ? {
+            title: t('removeFolderWorkspaceConfirm', { name: current.name }),
+            description: t('removeFolderWorkspaceHint'),
+            confirmLabel: t('removeFolderWorkspace'),
+          }
+        : {
+            title: t('deleteWorkspaceConfirm', { name: current.name }),
+            description: t('deleteWorkspaceHint'),
+            confirmLabel: t('deleteWorkspace'),
+            destructive: true,
+          },
+    );
     if (confirmed) await control.remove(current.id);
   };
 
@@ -164,11 +183,16 @@ function GeneralSettings() {
           )}
         </Field>
         <div>
-          <Button variant="danger" onClick={() => void removeWorkspace()}>
-            <Trash2 aria-hidden="true" />
-            {t('deleteWorkspace')}
+          <Button
+            variant={inFolder ? 'secondary' : 'danger'}
+            onClick={() => void removeWorkspace()}
+          >
+            {inFolder ? <FolderMinus aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+            {t(inFolder ? 'removeFolderWorkspace' : 'deleteWorkspace')}
           </Button>
-          <p className="mt-2 text-xs text-fg-muted">{t('deleteWorkspaceHint')}</p>
+          <p className="mt-2 text-xs text-fg-muted">
+            {t(inFolder ? 'removeFolderWorkspaceHint' : 'deleteWorkspaceHint')}
+          </p>
         </div>
       </Section>
       <Separator />

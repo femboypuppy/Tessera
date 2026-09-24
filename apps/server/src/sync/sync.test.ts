@@ -1,3 +1,5 @@
+import { once } from 'node:events';
+import net from 'node:net';
 import * as decoding from 'lib0/decoding';
 import * as encoding from 'lib0/encoding';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -74,6 +76,46 @@ describe('sync persistence', () => {
     const doc = new Y.Doc();
     if (stored) Y.applyUpdate(doc, stored);
     expect(text(doc)).toBe('durable');
+  });
+
+  it('stops within seconds when a peer never answers the close frame, keeping every update', async () => {
+    const t = await server();
+    const { ownerToken, workspaceId } = await bootstrap(t);
+    const c = client(t.wsUrl, `${workspaceId}/page:frozen`, ownerToken);
+    await c.synced();
+    c.doc.getText('t').insert(0, 'kept');
+    await c.settled();
+    // A peer that went silent (a laptop that fell asleep): upgraded, then never reads again.
+    const frozen = net.connect(t.server.port, '127.0.0.1');
+    frozen.write(
+      [
+        'GET /sync HTTP/1.1',
+        `Host: 127.0.0.1:${t.server.port}`,
+        'Upgrade: websocket',
+        'Connection: Upgrade',
+        'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==',
+        'Sec-WebSocket-Version: 13',
+        '',
+        '',
+      ].join('\r\n'),
+    );
+    const [answer] = (await once(frozen, 'data')) as [Buffer];
+    expect(answer.toString()).toMatch(/^HTTP\/1\.1 101/);
+    frozen.pause();
+    expect(t.server.sync.socketCount).toBe(2);
+
+    // Without cutting it off, the HTTP server would wait out ws's 30 s close timeout.
+    const started = Date.now();
+    await t.server.close();
+    expect(Date.now() - started).toBeLessThan(5_000);
+    frozen.destroy();
+
+    const restarted = await t.restart();
+    servers.push(restarted);
+    const stored = new Y.Doc();
+    const state = restarted.server.services.persistence.load(workspaceId, 'page:frozen');
+    if (state) Y.applyUpdate(stored, state);
+    expect(text(stored)).toBe('kept');
   });
 
   it('lists docs with sequence numbers that move on changes', async () => {

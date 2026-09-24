@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-workspace-attach"
+description = "Enables the workspace_attach command without any pre-configured scope."
+commands.allow = ["workspace_attach"]
+
+[[permission]]
+identifier = "deny-workspace-attach"
+description = "Denies the workspace_attach command without any pre-configured scope."
+commands.deny = ["workspace_attach"]

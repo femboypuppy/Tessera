@@ -1,0 +1,39 @@
+# Tessera on Fly.io. Guide: deploy/fly/README.md. Run flyctl from this folder.
+app = "tessera-example" # change to your app's name (fly launch sets it)
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DATA_DIR = "/data"
+  PORT = "8787"
+  SIGNUP_MODE = "invite"
+  LOG_LEVEL = "info"
+  # PUBLIC_URL is set by the guide: https://<app>.fly.dev or your own domain.
+
+# One volume, one machine: SQLite has one writer.
+[[mounts]]
+  source = "tessera_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  # Real-time sync keeps WebSockets open; stopping idle machines would drop them.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    path = "/api/health"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

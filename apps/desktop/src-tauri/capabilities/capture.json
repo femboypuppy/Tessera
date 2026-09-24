@@ -1,0 +1,31 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "capture",
+  "description": "The quick-capture window: reads and writes the open workspace, nothing else (no menus, folders, keychain or updates).",
+  "windows": ["capture"],
+  "permissions": [
+    "core:event:default",
+    "core:window:allow-start-dragging",
+    "allow-app-info",
+    "allow-flush-done",
+    "allow-links-take",
+    "allow-prefs-get",
+    "allow-capture-ready",
+    "allow-capture-hide",
+    "allow-window-show-main",
+    "allow-registry-list",
+    "allow-registry-touch",
+    "allow-workspace-attach",
+    "allow-workspace-detach",
+    "allow-workspace-status",
+    "allow-doc-load",
+    "allow-doc-store",
+    "allow-doc-compact",
+    "allow-doc-delete",
+    "allow-doc-list",
+    "allow-asset-put",
+    "allow-asset-get",
+    "allow-asset-info",
+    "allow-asset-list"
+  ]
+}

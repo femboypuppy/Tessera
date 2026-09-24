@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-asset-info"
+description = "Enables the asset_info command without any pre-configured scope."
+commands.allow = ["asset_info"]
+
+[[permission]]
+identifier = "deny-asset-info"
+description = "Denies the asset_info command without any pre-configured scope."
+commands.deny = ["asset_info"]

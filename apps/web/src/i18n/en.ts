@@ -119,6 +119,10 @@ export const en = {
   deleteWorkspaceConfirm: 'Delete the “{name}” workspace from this device?',
   deleteWorkspaceHint:
     'Its pages are removed from this device. Copies on a sync server are not affected.',
+  removeFolderWorkspace: 'Remove from the list',
+  removeFolderWorkspaceConfirm: 'Remove “{name}” from the list?',
+  removeFolderWorkspaceHint:
+    'The folder and everything in it stay on your disk. Open it again any time with Open folder….',
   about: 'About',
   aboutServices: 'Active services',
   keyboardShortcuts: 'Keyboard shortcuts',

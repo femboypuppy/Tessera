@@ -36,6 +36,14 @@ export type DenyReason =
   'unauthenticated' | 'forbidden' | 'invalid-document' | 'document-deleted' | 'origin-not-allowed';
 
 /** Answers an upgrade request with a complete HTTP error response, then closes the socket. */
+/** Polls `done` every 20 ms until it holds or `timeoutMs` passes. */
+async function waitUntil(done: () => boolean, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!done() && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+}
+
 function rejectUpgrade(socket: Duplex, status: number, message: string): void {
   if (!socket.writable) {
     socket.destroy();
@@ -150,16 +158,18 @@ export class SyncServer {
   }
 
   /** Closes every connection, lets documents unload, and stops accepting new ones. */
-  async shutdown(timeoutMs = 10_000): Promise<void> {
+  async shutdown(timeoutMs = 10_000, closeHandshakeMs = 1_000): Promise<void> {
     this.closing = true;
     for (const off of this.offs.splice(0)) off();
     this.hocuspocus.closeConnections();
     for (const socket of this.sockets.keys()) socket.close(1001, 'server shutting down');
     this.hocuspocus.flushPendingStores();
-    const deadline = Date.now() + timeoutMs;
-    while (this.hocuspocus.getDocumentsCount() > 0 && Date.now() < deadline) {
-      await new Promise((resolve) => setTimeout(resolve, 20));
-    }
+    // A peer that never answers the close frame (asleep, offline, frozen) would keep its socket,
+    // and with it the HTTP server, open for ws's 30 s close timeout, past `docker stop`'s grace
+    // period. Every acknowledged update is already stored, so such peers are cut off.
+    await waitUntil(() => this.sockets.size === 0, closeHandshakeMs);
+    for (const socket of this.sockets.keys()) (socket as unknown as WebSocket).terminate();
+    await waitUntil(() => this.hocuspocus.getDocumentsCount() === 0, timeoutMs);
     this.wss.close();
   }
 

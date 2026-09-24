@@ -18,7 +18,7 @@ import type { GenerateOptions } from '../generator';
 import type { HarnessState } from '../harness-state';
 import { TesseraApp } from './app';
 import { startHarness, type HarnessServer } from './harness-server';
-import { startSyncServer, type SyncServer } from './sync-server';
+import { externalServerUrl, startSyncServer, type SyncServer } from './sync-server';
 
 /** The serializable part of the harness state. */
 export type SeededState = Omit<HarnessState, 'ctx' | 'markdownFiles'>;
@@ -119,9 +119,11 @@ export const test = base.extend<TesseraFixtures, TesseraWorkerFixtures>({
   ],
 
   collaborators: async ({ browser, syncServer, baseURL }, provide) => {
+    // Against a running server (TESSERA_E2E_SERVER_URL), both people use the app it serves.
+    const appURL = externalServerUrl() ?? baseURL;
     const contexts = await Promise.all([
-      browser.newContext({ baseURL }),
-      browser.newContext({ baseURL }),
+      browser.newContext({ baseURL: appURL }),
+      browser.newContext({ baseURL: appURL }),
     ]);
     const [alice, bob] = await Promise.all(contexts.map((context) => context.newPage()));
     if (!alice || !bob) throw new Error('Could not open two pages');

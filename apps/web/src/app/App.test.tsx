@@ -279,6 +279,23 @@ describe('feature extension points', () => {
     await waitFor(() => expect(ran).toEqual(['Orbit Lab']));
   });
 
+  it('removes a folder workspace from the list instead of deleting it', async () => {
+    const user = userEvent.setup();
+    const sidebar = await createWorkspace(user, 'Field notes');
+    const [workspace] = await runtime.workspaceRegistry.list();
+    if (!workspace) throw new Error('no workspace');
+    await act(() => runtime.workspaceRegistry.update(workspace.id, { path: 'C:/Notes/Field' }));
+    await user.click(within(sidebar).getByRole('button', { name: 'Settings' }));
+    await user.click(await screen.findByRole('button', { name: 'Remove from the list' }));
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'Remove “Field notes” from the list?',
+    });
+    expect(within(dialog).getByText(/The folder and everything in it stay/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete workspace' })).toBeNull();
+    await user.click(within(dialog).getByRole('button', { name: 'Remove from the list' }));
+    await waitFor(async () => expect(await runtime.workspaceRegistry.list()).toEqual([]));
+  });
+
   it('switches to another workspace and reopens the current one on request', async () => {
     const user = userEvent.setup();
     const opened: AppContext[] = [];

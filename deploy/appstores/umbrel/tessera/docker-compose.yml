@@ -1,0 +1,24 @@
+# Tessera for Umbrel (umbrel-apps format). See deploy/appstores/README.md.
+version: '3.7'
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: tessera_web_1
+      APP_PORT: 8787
+      # Tessera has its own accounts; the WebSocket sync path must not need Umbrel's login.
+      PROXY_AUTH_ADD: 'false'
+
+  web:
+    # Pin to a release digest when submitting: ghcr.io/femboypuppy/tessera:0.1.0@sha256:…
+    image: ghcr.io/femboypuppy/tessera:0.1.0
+    user: '1000:1000'
+    restart: on-failure
+    stop_grace_period: 30s
+    environment:
+      DATA_DIR: /data
+      PUBLIC_URL: http://${DEVICE_DOMAIN_NAME}:8787
+      SIGNUP_MODE: invite
+      LOG_LEVEL: info
+    volumes:
+      - ${APP_DATA_DIR}/data:/data

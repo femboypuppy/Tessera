@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!-- Unraid Community Applications template for Tessera. See deploy/appstores/README.md. -->
+<Container version="2">
+  <Name>Tessera</Name>
+  <Repository>ghcr.io/femboypuppy/tessera:latest</Repository>
+  <Registry>https://github.com/femboypuppy/Tessera/pkgs/container/tessera</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/femboypuppy/Tessera/issues</Support>
+  <Project>https://github.com/femboypuppy/Tessera</Project>
+  <Overview>Tessera is a local-first, open-source knowledge app: Notion-style pages and databases, Obsidian-style [[links]], backlinks and a graph, real-time collaboration and plugins. This container is the sync server and the web app. Your notes also stay on every device that uses them, and export to plain markdown any time.&#xD;
+&#xD;
+After the first start, create the owner from the container's console: su-exec node tessera-server create-owner</Overview>
+  <Category>Productivity: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:8787]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/femboypuppy/Tessera/main/deploy/appstores/unraid/tessera.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/femboypuppy/Tessera/main/apps/desktop/src-tauri/icons/icon.png</Icon>
+  <!-- Started as root so the entrypoint can give the appdata folder to the app user (uid 1000); the server then runs unprivileged. -->
+  <ExtraParams>--user 0 --security-opt no-new-privileges:true</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI port" Target="8787" Default="8787" Mode="tcp" Description="Port of the web app and the sync server." Type="Port" Display="always" Required="true" Mask="false">8787</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/tessera" Mode="rw" Description="The database and attachments. Back this folder up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/tessera</Config>
+  <Config Name="Public URL" Target="PUBLIC_URL" Default="http://tower.local:8787" Mode="" Description="The address people use to reach Tessera (invite links, the desktop app). Use https:// behind a reverse proxy." Type="Variable" Display="always" Required="true" Mask="false">http://tower.local:8787</Config>
+  <Config Name="Sign-up mode" Target="SIGNUP_MODE" Default="invite|open|closed" Mode="" Description="Who can create an account." Type="Variable" Display="always" Required="false" Mask="false">invite</Config>
+  <Config Name="Max upload (MB)" Target="MAX_UPLOAD_MB" Default="25" Mode="" Description="Largest attachment." Type="Variable" Display="advanced" Required="false" Mask="false">25</Config>
+  <Config Name="Log level" Target="LOG_LEVEL" Default="info|warn|error|debug" Mode="" Description="How much the server logs." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+</Container>

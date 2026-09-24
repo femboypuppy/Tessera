@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-registry-upsert"
+description = "Enables the registry_upsert command without any pre-configured scope."
+commands.allow = ["registry_upsert"]
+
+[[permission]]
+identifier = "deny-registry-upsert"
+description = "Denies the registry_upsert command without any pre-configured scope."
+commands.deny = ["registry_upsert"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-folder-reveal"
+description = "Enables the folder_reveal command without any pre-configured scope."
+commands.allow = ["folder_reveal"]
+
+[[permission]]
+identifier = "deny-folder-reveal"
+description = "Denies the folder_reveal command without any pre-configured scope."
+commands.deny = ["folder_reveal"]

@@ -1,0 +1,28 @@
+# Tessera on Render (a Blueprint). Guide: deploy/render/README.md.
+# Point the Blueprint at this file: Blueprint path `deploy/render/render.yaml`.
+services:
+  - type: web
+    name: tessera
+    runtime: docker
+    # Builds deploy/render/Dockerfile: the published image, started as root because Render
+    # mounts disks owned by root (the image's entrypoint then runs the server as `node`).
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: ./deploy/render
+    # Persistent disks need a paid instance type.
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /api/health
+    disk:
+      name: tessera-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: SIGNUP_MODE
+        value: invite
+      - key: LOG_LEVEL
+        value: info
+      # https://<service>.onrender.com, or your own domain. Asked for when the Blueprint is created.
+      - key: PUBLIC_URL
+        sync: false

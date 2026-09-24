@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-workspace-merge-conflict"
+description = "Enables the workspace_merge_conflict command without any pre-configured scope."
+commands.allow = ["workspace_merge_conflict"]
+
+[[permission]]
+identifier = "deny-workspace-merge-conflict"
+description = "Denies the workspace_merge_conflict command without any pre-configured scope."
+commands.deny = ["workspace_merge_conflict"]
