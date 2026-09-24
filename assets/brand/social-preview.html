@@ -1,0 +1,182 @@
+<!doctype html>
+<!--
+  The GitHub social preview (1280×640). `pnpm --dir docs brand` renders it to social-preview.png
+  with Playwright. Every color comes from packages/ui/src/styles/tokens.css (linked below); the
+  values in :root are only fallbacks. Opening this file in a browser shows the same picture.
+-->
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tessera social preview</title>
+    <style>
+      @font-face {
+        font-family: 'Inter Variable';
+        font-weight: 100 900;
+        src: url('../../docs/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+          format('woff2');
+      }
+      :root {
+        --tess-bg: #191919;
+        --tess-fg: #ebebea;
+        --tess-fg-muted: #a3a3a0;
+        --tess-border: #2f2f2f;
+        --tess-accent: #5b5bd6;
+        --tess-accent-text: #b1a9ff;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+      }
+      body {
+        position: relative;
+        background:
+          radial-gradient(900px 520px at 88% 30%, rgb(91 91 214 / 0.2), transparent 70%),
+          var(--tess-bg);
+        color: var(--tess-fg);
+        font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #mosaic {
+        position: absolute;
+        inset: 0 0 0 640px;
+        mask-image: linear-gradient(to right, transparent 0%, black 55%);
+      }
+      #mosaic span {
+        position: absolute;
+        width: 52px;
+        height: 52px;
+        border-radius: 10px;
+      }
+      main {
+        position: absolute;
+        left: 88px;
+        top: 0;
+        bottom: 0;
+        width: 760px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 28px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+      .brand img {
+        width: 88px;
+        height: 88px;
+        filter: drop-shadow(0 12px 32px rgb(91 91 214 / 0.35));
+      }
+      h1 {
+        font-size: 92px;
+        font-weight: 700;
+        letter-spacing: -0.035em;
+        line-height: 1;
+      }
+      .tagline {
+        font-size: 42px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.18;
+      }
+      .tagline span {
+        color: var(--tess-fg-muted);
+      }
+      ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 0;
+        list-style: none;
+      }
+      li {
+        padding: 10px 18px;
+        border: 1px solid var(--tess-border);
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.04);
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--tess-fg);
+      }
+      li b {
+        color: var(--tess-accent-text);
+        font-weight: 600;
+      }
+      footer {
+        position: absolute;
+        left: 88px;
+        bottom: 44px;
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--tess-fg-muted);
+        letter-spacing: 0.01em;
+      }
+    </style>
+    <!-- The design tokens (they override the fallbacks above). -->
+    <link rel="stylesheet" href="../../packages/ui/src/styles/tokens.css" />
+  </head>
+  <body>
+    <div id="mosaic" aria-hidden="true"></div>
+    <main>
+      <div class="brand">
+        <img src="app-icon.svg" alt="" />
+        <h1>Tessera</h1>
+      </div>
+      <p class="tagline">
+        Your notes, your server.<br /><span>Notion's power, Obsidian's freedom.</span>
+      </p>
+      <ul>
+        <li><b>Local-first</b> · works offline</li>
+        <li>Real-time collaboration</li>
+        <li>Self-host in one command</li>
+        <li>Open source · <b>MIT</b></li>
+      </ul>
+    </main>
+    <footer>github.com/femboypuppy/Tessera</footer>
+    <script>
+      // A deterministic mosaic (same seed, same picture), colored with the tag tokens.
+      (function drawMosaic() {
+        const root = document.getElementById('mosaic');
+        const style = getComputedStyle(document.documentElement);
+        const token = (name, fallback) => style.getPropertyValue(name).trim() || fallback;
+        const palette = [
+          [token('--tess-accent', '#5b5bd6'), 1],
+          [token('--tess-accent', '#5b5bd6'), 0.7],
+          [token('--tess-accent', '#5b5bd6'), 0.45],
+          [token('--tess-accent-text', '#b1a9ff'), 0.4],
+          [token('--tess-tag-blue-fg', '#72b5ea'), 0.35],
+          [token('--tess-tag-purple-fg', '#bfa2dd'), 0.35],
+          [token('--tess-tag-default-bg', '#373737'), 1],
+          [token('--tess-tag-default-bg', '#373737'), 1],
+          [token('--tess-tag-default-bg', '#373737'), 0.8],
+          [token('--tess-tag-default-bg', '#373737'), 0.6],
+        ];
+        let seed = 20260923;
+        const random = () => {
+          seed = (seed * 1664525 + 1013904223) % 4294967296;
+          return seed / 4294967296;
+        };
+        const step = 64;
+        for (let row = 0; row < 11; row += 1) {
+          for (let col = 0; col < 12; col += 1) {
+            if (random() < 0.22) continue;
+            const [color, opacity] = palette[Math.floor(random() * palette.length)];
+            const tile = document.createElement('span');
+            tile.style.left = `${col * step + (row % 2) * 12 - 20}px`;
+            tile.style.top = `${row * step - 24}px`;
+            tile.style.background = color;
+            tile.style.opacity = String(opacity);
+            root.append(tile);
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>

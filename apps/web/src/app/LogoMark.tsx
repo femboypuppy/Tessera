@@ -1,9 +1,19 @@
 import { cn } from '@tessera/ui';
 
-/**
- * A placeholder mosaic-tile mark in the accent color (Agent 10 designs the final logo in
- * `assets/`). Decorative: the product name is always written next to it.
- */
+/** The logo's nine tiles (`assets/brand/logo-mark.svg`): a solid T among fainter tiles. */
+const TILES = [
+  [0, 0, 1],
+  [11.4, 0, 1],
+  [22.8, 0, 1],
+  [11.4, 11.4, 1],
+  [11.4, 22.8, 1],
+  [0, 11.4, 0.3],
+  [22.8, 11.4, 0.3],
+  [0, 22.8, 0.14],
+  [22.8, 22.8, 0.14],
+] as const;
+
+/** The Tessera mark in the accent color. Decorative: the product name is always written next to it. */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg
@@ -12,10 +22,18 @@ export function LogoMark({ className }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      <rect x="3" y="3" width="12" height="12" rx="3" fill="currentColor" />
-      <rect x="17" y="3" width="12" height="12" rx="3" fill="currentColor" opacity="0.55" />
-      <rect x="3" y="17" width="12" height="12" rx="3" fill="currentColor" opacity="0.55" />
-      <rect x="17" y="17" width="12" height="12" rx="3" fill="currentColor" />
+      {TILES.map(([x, y, opacity]) => (
+        <rect
+          key={`${x}-${y}`}
+          x={x}
+          y={y}
+          width="9.2"
+          height="9.2"
+          rx="2.3"
+          fill="currentColor"
+          fillOpacity={opacity}
+        />
+      ))}
     </svg>
   );
 }

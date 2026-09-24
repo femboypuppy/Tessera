@@ -80,6 +80,23 @@ test('shell screenshots', async ({ page }) => {
   await page.getByRole('button', { name: 'Change cover' }).click();
   await page.getByRole('button', { name: 'aurora', exact: true }).click();
   await page.getByRole('button', { name: 'Add to favorites' }).click();
+  // The page itself, written in the editor with markdown shortcuts.
+  await page.getByRole('textbox', { name: 'Page title' }).press('Enter');
+  for (const line of [
+    'Everything the team knows about the Moon landings, one page per mission.',
+    '## This week',
+    '[] Review the lunar module checklist with the crew',
+    'Book the simulator for Thursday',
+    'Send the flight plan to Mission control',
+    '',
+    '## Reading',
+    'Start with “Carrying the Fire” in the reading list, then the Apollo 11 press kit.',
+  ]) {
+    await page.keyboard.type(line);
+    await page.keyboard.press('Enter');
+  }
+  await page.keyboard.press('Backspace');
+  await expect(page.getByRole('main').getByRole('checkbox')).toHaveCount(3);
   await blur(page);
   await snap(page, 'shell');
 
@@ -94,8 +111,12 @@ test('shell screenshots', async ({ page }) => {
   await tree.getByRole('treeitem', { name: 'Reading list' }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Move to trash' }).click();
   const notifications = page.getByRole('region', { name: /Notifications/ });
-  for (const dismiss of await notifications.getByRole('button', { name: 'Dismiss' }).all())
-    await dismiss.click();
+  // One at a time: each dismissed toast leaves the list.
+  const dismiss = notifications.getByRole('button', { name: 'Dismiss' });
+  for (let left = await dismiss.count(); left > 0; left -= 1) {
+    await dismiss.first().click();
+    await expect(dismiss).toHaveCount(left - 1);
+  }
   await page
     .getByRole('navigation', { name: 'Sidebar' })
     .getByRole('button', { name: 'Trash' })

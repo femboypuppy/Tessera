@@ -1,0 +1,29 @@
+name: Question
+description: Ask how to do something. Questions get the fastest answers in Discussions.
+title: '[Question]: '
+labels: ['question']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Most questions get a faster answer in [GitHub Discussions](https://github.com/femboypuppy/Tessera/discussions/categories/q-a)**, where the whole community can help and the answer stays easy to find.
+        The [docs](https://femboypuppy.github.io/Tessera/), the [FAQ](https://femboypuppy.github.io/Tessera/guide/faq) and [troubleshooting](https://femboypuppy.github.io/Tessera/guide/troubleshooting) may already answer it.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What are you trying to do, and what have you tried?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tessera version
+      placeholder: 0.1.0
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before asking
+      options:
+        - label: I searched the docs and Discussions.
+          required: true

@@ -55,7 +55,6 @@ const task = (checked: boolean, value: string) => ({
 const launchPlanV1 = {
   type: 'doc',
   content: [
-    h(1, 'Launch plan'),
     p('Apollo 11 lifts off from Launch Complex 39A. This page tracks the go/no-go poll.'),
     {
       type: 'taskList',
@@ -66,7 +65,6 @@ const launchPlanV1 = {
 const launchPlanV2 = {
   type: 'doc',
   content: [
-    h(1, 'Launch plan'),
     p(
       'Apollo 11 lifts off from Launch Complex 39A at 09:32 EDT. This page tracks the go/no-go poll.',
     ),
@@ -149,6 +147,9 @@ test('sync screenshots', async ({ browser, page, context, syncServer, baseURL })
   await joinWorkspace(grace, syncServer, 'Apollo research');
   await expect(pageTree(grace).getByRole('treeitem', { name: 'Launch plan' })).toBeVisible();
   await grace.goto(`/p/${planId}`);
+  // Grace puts her caret in the text: Ada sees it, labeled with her name.
+  await grace.getByText('Range safety check', { exact: true }).click();
+  await expect(page.locator('.tess-remote-label')).toHaveText('Grace Hopper', { timeout: 15_000 });
   const presence = page.getByTestId('presence');
   await expect(presence).toHaveAccessibleName(/Grace Hopper/);
   await presence.click();
@@ -157,14 +158,16 @@ test('sync screenshots', async ({ browser, page, context, syncServer, baseURL })
   await page.keyboard.press('Escape');
 
   // History: a saved version, later edits, and a preview of the first version.
-  await page.getByRole('button', { name: 'Version history' }).click();
+  await page.getByRole('banner').getByRole('button', { name: 'Version history' }).click();
   const panel = page.getByRole('complementary', { name: 'Version history' });
   await panel.getByRole('button', { name: 'Save version' }).click();
   await panel.getByLabel('Name (optional)').fill('First outline');
   await panel.getByRole('button', { name: 'Save version' }).click();
   await expect(panel.getByText('First outline')).toBeVisible();
   await writeDoc(grace, planId, launchPlanV2);
-  await expect(page.getByRole('button', { name: 'Version history' })).toBeVisible();
+  await expect(
+    page.getByRole('banner').getByRole('button', { name: 'Version history' }),
+  ).toBeVisible();
   await panel.getByRole('button', { name: 'Save version' }).click();
   await panel.getByLabel('Name (optional)').fill('Go/no-go poll added');
   await panel.getByRole('button', { name: 'Save version' }).click();

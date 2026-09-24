@@ -29,7 +29,7 @@ async function snap(page: Page, name: string): Promise<void> {
 async function openDemoWorkspace(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: /Open the demo workspace/ }).click();
-  await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue('Start here');
+  await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue('Welcome to Tessera');
   await expect(
     pageTree(page).getByRole('treeitem', { name: 'Projects', exact: true }),
   ).toBeVisible();

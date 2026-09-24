@@ -1,0 +1,53 @@
+name: Feature request
+description: Suggest an idea or an improvement.
+title: '[Feature]: '
+labels: ['enhancement', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Please check the [roadmap](https://github.com/femboypuppy/Tessera#roadmap) and [existing requests](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+label%3Aenhancement) first.
+        Could this be a plugin? Many ideas can be, and plugins ship faster. See the [plugin docs](https://femboypuppy.github.io/Tessera/plugins/).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe what you're trying to do and what gets in the way today.
+      placeholder: I keep a weekly review page and have to copy last week's by hand.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to happen?
+      description: Describe the feature as you imagine it. Mockups are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Workarounds you use now, or how other apps handle this.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Editor
+        - Databases
+        - Links, search and graph
+        - Sync and collaboration
+        - Import and export
+        - Plugins
+        - Desktop app
+        - Self-hosting
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to help build this.
