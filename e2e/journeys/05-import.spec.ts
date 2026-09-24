@@ -45,9 +45,12 @@ test('import a markdown vault from the first-run screen', async ({ page, app }) 
       .last()
       .click();
     await expect(dialog).toContainText(/imported/i, { timeout: 30_000 });
-    await expect(dialog).toContainText(
-      new RegExp(`${vault.pages.filter((entry) => entry.role === 'page').length}\\s+pages`),
-    );
+    // The report counts every page it created: the notes, the database and its rows, and the
+    // import's root page. (It shows each label, then its number.)
+    const rows = vault.pages.filter((entry) => entry.role === 'row').length;
+    await expect(dialog).toContainText(new RegExp(`Pages\\s*${vault.pages.length + 1}(?!\\d)`));
+    await expect(dialog).toContainText(/Databases\s*1(?!\d)/);
+    await expect(dialog).toContainText(new RegExp(`Rows\\s*${rows}(?!\\d)`));
     await dialog
       .getByRole('button', { name: /done|close|open/i })
       .first()

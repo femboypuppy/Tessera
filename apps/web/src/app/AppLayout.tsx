@@ -188,7 +188,11 @@ export function AppLayout() {
   if (bareRoute) {
     const Component = bareRoute.component;
     return (
-      <main id="main" className="h-dvh overflow-y-auto bg-bg text-fg">
+      // In print the page flows onto as many sheets as it needs (not one screen of a scroller).
+      <main
+        id="main"
+        className="h-dvh overflow-y-auto bg-bg text-fg print:h-auto print:overflow-visible"
+      >
         <FeatureBoundary featureId={bareRoute.featureId} className="m-6">
           <Suspense fallback={<ViewLoading />}>
             <Component />

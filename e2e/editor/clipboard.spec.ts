@@ -25,6 +25,21 @@ import {
   type NodeJSON,
 } from './helpers';
 
+/**
+ * Puts the caret on a new empty paragraph at the end of the page, outside any list or quote (a
+ * paste that ends in a list leaves the caret there; Enter on its empty item lifts it out), so the
+ * next paste starts with its own blocks.
+ */
+async function newLineAtEnd(page: Page): Promise<void> {
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.press('Enter');
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const last = (await docJSON(page)).content?.at(-1);
+    if (last?.type === 'paragraph' && !last.content?.length) return;
+    await page.keyboard.press('Enter');
+  }
+}
+
 /** True when the workspace runs the stub codec (paragraphs and headings only). */
 async function stubCodec(page: Page): Promise<boolean> {
   const diagnostics = await readDiagnostics(page);
@@ -85,8 +100,7 @@ test('pastes HTML from Google Docs, Notion and web pages as blocks, never raw HT
     [WEB_PAGE_HTML, WEB_PAGE_TEXT],
   ] as const) {
     await pasteData(page, { 'text/html': html, 'text/plain': text });
-    await page.keyboard.press('ControlOrMeta+End');
-    await page.keyboard.press('Enter');
+    await newLineAtEnd(page);
   }
   const doc = await docJSON(page);
   const serialized = JSON.stringify(doc);
@@ -169,7 +183,11 @@ test('copies HTML and markdown, and pastes Tessera content back losslessly', asy
   const clipboard = await copyData(page);
   expect(clipboard['text/html']).toContain('data-pm-slice');
   expect(clipboard['text/plain']).toContain('Checklist');
-  expect(clipboard['text/plain']).not.toMatch(/<[a-z]/i);
+  // The plain flavor is markdown, not the HTML flavor (markdown writes toggles as <details>), and
+  // leaves out block IDs, which mean nothing to other apps.
+  expect(clipboard['text/plain']).not.toMatch(/<(p|h[1-6]|ul|ol|li|div|span|strong|em)\b/i);
+  expect(clipboard['text/plain']).not.toContain('data-pm-slice');
+  expect(clipboard['text/plain']).not.toMatch(/ \^[A-Za-z0-9-]+$/m);
   if (!(await stubCodec(page))) expect(clipboard['text/plain']).toContain('## Checklist');
 
   await createPage(page, 'Copy');

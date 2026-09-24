@@ -600,7 +600,9 @@ updateDocJSON(sourceHandle.doc, (doc) => replaceTextWithPageLink(doc, mentions[0
 ```
 
 **`MarkdownCodec`**: `parse(markdown, { resolvePageLink?, resolveAsset? }) → { doc, frontmatter, warnings }`,
-`serialize(doc, { linkStyle?, resolvePage?, resolveAssetPath?, frontmatter? }) → string`,
+`serialize(doc, { linkStyle?, resolvePage?, resolveAssetPath?, frontmatter?, keepBlockId? }) → string`
+(`keepBlockId` picks the block IDs written as Obsidian ` ^id`: the markdown export keeps the ones
+links point at, the editor's copy none, since the editor gives most blocks an ID),
 `parseHTML(html) → DocJSON` (sanitized). Default link style is `[[wikilinks]]`. Synchronous, so it
 can run on paste.
 
@@ -987,6 +989,7 @@ branch builds on its own.
 - The current user's ID is a live device setting, so signing in can switch it to the account ID.
 - Added at merge time from the agents' contract change requests (`HANDOFF/integration.md`):
   `createPages`, `addRows`, `checkRowValues` and `ctx.workspace.addDatabaseRows` (bulk creation),
+  `MarkdownSerializeOptions.keepBlockId` (clean markdown exports and copies),
   the `credentialStore` service, `AssetStore.retainUrl`, `SyncStatusInfo.readOnly` (read-only
   viewers), `SearchHit.heading`/`blockId`, `Backlink.blockId`, the `workspaceMenuItems`
   contribution, and replaceable registrations for core's stub importer and exporter.

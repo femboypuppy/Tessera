@@ -61,6 +61,21 @@ Architect-owned follow-ups done in the same pass, because they are shell changes
 asked for: `Suspense` around `pageTopSections` and `pageFooterSections` (search), and
 `/p/<id>#block-<blockId>` or `#<heading-slug>` URLs as scroll targets (editor's "Copy link").
 
+## Merge log
+
+How each merge was checked on this machine (Windows 11, i5-10400F 6 cores/12 threads, shared
+with a VMware VM and desktop apps that keep the CPU near 100% before any test starts). Unit tests:
+`pnpm test`. End to end: Chromium with two workers and Firefox with one (the CI setting is two
+workers per browser on dedicated runners; here, two parallel Firefox workers starve each other past
+the 45 s test timeout). A failure is re-run alone before it counts as fixed or flaky.
+
+| Merge | Adapted at the merge | Unit | e2e |
+|---|---|---|---|
+| `feat/ci` | Root `prepare` (git hooks), `.lighthouseci/` ignored, WCAG AA contrast tokens, Avatar text by contrast, focusable ScrollArea, empty accessibility baseline, SECURITY.md contact | 407 passed | 66 passed, 22 skipped (journeys waiting for features) |
+| `feat/sync` | Credentials on core's `credentialStore` service (IndexedDB store at 50); the sync e2e server fixture gets its own 120 s budget | 531 passed | Chromium all passed; Firefox passes with one worker |
+| `feat/editor` | Journey 08 runs for real: helpers follow the real Sync & account UI, Bob opens the invite link; the testkit server on `localhost` with the app's origin allowed (the Lax cookie is never sent to 127.0.0.1); seeded-harness fixture budget and warm-up; Firefox typing guard (24 ms); EmojiPicker query by label; test timeouts for busy machines | 682 passed | Chromium 60 + Firefox 60 passed after the fixes (9 skipped each, waiting for search, databases, importers) |
+| `feat/importers` | `applyPlan` creates pages with `createPages` in batches of 200 and rows with `addRows` (the 2,000-note import's page phase: 11.8 s → 0.17 s); the shell prints bare routes on as many sheets as needed (the print view's override is gone); `serialize(…, { keepBlockId })`: the markdown export writes only block IDs a link points at, the editor's copy none (every editor block has an ID, so exports had ` ^id` on nearly every line); the clipboard spec starts each paste on a top-level line (with the real codec a pasted list kept the caret in it) and checks the plain flavor is markdown; journey 05 checks the report's real totals | 792 passed | Chromium 66 + Firefox 66 passed, 8 skipped each |
+
 ## Follow-ups from the handoffs
 
 Status is filled in as the merges land (✅ done, ⏳ in progress, ➡️ deferred with an issue below).

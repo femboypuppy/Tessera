@@ -455,25 +455,70 @@ importers:
       '@tessera/markdown':
         specifier: workspace:*
         version: link:../markdown
+      '@tessera/ui':
+        specifier: workspace:*
+        version: link:../ui
+      character-entities:
+        specifier: 2.0.2
+        version: 2.0.2
+      dompurify:
+        specifier: 3.4.15
+        version: 3.4.15
       fflate:
         specifier: 0.8.3
         version: 0.8.3
+      lucide-react:
+        specifier: 1.47.0
+        version: 1.47.0(react@19.3.0)
       papaparse:
         specifier: 5.7.0
         version: 5.7.0
+      react-router:
+        specifier: 8.4.0
+        version: 8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       yaml:
         specifier: 2.9.1
         version: 2.9.1
       yjs:
         specifier: 13.6.32
         version: 13.6.32
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
+      '@testing-library/dom':
+        specifier: 10.4.2
+        version: 10.4.2
+      '@testing-library/jest-dom':
+        specifier: 7.0.1
+        version: 7.0.1(@testing-library/dom@10.4.2)(vitest@5.0.1)
+      '@testing-library/react':
+        specifier: 16.3.3
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@testing-library/user-event':
+        specifier: 14.6.7
+        version: 14.6.7(@testing-library/dom@10.4.2)
       '@types/papaparse':
         specifier: 5.5.2
         version: 5.5.2
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
       fast-check:
         specifier: 4.10.2
         version: 4.10.2
+      jsdom:
+        specifier: 30.1.1
+        version: 30.1.1
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
 
   packages/markdown:
     dependencies:
@@ -483,12 +528,54 @@ importers:
       '@types/mdast':
         specifier: 4.0.4
         version: 4.0.4
+      '@types/unist':
+        specifier: 3.0.3
+        version: 3.0.3
+      character-entities:
+        specifier: 2.0.2
+        version: 2.0.2
       dompurify:
         specifier: 3.4.15
         version: 3.4.15
+      mdast-util-from-markdown:
+        specifier: 2.0.3
+        version: 2.0.3
+      mdast-util-frontmatter:
+        specifier: 2.0.1
+        version: 2.0.1
+      mdast-util-gfm:
+        specifier: 3.1.0
+        version: 3.1.0
+      mdast-util-gfm-autolink-literal:
+        specifier: 2.0.1
+        version: 2.0.1
+      mdast-util-to-markdown:
+        specifier: 2.1.2
+        version: 2.1.2
       mdast-util-to-string:
         specifier: 4.0.0
         version: 4.0.0
+      micromark-extension-frontmatter:
+        specifier: 2.0.0
+        version: 2.0.0
+      micromark-extension-gfm:
+        specifier: 3.0.0
+        version: 3.0.0
+      micromark-util-character:
+        specifier: 2.1.1
+        version: 2.1.1
+      micromark-util-chunked:
+        specifier: 2.0.1
+        version: 2.0.1
+      micromark-util-classify-character:
+        specifier: 2.0.1
+        version: 2.0.1
+      micromark-util-resolve-all:
+        specifier: 2.0.1
+        version: 2.0.1
+      micromark-util-types:
+        specifier: 2.0.2
+        version: 2.0.2
       remark-frontmatter:
         specifier: 5.0.0
         version: 5.0.0

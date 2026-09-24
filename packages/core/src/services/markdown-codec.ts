@@ -33,6 +33,11 @@ export interface MarkdownSerializeOptions {
   resolveAssetPath?: (assetId: string) => string | null | undefined;
   /** Frontmatter to write at the top. */
   frontmatter?: Record<string, JsonValue>;
+  /**
+   * Which block IDs to write (Obsidian's ` ^id`). Default: every one. The editor gives most blocks
+   * an ID, so exports keep only the IDs links point at, and the clipboard keeps none.
+   */
+  keepBlockId?: (blockId: string) => boolean;
 }
 
 /**

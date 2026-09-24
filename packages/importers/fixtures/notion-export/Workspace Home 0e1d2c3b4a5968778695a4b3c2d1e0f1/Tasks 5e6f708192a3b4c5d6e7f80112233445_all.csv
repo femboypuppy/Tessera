@@ -1,0 +1,4 @@
+﻿Name,Status,Tags,Due,Done,Estimate,Budget,Progress,Link,Owner email,Crew,Created time,Notes,Assignee
+Book the pad,In progress,"launch, logistics","September 23, 2026",No,3,"$1,200.00",45%,https://example.com/pad,ops@example.com,Neil Armstrong (https://www.notion.so/Neil-Armstrong-a3b4c5d6e7f80112233445566778899a?pvs=21),"September 20, 2026 3:30 PM",Call the Cape first.,Ada Lovelace
+Fuel the rocket,Done,"launch, fuel","September 25, 2026 → September 26, 2026",Yes,8,"$40,000.00",100%,https://example.com/fuel,fuel@example.com,"Neil Armstrong (https://www.notion.so/Neil-Armstrong-a3b4c5d6e7f80112233445566778899a?pvs=21), Buzz Aldrin (https://www.notion.so/Buzz-Aldrin-b4c5d6e7f80112233445566778899aab?pvs=21)","September 21, 2026 9:05 AM",,Grace Hopper
+Write the press kit,Not started,press,"October 1, 2026",No,2,$350.00,0%,https://example.com/press,press@example.com,,"September 22, 2026 11:45 AM","Draft, review, ship",Ada Lovelace

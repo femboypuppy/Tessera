@@ -72,6 +72,9 @@ export function serializeOptions(ctx: AppContext): MarkdownSerializeOptions {
   const snapshot = ctx.workspace.pages.getSnapshot();
   return {
     linkStyle: 'wikilink',
+    // Copied text is for other apps: block IDs (` ^id` on almost every block) are noise there, and
+    // pasting back into Tessera uses the HTML flavor, which keeps everything.
+    keepBlockId: () => false,
     resolvePage: (pageId) => {
       const page = snapshot.get(pageId);
       return page ? { title: page.title || t('untitled') } : null;
