@@ -19,6 +19,8 @@ export interface Device {
   syncState: SyncStateStore;
   replicator: BackgroundReplicator;
   api: ServerApi;
+  /** Docs the background sync pulled while closed (what indexes are told to re-read). */
+  pulled: string[];
   open(docName: string): Promise<DocHandle>;
   goOffline(): void;
   goOnline(): void;
@@ -58,6 +60,7 @@ export async function createDevice(
     getUser: () => ({ id: `user-${options.name}`, name: options.name, color: '#0090ff' }),
   });
   const api = new ServerApi(t.url, { mode: 'bearer', getToken });
+  const pulled: string[] = [];
   const replicator = new BackgroundReplicator({
     workspaceId,
     provider,
@@ -67,6 +70,7 @@ export async function createDevice(
     pageExists: () => true,
     intervalMs: 60_000,
     docTimeoutMs: 10_000,
+    onPulled: (docName) => pulled.push(docName),
   });
   replicator.start();
   // The workspace doc is always open in the app; its connection authorizes the workspace.
@@ -79,6 +83,7 @@ export async function createDevice(
     syncState,
     replicator,
     api,
+    pulled,
     open: (docName) => manager.load(docName),
     goOffline: () => connectivity.dispatchEvent(new Event('offline')),
     goOnline: () => connectivity.dispatchEvent(new Event('online')),

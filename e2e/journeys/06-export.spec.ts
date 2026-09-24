@@ -20,16 +20,9 @@ test('export the workspace to a markdown zip', async ({ freshWorkspace: app, pag
     await runCommand(app, 'Export');
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    await dialog
-      .getByRole('radio', { name: /markdown/i })
-      .or(dialog.getByRole('option', { name: /markdown/i }))
-      .first()
-      .click();
-    await dialog
-      .getByRole('radio', { name: /workspace/i })
-      .or(dialog.getByRole('option', { name: /workspace/i }))
-      .first()
-      .click();
+    // By name from its start: the backup format's description also mentions "workspace".
+    await dialog.getByRole('radio', { name: /^Markdown/ }).click();
+    await dialog.getByRole('radio', { name: /^The whole workspace/ }).click();
     const download = page.waitForEvent('download');
     await dialog
       .getByRole('button', { name: /^export/i })

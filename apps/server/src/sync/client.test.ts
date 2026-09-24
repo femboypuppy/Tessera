@@ -155,6 +155,9 @@ describe('HocuspocusSyncProvider with the runtime DocManager', () => {
       async () => expect(await storedText(phone, 'page:shared')).toBe('written on the laptop'),
       10_000,
     );
+    // Indexes are told about it (right after the pulled update is stored): nothing else sees a
+    // closed doc change.
+    await eventually(() => expect(phone.pulled).toContain('page:shared'));
     await phone.settled();
     phone.goOffline();
     const offlineCopy = await phone.open('page:shared');

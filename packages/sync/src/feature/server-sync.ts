@@ -1,4 +1,10 @@
-import { databaseDocName, pageDocName, SETTING_KEYS, type AppContext } from '@tessera/core';
+import {
+  databaseDocName,
+  pageDocName,
+  parseDocName,
+  SETTING_KEYS,
+  type AppContext,
+} from '@tessera/core';
 import type { ServerApi } from '../client/api';
 import { ServerApiError } from '../client/errors';
 import type { SyncStateStore } from '../stores/sync-state';
@@ -56,6 +62,12 @@ export async function startServerSync(
       }),
     onDeletedOnServer: (docName) => {
       if (!provider.isOpen(docName)) void docStore.delete(docName);
+    },
+    // A page or database pulled in the background: search and backlinks re-read it.
+    onPulled: (docName) => {
+      const parsed = parseDocName(docName);
+      if (parsed && parsed.kind !== 'workspace')
+        void ctx.services.searchIndex.upsert(parsed.id).catch(() => undefined);
     },
   });
   replicator.start();

@@ -43,6 +43,11 @@ export interface ReplicatorOptions {
   onProblem?(problem: ReplicatorProblem): void;
   /** A doc the server deleted for good (someone deleted the page): drop the local copy. */
   onDeletedOnServer?(docName: string): void;
+  /**
+   * A closed doc received the server's changes, now in the doc store. Nothing else sees them
+   * (no live doc, no `doc.changed`), so indexes re-read it from here.
+   */
+  onPulled?(docName: string): void;
 }
 
 /** Origin of the stored state loaded into a background doc (never stored again). */
@@ -241,8 +246,9 @@ export class BackgroundReplicator {
       connection.attach();
     });
     connection.destroy();
-    await Promise.allSettled(writes);
+    const stored = await Promise.allSettled(writes);
     doc.destroy();
+    if (stored.some((result) => result.status === 'fulfilled')) this.options.onPulled?.(docName);
     if (outcome === 'ok') await syncState.markSynced(docName, observed, serverSeq);
     else if (outcome === 'deleted') {
       await syncState.remove(docName);
