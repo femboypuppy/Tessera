@@ -5,7 +5,7 @@
  * Chromium context, prints a markdown table and writes JSON.
  *
  *   pnpm exec tsx scripts/bench/run.ts [--out dir] [--only cold-start,search]
- *     [--runs 3] [--compare baseline/results.json] [--strict]
+ *     [--runs 3] [--compare baseline/results.json] [--strict] [--headed]
  *
  * Budgets are reported, not enforced (the owners' tests and the bundle check enforce theirs);
  * `--strict` makes a missed budget exit with 1. A benchmark that errors always does.
@@ -30,6 +30,8 @@ const { values } = parseArgs({
     runs: { type: 'string', default: '3' },
     compare: { type: 'string' },
     strict: { type: 'boolean', default: false },
+    // A visible window renders with the GPU; headless Chromium falls back to software rendering.
+    headed: { type: 'boolean', default: false },
   },
 });
 
@@ -51,7 +53,7 @@ const harness = await startHarness({
   mode: 'preview',
   outDir: path.join(root, 'node_modules', '.cache', 'bench-harness'),
 });
-const browser = await chromium.launch();
+const browser = await chromium.launch({ headless: !values.headed });
 const context: BenchContext = {
   browser,
   harness,

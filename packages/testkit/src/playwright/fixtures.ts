@@ -118,18 +118,27 @@ export const test = base.extend<TesseraFixtures, TesseraWorkerFixtures>({
     { scope: 'worker', timeout: 120_000 },
   ],
 
-  collaborators: async ({ browser, syncServer, baseURL }, provide) => {
-    // Against a running server (TESSERA_E2E_SERVER_URL), both people use the app it serves.
-    const appURL = externalServerUrl() ?? baseURL;
-    const contexts = await Promise.all([
-      browser.newContext({ baseURL: appURL }),
-      browser.newContext({ baseURL: appURL }),
-    ]);
-    const [alice, bob] = await Promise.all(contexts.map((context) => context.newPage()));
-    if (!alice || !bob) throw new Error('Could not open two pages');
-    await provide({ server: syncServer, alice: new TesseraApp(alice), bob: new TesseraApp(bob) });
-    await Promise.all(contexts.map((context) => context.close()));
-  },
+  collaborators: [
+    async ({ browser, baseURL }, provide) => {
+      // A server of its own for each test: a collaboration starts by creating the server's owner,
+      // which a server shared with an earlier test already has. Against a running server
+      // (TESSERA_E2E_SERVER_URL), both people use the app it serves.
+      const server = await startSyncServer(
+        baseURL ? { corsOrigins: [new URL(baseURL).origin] } : {},
+      );
+      const appURL = externalServerUrl() ?? baseURL;
+      const contexts = await Promise.all([
+        browser.newContext({ baseURL: appURL }),
+        browser.newContext({ baseURL: appURL }),
+      ]);
+      const [alice, bob] = await Promise.all(contexts.map((context) => context.newPage()));
+      if (!alice || !bob) throw new Error('Could not open two pages');
+      await provide({ server, alice: new TesseraApp(alice), bob: new TesseraApp(bob) });
+      await Promise.all(contexts.map((context) => context.close()));
+      await server.stop();
+    },
+    { timeout: 120_000 },
+  ],
 });
 
 export { expect };
