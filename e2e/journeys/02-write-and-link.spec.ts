@@ -9,7 +9,7 @@ test('write a page, link it to another and find the backlink', async ({
   freshWorkspace: app,
   page,
 }) => {
-  await app.requireFeatures('editor', 'backlinks');
+  await app.expectFeatures('editor', 'backlinks');
 
   await test.step('two pages exist', async () => {
     await app.newPage('Apollo program');

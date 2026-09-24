@@ -19,7 +19,7 @@ test('two people type in one page at once and see each other live', async ({ col
   const { server, alice: graceApp, bob: alanApp } = collaborators;
   test.setTimeout(180_000);
   await graceApp.createWorkspace('Compiler team');
-  await graceApp.requireFeatures('sync', 'editor');
+  await graceApp.expectFeatures('sync', 'editor');
 
   await test.step('Grace shares a page with Alan', async () => {
     await server.createOwner(grace);

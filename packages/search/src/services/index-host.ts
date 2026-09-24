@@ -427,13 +427,17 @@ export class IndexHost {
         }
       }
       this.flushMeta();
-      const transfer = [...contents, ...databases]
-        .map((item) => item.bytes?.buffer)
-        .filter((buffer): buffer is ArrayBuffer => buffer instanceof ArrayBuffer);
+      // Each request transfers only its own buffers: a buffer transferred with the first one is
+      // detached, and the second could no longer be sent (its databases went unindexed).
+      const buffers = (items: ReadonlyArray<{ bytes: Uint8Array | null }>) =>
+        items
+          .map((item) => item.bytes?.buffer)
+          .filter((buffer): buffer is ArrayBuffer => buffer instanceof ArrayBuffer);
       try {
         if (contents.length)
-          await this.transport.request({ type: 'content', items: contents }, transfer);
-        if (databases.length) await this.transport.request({ type: 'database', items: databases });
+          await this.transport.request({ type: 'content', items: contents }, buffers(contents));
+        if (databases.length)
+          await this.transport.request({ type: 'database', items: databases }, buffers(databases));
       } catch (error) {
         console.warn('[search] indexing a batch failed', error);
       }

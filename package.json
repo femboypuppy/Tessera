@@ -13,7 +13,7 @@
   "scripts": {
     "prepare": "node scripts/git-hooks/install.ts",
     "dev": "pnpm --parallel --filter @tessera/web --filter @tessera/server dev",
-    "build": "pnpm -r build",
+    "build": "pnpm -r build && node scripts/build-desktop.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -2,7 +2,7 @@
  * Helpers for driving the app shell in Playwright, using the labels the shell exposes to
  * assistive technology (see e2e/architect). Feature UIs are driven by the journeys themselves.
  */
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import {
   describeMissing,
   missingFeatures,
@@ -73,11 +73,12 @@ export class TesseraApp {
   }
 
   /**
-   * Skips the current test, with a message naming what is missing and who builds it, unless the
-   * running app has every feature in `required`. Call it after a workspace is open.
+   * Fails the current test, naming what is missing and who builds it, unless the running app has
+   * every feature in `required`: a feature that didn't load fails here, clearly, instead of as a
+   * selector timeout later. Call it after a workspace is open.
    */
-  async requireFeatures(...required: FeatureName[]): Promise<void> {
+  async expectFeatures(...required: FeatureName[]): Promise<void> {
     const missing = missingFeatures(await this.diagnostics(), required);
-    test.skip(missing.length > 0, describeMissing(missing));
+    expect(missing, describeMissing(missing)).toEqual([]);
   }
 }

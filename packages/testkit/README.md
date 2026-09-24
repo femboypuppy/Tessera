@@ -56,7 +56,7 @@ Import from `e2e/support` (it re-exports `@tessera/testkit/playwright`):
 import { expect, test } from '../support';
 
 test('search finds a page', async ({ freshWorkspace: app }) => {
-  await app.requireFeatures('search'); // skips with what's missing and who builds it
+  await app.expectFeatures('search'); // fails with what's missing and who builds it
   // …
 });
 

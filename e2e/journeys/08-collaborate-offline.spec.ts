@@ -19,7 +19,7 @@ const bob = { email: 'bob@example.com', name: 'Bob', password: 'staple horse bat
 test('two people edit one workspace, offline and back online', async ({ collaborators }) => {
   const { server, alice: aliceApp, bob: bobApp } = collaborators;
   await aliceApp.createWorkspace('Launch team');
-  await aliceApp.requireFeatures('sync', 'editor');
+  await aliceApp.expectFeatures('sync', 'editor');
   test.setTimeout(180_000);
 
   await test.step('Alice uploads her workspace to the server and invites Bob', async () => {

@@ -10,7 +10,7 @@ test('work survives a reload and shows up in another tab', async ({
   page,
   context,
 }) => {
-  await app.requireFeatures('persistence', 'editor');
+  await app.expectFeatures('persistence', 'editor');
 
   await test.step('pages with text are written', async () => {
     await app.newPage('Flight plan');

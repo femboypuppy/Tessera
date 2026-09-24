@@ -40,12 +40,6 @@ async function newLineAtEnd(page: Page): Promise<void> {
   }
 }
 
-/** True when the workspace runs the stub codec (paragraphs and headings only). */
-async function stubCodec(page: Page): Promise<boolean> {
-  const diagnostics = await readDiagnostics(page);
-  return (diagnostics?.services.markdownCodec ?? 'basic') === 'basic';
-}
-
 function types(doc: NodeJSON): string[] {
   return (doc.content ?? []).map((node) => node.type);
 }
@@ -70,16 +64,13 @@ test('pastes markdown as blocks', async ({ page }) => {
     'countdown(10);',
   ])
     expect(text).toContain(words);
-  if (await stubCodec(page)) {
-    // The stub codec keeps everything else as paragraphs of plain text.
-    expect(types(doc).every((type) => type === 'heading' || type === 'paragraph')).toBe(true);
-  } else {
-    expect(types(doc)).toEqual(
-      expect.arrayContaining(['bulletList', 'orderedList', 'taskList', 'blockquote', 'codeBlock']),
-    );
-    expect(marksOn(doc, 'crew')).toEqual(['bold']);
-    expect(marksOn(doc, 'dawn')).toEqual(['italic']);
-  }
+  // The real codec (remark), never core's stub: lists, quotes, code and marks keep their structure.
+  expect((await readDiagnostics(page))?.services.markdownCodec).toBe('remark');
+  expect(types(doc)).toEqual(
+    expect.arrayContaining(['bulletList', 'orderedList', 'taskList', 'blockquote', 'codeBlock']),
+  );
+  expect(marksOn(doc, 'crew')).toEqual(['bold']);
+  expect(marksOn(doc, 'dawn')).toEqual(['italic']);
 
   // One undo removes the whole paste; redo brings it back.
   const pasted = await outline(page);
@@ -126,10 +117,8 @@ test('pastes HTML from Google Docs, Notion and web pages as blocks, never raw HT
     node.content?.map((child) => child.text).join(''),
   );
   expect(headings).toEqual(expect.arrayContaining(['Mission roles', 'Apollo 11']));
-  if (!(await stubCodec(page))) {
-    expect(findNodes(doc, 'listItem').length).toBeGreaterThanOrEqual(4);
-    expect(marksOn(doc, 'Neil Armstrong')).toContain('bold');
-  }
+  expect(findNodes(doc, 'listItem').length).toBeGreaterThanOrEqual(4);
+  expect(marksOn(doc, 'Neil Armstrong')).toContain('bold');
 });
 
 test('copies HTML and markdown, and pastes Tessera content back losslessly', async ({ page }) => {
@@ -188,7 +177,7 @@ test('copies HTML and markdown, and pastes Tessera content back losslessly', asy
   expect(clipboard['text/plain']).not.toMatch(/<(p|h[1-6]|ul|ol|li|div|span|strong|em)\b/i);
   expect(clipboard['text/plain']).not.toContain('data-pm-slice');
   expect(clipboard['text/plain']).not.toMatch(/ \^[A-Za-z0-9-]+$/m);
-  if (!(await stubCodec(page))) expect(clipboard['text/plain']).toContain('## Checklist');
+  expect(clipboard['text/plain']).toContain('## Checklist');
 
   await createPage(page, 'Copy');
   await pasteData(page, clipboard);

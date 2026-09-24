@@ -35,7 +35,7 @@ const SLICE_MS = 12;
  * Pages created per `createPages` call. Each call indexes the workspace once (O(pages so far)), so
  * batches keep the whole import linear while each one stays short enough to keep the UI rendering.
  */
-const PAGE_BATCH = 200;
+const PAGE_BATCH = 50;
 
 /**
  * Lets the browser render and handle input before the next slice of work. A message queues behind

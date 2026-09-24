@@ -22,7 +22,14 @@ function createDecoderElement() {
 
 const scope = globalThis as { document?: unknown };
 if (typeof scope.document === 'undefined') {
-  scope.document = { createElement: createDecoderElement };
+  scope.document = {
+    createElement: createDecoderElement,
+    // Browser checks that run when a module loads read this once a `document` exists (the dev
+    // server loads all of core, so prosemirror-view's `"webkitFontSmoothing" in
+    // document.documentElement.style` runs too). Without it the worker failed to start in dev,
+    // and imports were planned on the main thread.
+    documentElement: { style: {} },
+  };
 }
 
 export {};

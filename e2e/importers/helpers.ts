@@ -9,10 +9,7 @@ export function fixturePath(name: string): string {
   return fileURLToPath(new URL(`../../packages/importers/fixtures/${name}`, import.meta.url));
 }
 
-/**
- * Opens the app and creates an empty workspace through onboarding. The web app keeps workspaces
- * in memory until the storage feature lands, so every test starts here and never reloads.
- */
+/** Opens the app and creates an empty workspace through onboarding (a fresh browser context). */
 export async function createWorkspace(page: Page, name: string): Promise<void> {
   await page.goto('/');
   await page.getByLabel('Workspace name').fill(name);

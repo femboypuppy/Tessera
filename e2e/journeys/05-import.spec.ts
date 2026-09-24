@@ -26,7 +26,7 @@ test('import a markdown vault from the first-run screen', async ({ page, app }) 
     if ((await importAction.count()) === 0) {
       // The import feature registers its onboarding action; without it there is nothing to test.
       await app.createWorkspace('Import check');
-      await app.requireFeatures('import');
+      await app.expectFeatures('import');
     }
     await importAction.click();
   });

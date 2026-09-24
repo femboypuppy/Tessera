@@ -6,7 +6,7 @@ import { expect, readZip, temporaryFolder, test } from '../support';
 import { insertPageLink, runCommand, writeInBody } from '../support/journeys';
 
 test('export the workspace to a markdown zip', async ({ freshWorkspace: app, page }) => {
-  await app.requireFeatures('export', 'editor', 'search');
+  await app.expectFeatures('export', 'editor', 'search');
 
   await test.step('two linked pages exist', async () => {
     await app.newPage('Apollo program');

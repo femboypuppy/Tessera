@@ -5,7 +5,7 @@
 import { expect, test } from '../support';
 
 test('build a reading list database with a board view', async ({ freshWorkspace: app, page }) => {
-  await app.requireFeatures('databases');
+  await app.expectFeatures('databases');
   const main = page.getByRole('main');
 
   await test.step('the sidebar creates a database page', async () => {

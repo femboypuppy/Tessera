@@ -1,9 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
-/**
- * Helpers for the editor specs. The web app keeps workspaces in memory until the storage feature
- * lands, so every test starts at onboarding.
- */
+/** Helpers for the editor specs. Every test starts at onboarding, in a fresh browser context. */
 
 /** A node of the editor's JSON (TipTap `getJSON()`), loosely typed. */
 export interface NodeJSON {

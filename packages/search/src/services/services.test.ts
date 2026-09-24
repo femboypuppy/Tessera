@@ -16,15 +16,29 @@ import {
   type TestAppContext,
 } from '@tessera/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IdbPersistence, MemoryPersistence, type IndexPersistence } from '../engine/persistence';
+import type { IndexRequest, IndexRequestType, IndexResults } from '../engine/protocol';
 import { InProcessTransport } from '../engine/transport';
 import { GraphLinkIndex } from './graph-link-index';
 import { createLinkIndex, createSearchIndex } from './index';
 import { MiniSearchIndex } from './minisearch-index';
 
+/**
+ * The in-process index behind a worker's message boundary: every request is cloned with its
+ * transfer list, as `postMessage` does, so transferred buffers are detached on the sending side.
+ */
+class PostMessageTransport extends InProcessTransport {
+  override request<T extends IndexRequestType>(
+    request: Extract<IndexRequest, { type: T }>,
+    transfer: Transferable[] = [],
+  ): Promise<IndexResults[T]> {
+    return super.request(structuredClone(request, { transfer }));
+  }
+}
+
 function indexFeature(persistence: IndexPersistence) {
-  const transport = () => new InProcessTransport({ persistence, saveDelayMs: 5 });
+  const transport = () => new PostMessageTransport({ persistence, saveDelayMs: 5 });
   return defineFeature({
     id: 'search',
     services: [
@@ -234,6 +248,37 @@ describe('MiniSearchIndex in a workspace session', () => {
     await search.rebuild();
     expect(search.host.docsRead).toBeGreaterThan(before);
     expect(ids(await search.query('clouds'))).toEqual([page.id]);
+  });
+
+  it('indexes pages and databases read in the same batch', async () => {
+    const { test, search, ctx } = await setup();
+    const page = ctx.workspace.createPage({ title: 'Nebula' });
+    await write(test, page.id, b.doc(b.paragraph('Gas clouds')));
+    const { page: database } = await ctx.workspace.createDatabase({
+      title: 'Reading list',
+      titlePropertyName: 'Name',
+      viewName: 'Table',
+    });
+    const handle = await ctx.loadDatabaseDoc(database.id);
+    const { addProperty } = await import('@tessera/core');
+    const author = addProperty(handle.doc, { name: 'Author', type: 'text' });
+    handle.release();
+    const row = await ctx.workspace.addDatabaseRow(database.id, {
+      title: 'Dune',
+      values: { [author.id]: 'Frank Herbert' },
+    });
+    await search.whenIdle();
+    const warnings: unknown[] = [];
+    const warn = vi.spyOn(console, 'warn').mockImplementation((...args) => warnings.push(args));
+    try {
+      // A rebuild reads every doc again, so pages and databases share batches.
+      await search.rebuild();
+    } finally {
+      warn.mockRestore();
+    }
+    expect(warnings).toEqual([]);
+    expect(ids(await search.query('clouds'))).toEqual([page.id]);
+    expect((await search.query('herbert')).hits[0]).toMatchObject({ pageId: row.id });
   });
 });
 

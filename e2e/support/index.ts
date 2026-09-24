@@ -8,7 +8,7 @@
  * import { expect, test } from '../support';
  *
  * test('search finds a page', async ({ freshWorkspace: app }) => {
- *   await app.requireFeatures('search');
+ *   await app.expectFeatures('search');
  *   …
  * });
  */

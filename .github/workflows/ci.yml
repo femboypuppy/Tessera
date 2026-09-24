@@ -179,6 +179,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build every package and app
         run: pnpm build
+        env:
+          # desktop.yml builds and signs the desktop app on each OS.
+          TESSERA_SKIP_DESKTOP: '1'
       - name: Read the Playwright version
         id: playwright
         run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"

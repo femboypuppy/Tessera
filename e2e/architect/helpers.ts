@@ -1,9 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
-/**
- * Helpers for the shell specs. The web app keeps workspaces in memory until the storage feature
- * lands, so every test starts at onboarding and a reload starts over.
- */
+/** Helpers for the shell specs. Every test starts at onboarding, in a fresh browser context. */
 
 /** Opens the app and creates an empty workspace through onboarding. Returns the sidebar. */
 export async function createWorkspace(page: Page, name: string): Promise<Locator> {

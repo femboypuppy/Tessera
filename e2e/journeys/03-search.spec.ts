@@ -9,7 +9,7 @@ test('find pages by title, text and tag from the palette', async ({
   freshWorkspace: app,
   page,
 }) => {
-  await app.requireFeatures('search', 'editor');
+  await app.expectFeatures('search', 'editor');
 
   await test.step('pages with distinctive text exist', async () => {
     await app.newPage('Apollo 11 landing');

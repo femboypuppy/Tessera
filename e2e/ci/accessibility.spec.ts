@@ -76,7 +76,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     });
 
     test('command palette', async ({ freshWorkspace: app, page }) => {
-      await app.requireFeatures('search');
+      await app.expectFeatures('search');
       await furnish(app);
       await app.shortcut('Mod+K');
       await expect(page.getByRole('dialog')).toBeVisible();
@@ -84,7 +84,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     });
 
     test('graph view', async ({ freshWorkspace: app, page }) => {
-      await app.requireFeatures('graph');
+      await app.expectFeatures('graph');
       await furnish(app);
       await page.goto('/graph');
       await expect(page.locator('main')).toBeVisible();
