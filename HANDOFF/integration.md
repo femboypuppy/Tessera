@@ -288,6 +288,25 @@ check in `prosemirror-view`, which the dev server loads), so imports were planne
 thread in dev. That is fixed; production was fine (checked by wrapping `Worker` in a production
 build). Pages are now created 50 per batch.
 
+## Final verification
+
+On `main` at `ea14918` (the last code change, `244666f`), on this machine:
+
+| Check | Result |
+|---|---|
+| `pnpm typecheck` | every package and app, exit 0 |
+| `pnpm lint` | ESLint with no warnings, Prettier clean, exit 0 |
+| `pnpm test` | 160 files, 1,371 tests passed |
+| `pnpm test:e2e`, Chromium (2 workers) | 142 passed |
+| `pnpm test:e2e`, Firefox (1 worker) | 141 passed, 1 skipped (the 10,000-row frame timing, Chromium-only by design) |
+| `node scripts/ci/actionlint.ts` | every workflow valid (shellcheck not installed here) |
+| `pnpm build` | every package, the web app, the server and the desktop app (release) |
+| `pnpm --dir docs build` | builds, no dead links, 19 checks passed |
+| Container smoke test, `docker compose up` + journey 9 | PASS, PASS |
+| Fresh clone: `pnpm install && pnpm dev` + journey 9 | PASS |
+| Real desktop app (`smoke-app.mjs`) | PASS |
+| Rust (`cargo test`) | 45 passed |
+
 ## Known bugs and deferred work (ready-to-file issues)
 
 Each entry is a GitHub issue: the heading is its title, the first line its labels.
