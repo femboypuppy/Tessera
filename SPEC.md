@@ -55,7 +55,6 @@ The bar: someone who tries it for five minutes wants to star it.
 - Rewinding CRDT history. "Restore version" writes the old content as a new edit.
 - Federation between servers.
 - Importers beyond Notion, Obsidian and markdown folders (Logseq, Bear, Evernote are stretch goals).
-- A formula language (a stretch goal for Agent 04; the `formula` property type is reserved).
 
 ## 3. Architecture
 
@@ -239,7 +238,7 @@ including `title`, `createdTime` and `updatedTime`.
 | `relation` | page IDs | `RelationConfig`: `targetDatabaseId` (or null for any page), `backPropertyId` for two-way relations, `limit: 'one' \| 'many'`. |
 | `createdTime` | none (`PageMeta.createdAt`) | |
 | `updatedTime` | none (later of the page's `updatedAt` and the row's `valuesUpdatedAt`) | |
-| `formula` | none (computed) | Reserved. Offer it only once a formula engine exists. |
+| `formula` | none (computed) | `FormulaConfig`: `expression`, in the Notion-like language of `@tessera/db-views/query` (`prop("Name")`, `if()`, `dateAdd()`, …; no `eval`), evaluated per view query. |
 
 Changing a property's type keeps its type-specific config (switching select, then text, then
 select restores the options). Stored values that no longer validate after a type change are

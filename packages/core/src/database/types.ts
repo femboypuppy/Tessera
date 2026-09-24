@@ -23,7 +23,7 @@ import type { JsonValue } from '../json';
  * | `relation`    | page IDs `string[]`           | row pages or any pages, see {@link RelationConfig}     |
  * | `createdTime` | none (PageMeta.createdAt)     |                                                        |
  * | `updatedTime` | none (max of page and row)    | see `resolveRows`                                      |
- * | `formula`     | none (computed)               | reserved; only offered once a formula engine exists    |
+ * | `formula`     | none (computed)               | `@tessera/db-views` evaluates `formula.expression`     |
  */
 export const PROPERTY_TYPES = [
   'title',
