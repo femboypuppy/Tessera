@@ -1,4 +1,5 @@
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
@@ -28,24 +29,36 @@ const TYPES: Record<string, string> = {
 };
 
 /**
+ * Written into `index.html` (`<meta property="csp-nonce">`) and replaced by each response's nonce.
+ * It is the token the desktop app (Tauri) replaces with its own nonce, so one build works in both.
+ */
+export const CSP_NONCE_PLACEHOLDER = '__TAURI_SCRIPT_NONCE__';
+
+/**
  * The web app's Content-Security-Policy. `connect-src` allows other servers because a workspace
  * may sync with a different Tessera server than the one serving the app.
+ *
+ * Plugins run in sandboxed `srcdoc` frames, which inherit this policy on top of their own: their
+ * bootstrap script carries this response's `nonce`, and plugin code loads from `blob:` URLs the
+ * frames create (fonts too). The app's own scripts are all `'self'`.
  */
-export const WEB_APP_CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  "media-src 'self' blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' ws: wss: http: https:",
-  "frame-src 'self' blob: https:",
-  "worker-src 'self' blob:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join('; ');
+export function webAppCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' blob:`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "media-src 'self' blob: https:",
+    "font-src 'self' data: blob:",
+    "connect-src 'self' ws: wss: http: https:",
+    "frame-src 'self' blob: https:",
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+}
 
 /** Finds the built web app: `WEB_DIR`, else `apps/web/dist` next to this server. */
 export function resolveWebDir(configured: string | null): string | null {
@@ -66,7 +79,10 @@ export function resolveWebDir(configured: string | null): string | null {
  * Serves the web app (a single-page app): real files by path, `index.html` for every other page
  * route. Paths are resolved inside `root` only.
  */
-export function serveWebApp(root: string, csp: string = WEB_APP_CSP): MiddlewareHandler<AppEnv> {
+export function serveWebApp(
+  root: string,
+  csp: (nonce: string) => string = webAppCsp,
+): MiddlewareHandler<AppEnv> {
   const base = path.resolve(root);
   const index = path.join(base, 'index.html');
   return async (c, next) => {
@@ -95,15 +111,24 @@ export function serveWebApp(root: string, csp: string = WEB_APP_CSP): Middleware
       if (path.extname(decoded)) return c.text('Not found', 404);
       file = index;
     }
+    if (file === index) {
+      // A fresh nonce for every response, in the page and in its policy.
+      const nonce = randomBytes(16).toString('base64');
+      const html = readFileSync(index, 'utf8').replaceAll(CSP_NONCE_PLACEHOLDER, nonce);
+      const headers = new Headers({
+        'Content-Type': TYPES['.html'] ?? 'text/html',
+        'Content-Length': String(Buffer.byteLength(html)),
+        'Cache-Control': 'no-cache',
+        'Content-Security-Policy': csp(nonce),
+      });
+      return new Response(c.req.method === 'HEAD' ? null : html, { status: 200, headers });
+    }
     const extension = path.extname(file).toLowerCase();
     const headers = new Headers({
       'Content-Type': TYPES[extension] ?? 'application/octet-stream',
       'Content-Length': String(statSync(file).size),
     });
-    if (file === index) {
-      headers.set('Cache-Control', 'no-cache');
-      headers.set('Content-Security-Policy', csp);
-    } else if (decoded.startsWith('/assets/')) {
+    if (decoded.startsWith('/assets/')) {
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
       headers.set('Cache-Control', 'public, max-age=3600');

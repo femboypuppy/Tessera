@@ -347,15 +347,29 @@ describe('browser protections', () => {
     await t.stop();
     const web = path.join(t.dataDir, 'web');
     mkdirSync(path.join(web, 'assets'), { recursive: true });
-    writeFileSync(path.join(web, 'index.html'), '<!doctype html><title>Tessera</title>');
+    writeFileSync(
+      path.join(web, 'index.html'),
+      '<!doctype html><meta property="csp-nonce" nonce="__TAURI_SCRIPT_NONCE__"><title>Tessera</title>',
+    );
     writeFileSync(path.join(web, 'assets', 'app-abc123.js'), 'console.log(1)');
     writeFileSync(path.join(t.dataDir, 'secret.txt'), 'top secret');
     const withWeb = await server({ webDir: web }, {}, undefined);
     const index = await fetch(`${withWeb.url}/p/some-page`);
     expect(index.status).toBe(200);
-    expect(await index.text()).toContain('<title>Tessera</title>');
-    expect(index.headers.get('content-security-policy')).toContain("script-src 'self'");
+    const html = await index.text();
+    expect(html).toContain('<title>Tessera</title>');
+    const csp = index.headers.get('content-security-policy') ?? '';
+    expect(csp).toContain("script-src 'self' 'nonce-");
     expect(index.headers.get('cache-control')).toBe('no-cache');
+    // Each response has its own nonce, in the policy and in the page (plugin frames use it).
+    const nonce = /'nonce-([A-Za-z0-9+/=]+)'/.exec(csp)?.[1];
+    expect(nonce).toMatch(/^[A-Za-z0-9+/]{22}==$/);
+    expect(html).toContain(`nonce="${nonce}"`);
+    expect(html).not.toContain('__TAURI_SCRIPT_NONCE__');
+    expect(Number(index.headers.get('content-length'))).toBe(Buffer.byteLength(html));
+    const again = await fetch(`${withWeb.url}/`);
+    expect(again.headers.get('content-security-policy')).not.toContain(`'nonce-${nonce}'`);
+    expect((await fetch(`${withWeb.url}/`, { method: 'HEAD' })).status).toBe(200);
     const asset = await fetch(`${withWeb.url}/assets/app-abc123.js`);
     expect(asset.headers.get('cache-control')).toContain('immutable');
     expect(asset.headers.get('content-type')).toContain('text/javascript');

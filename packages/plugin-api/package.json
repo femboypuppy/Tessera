@@ -1,21 +1,26 @@
 {
   "name": "@tessera/plugin-api",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "The SDK for writing Tessera plugins.",
+  "description": "The SDK for writing Tessera plugins: definePlugin, typed API, and a test harness with a mocked API.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./query": "./src/query.ts",
+    "./settings": "./src/settings.ts"
   },
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "docs:api": "tsx scripts/write-api-docs.ts"
   },
-  "dependencies": {
-    "@tessera/core": "workspace:*"
+  "devDependencies": {
+    "@tessera/core": "workspace:*",
+    "typescript": "6.0.3"
   }
 }

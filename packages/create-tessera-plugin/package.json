@@ -1,13 +1,13 @@
 {
   "name": "create-tessera-plugin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Scaffolds a Tessera plugin: pnpm create tessera-plugin my-plugin.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "bin": {
-    "create-tessera-plugin": "./dist/index.js"
+    "create-tessera-plugin": "./dist/cli.js"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -16,9 +16,14 @@
     "build": "tsdown",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --max-warnings 0",
+    "sync-template": "tsx scripts/sync-template.ts"
   },
-  "dependencies": {
+  "dependencies": {},
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
     "@tessera/core": "workspace:*"
   }
 }

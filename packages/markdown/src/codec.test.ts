@@ -387,6 +387,34 @@ describe('serialize', () => {
     expect(JSON.stringify(typed)).toContain('"href":"http://example.com"');
   });
 
+  it('keeps runs of backslashes before punctuation, in text and in toggle summaries', () => {
+    const b = '\\';
+    for (const text of [
+      `${b}${b}@`,
+      `${b}${b}:`,
+      `${b}${b}. `,
+      `${b}${b}${b}x`,
+      `${b}${b}${b}@`,
+      `x${b}${b}`,
+      `${b} ${b}${b}.`,
+    ]) {
+      const paragraph = doc([{ type: 'paragraph', content: [{ type: 'text', text }] }]);
+      expect(codec.parse(codec.serialize(paragraph)).doc.content[0]).toMatchObject({
+        content: [{ type: 'text', text }],
+      });
+      const toggle = doc([
+        {
+          type: 'toggle',
+          attrs: { open: false },
+          content: [{ type: 'toggleSummary', content: [{ type: 'text', text }] }],
+        },
+      ]);
+      expect(codec.parse(codec.serialize(toggle)).doc.content[0]).toMatchObject({
+        content: [{ type: 'toggleSummary', content: [{ type: 'text', text }] }],
+      });
+    }
+  });
+
   it('writes only the block IDs keepBlockId accepts', () => {
     const blocks = doc([
       {

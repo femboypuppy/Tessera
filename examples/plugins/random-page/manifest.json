@@ -1,0 +1,12 @@
+{
+  "id": "random-page",
+  "name": "Random page",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "author": "Tessera",
+  "description": "Opens a random page, for rediscovering old notes.",
+  "entry": "main.js",
+  "permissions": ["pages:read", "ui:commands"],
+  "icon": "🎲",
+  "repository": "https://github.com/femboypuppy/Tessera"
+}

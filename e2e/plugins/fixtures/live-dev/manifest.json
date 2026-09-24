@@ -1,0 +1,11 @@
+{
+  "id": "live-dev",
+  "name": "Live dev",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "author": "E2E",
+  "description": "A plugin served by a fake dev server whose code changes during the test.",
+  "entry": "main.js",
+  "permissions": ["ui:commands"],
+  "icon": "🛠️"
+}

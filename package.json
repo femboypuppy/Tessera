@@ -12,7 +12,7 @@
   },
   "scripts": {
     "prepare": "node scripts/git-hooks/install.ts",
-    "dev": "pnpm --filter @tessera/web dev",
+    "dev": "pnpm --parallel --filter @tessera/web --filter @tessera/server dev",
     "build": "pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -61,7 +61,9 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'], viewport } },
+    // Firefox runs the same steps two to three times slower on a busy machine (a plugin install
+    // flow measured 60 s against Chromium's 25 s), so its budget is doubled. Assertions don't change.
+    { name: 'firefox', timeout: 90_000, use: { ...devices['Desktop Firefox'], viewport } },
   ],
   webServer: {
     command: useDevServer

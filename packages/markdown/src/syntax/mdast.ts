@@ -229,13 +229,19 @@ const BACKSLASH_SENTINEL = '⸮';
  * Text, with one extra escape: a literal backslash before whitespace or before the last
  * character. Attention runs may encode that character later (`&#x20;`), and an unescaped
  * backslash would then escape the `&`. The sentinel is punctuation, like `\`, so the attention
- * encoding decisions stay the same.
+ * encoding decisions stay the same. It isn't ASCII punctuation, though, so `safe` leaves a
+ * backslash right before it unescaped; that one is escaped here too, or with the sentinel's `\\`
+ * after it, it would escape a backslash instead of being one (`\\@` came back as `\@`).
  */
 const handleText: Handle = (node: { value: string }, _parent, state, info) => {
   const value = node.value;
   if (!value.includes('\\') || value.includes(BACKSLASH_SENTINEL)) return state.safe(value, info);
   const marked = value.replace(/\\(?=[ \t]|[^]$)/g, BACKSLASH_SENTINEL);
-  return state.safe(marked, info).split(BACKSLASH_SENTINEL).join('\\\\');
+  return state
+    .safe(marked, info)
+    .replace(new RegExp(`\\\\(?=${BACKSLASH_SENTINEL})`, 'g'), '\\\\')
+    .split(BACKSLASH_SENTINEL)
+    .join('\\\\');
 };
 
 /**

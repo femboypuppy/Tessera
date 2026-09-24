@@ -1,0 +1,23 @@
+{
+  "name": "tessera-plugin-mermaid",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Tessera plugin: Mermaid diagrams as custom blocks.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@tessera/plugin-api": "^0.1.0",
+    "jsdom": "30.1.1",
+    "typescript": "6.0.3",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  },
+  "dependencies": {
+    "mermaid": "12.0.0"
+  }
+}

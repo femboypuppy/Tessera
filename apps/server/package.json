@@ -10,7 +10,7 @@
     "tessera-server": "./dist/main.js"
   },
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "tsx watch src/dev.ts",
     "build": "tsdown",
     "start": "tsdown --log-level warn && node dist/main.js",
     "load-test": "tsx scripts/load-test.ts",

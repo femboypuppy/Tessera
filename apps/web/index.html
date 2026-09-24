@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
+    <!-- The Tessera server and the desktop app (Tauri) replace this token with the page's CSP
+         nonce; plugin frames use it. -->
+    <meta property="csp-nonce" nonce="__TAURI_SCRIPT_NONCE__" />
     <meta
       name="description"
       content="Tessera: your notes, your server. A local-first knowledge app."

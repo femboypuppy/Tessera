@@ -1,3 +1,5 @@
+// First: configures zod before any module parses a schema.
+import './zod-config';
 import { createAppRuntime, LocalStorageSettingsStore } from '@tessera/core';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

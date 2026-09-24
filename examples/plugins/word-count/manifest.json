@@ -1,0 +1,12 @@
+{
+  "id": "word-count",
+  "name": "Word count",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "author": "Tessera",
+  "description": "Words, characters and reading time of the page you are on, with an optional word goal.",
+  "entry": "main.js",
+  "permissions": ["pages:read", "ui:panels"],
+  "icon": "🔢",
+  "repository": "https://github.com/femboypuppy/Tessera"
+}

@@ -909,6 +909,10 @@ Staying in budget:
 - **Plugins** run in sandboxed iframes (`sandbox="allow-scripts"` without `allow-same-origin`) with
   a strict CSP, talk only through a validated postMessage RPC, and get capability-scoped APIs
   checked against their granted permissions on every call. Crashes and timeouts are contained.
+  The frames are `srcdoc` documents, so the app's own policy applies to them too: the server
+  sends `script-src 'self' 'nonce-…' blob:` with a fresh nonce per `index.html` response and
+  writes it into `<meta property="csp-nonce">` (the desktop app fills the same token with Tauri's
+  nonce), and the frames' bootstraps carry that nonce.
 - **Server.** Authorization is always enforced on the server (viewers get read-only connections,
   even for hand-crafted messages). argon2id password hashes, httpOnly SameSite session cookies,
   bearer tokens for the desktop app, rate-limited auth endpoints, security headers, upload size
