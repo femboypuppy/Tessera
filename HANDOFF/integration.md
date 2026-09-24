@@ -227,7 +227,10 @@ the 45 s test timeout). A failure is re-run alone before it counts as fixed or f
   smoke test prints them, and `e2e/architect/shell.spec.ts` checks the list.
 - **Journeys** all run for real, none skipped; journey 9 (two people typing in one page) is new.
 - **`pnpm dev`** runs the web app and the server; the app reaches the server through Vite's `/api`
-  and `/sync` proxy (checked: health through the proxy, and a WebSocket to `/sync`).
+  and `/sync` proxy. Checked on a fresh clone: `pnpm install && pnpm dev`, then journey 9 against
+  it (`TESSERA_E2E_SERVER_URL=http://localhost:5173` with the setup code the dev server logged):
+  two people typing in one page, live. PASS. (The journey's server-address helper now waits out the
+  app's own pre-fill of the address field, which could land in the middle of typing.)
 - **`pnpm build`** builds every package, the web app, the server and the desktop app
   (`scripts/build-desktop.mjs`: `tauri build --no-bundle`, when Rust is installed).
 - **`docker compose up`** (the repository's `docker-compose.yml`, built from this checkout): the
@@ -512,6 +515,15 @@ Labels: `docs`, `security`, `dependencies`
 `pnpm --dir docs audit` reports Vite 5 advisories (`server.fs.deny` bypass on Windows, path
 traversal in optimized deps, esbuild's dev server) through VitePress 1.6.4. They affect `vitepress
 dev` only, not the built site. Move to VitePress 2 (Vite 6+) once it is stable.
+
+#### Windows: long fixture paths need `core.longpaths` to clone into deep folders
+Labels: `bug`, `windows`, `contributing`
+
+`packages/importers/fixtures/notion-export` keeps Notion's real folder names (a title plus a
+32-character ID per level). Cloned into a deep folder on Windows, some paths pass 260 characters
+and `git clone` fails with "Filename too long" unless `git config --global core.longpaths true`.
+**Next:** shorten the fixture's folder names (the test builds its deepest chain in a zip already),
+or note it in CONTRIBUTING.
 
 #### Screen readers: check with real ones
 Labels: `accessibility`

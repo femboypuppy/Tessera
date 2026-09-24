@@ -88,7 +88,13 @@ export async function openSyncSettings(app: TesseraApp): Promise<Locator> {
 
 /** In the connect form: the server's address, then Continue. */
 async function enterServer(scope: Locator, serverUrl: string): Promise<void> {
-  await scope.getByLabel('Server address').fill(serverUrl);
+  // When a server serves the app, the field fills itself with that server once its health check
+  // answers; if that lands in the middle of `fill`, the two run together. Fill until it holds.
+  const field = scope.getByLabel('Server address');
+  await expect(async () => {
+    await field.fill(serverUrl);
+    await expect(field).toHaveValue(serverUrl, { timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
   await scope.getByRole('button', { name: 'Continue', exact: true }).click();
 }
 
