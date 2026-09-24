@@ -46,7 +46,7 @@ import { MemoryWorkspaceRegistry, type WorkspaceInfo } from '../services/workspa
 import type { AppContext, ShellBridge, ToastOptions, WorkspaceApi } from './app-context';
 import { createBlockRendererRegistry } from './blocks';
 import { createCommandRegistry } from './commands';
-import { createKeyedDebouncer } from './debounce';
+import { createBatchDebouncer, createKeyedDebouncer } from './debounce';
 import { DocManager, type DocHandle, type DocUpdateEvent } from './doc-manager';
 import { createEventBus } from './events';
 import {
@@ -421,11 +421,19 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       merge: (a, b) => ({ ...b, local: a.local || b.local }),
     },
   );
-  const touch = createKeyedDebouncer<null>(
-    (pageId) => {
-      if (wsDoc && getPage(wsDoc, pageId)) touchPage(wsDoc, pageId, touchOptions());
+  // Every page edited in a burst is touched in one workspace transaction, so an import or a
+  // script that writes thousands of pages rebuilds the page index and re-renders the page tree
+  // once, not once per page (that was O(pages²) of work after a bulk write).
+  const touch = createBatchDebouncer(
+    (pageIds) => {
+      const ws = wsDoc;
+      if (!ws) return;
+      ws.transact(() => {
+        for (const pageId of pageIds)
+          if (getPage(ws, pageId)) touchPage(ws, pageId, touchOptions());
+      });
     },
-    { delayMs: options.touchDebounceMs ?? 1500, maxWaitMs: 10_000, merge: () => null },
+    { delayMs: options.touchDebounceMs ?? 1500, maxWaitMs: 10_000 },
   );
   const docs = new DocManager({
     docStore: docStore.service,
@@ -435,7 +443,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
     onDocUpdate: (event: DocUpdateEvent) => {
       if (event.kind === 'workspace') return;
       docChanged.call(event.id, { docName: event.docName, local: event.local, kind: event.kind });
-      if (event.local) touch.call(event.id, null);
+      if (event.local) touch.call(event.id);
     },
     onError: (error, context) =>
       report(error, { area: 'docs', source: `${context.operation} ${context.docName}` }),

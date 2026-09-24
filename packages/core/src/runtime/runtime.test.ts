@@ -99,6 +99,35 @@ describe('workspace session', () => {
     await dispose();
   });
 
+  it('touches every page edited in a burst in one workspace change', async () => {
+    // A real delay, as in the app (test contexts touch at once); `flush` runs the batch.
+    const { ctx, flush, dispose } = await createTestAppContext({
+      runtime: { touchDebounceMs: 1_000 },
+    });
+    const pages = Array.from({ length: 50 }, (_, i) =>
+      ctx.workspace.createPage({ title: `Note ${i}` }),
+    );
+    await flush();
+    const before = new Map(
+      pages.map((page) => [page.id, ctx.workspace.getPage(page.id)?.updatedAt]),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    let notifications = 0;
+    const stop = ctx.workspace.pages.subscribe(() => (notifications += 1));
+    for (const page of pages) {
+      const handle = await ctx.loadPageDoc(page.id);
+      writeDocJSON(handle.doc, b.doc(`Content of ${page.title}`));
+      handle.release();
+    }
+    await flush();
+    stop();
+    // Every page got a new updatedAt, and the page index was rebuilt once, not 50 times.
+    for (const page of pages)
+      expect(ctx.workspace.getPage(page.id)?.updatedAt).toBeGreaterThan(before.get(page.id) ?? 0);
+    expect(notifications).toBe(1);
+    await dispose();
+  });
+
   it('creates databases and rows, and rolls back rows with invalid values', async () => {
     const { ctx, dispose } = await createTestAppContext();
     const { page, titlePropertyId, viewId } = await ctx.workspace.createDatabase({

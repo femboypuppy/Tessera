@@ -55,3 +55,53 @@ export function createKeyedDebouncer<V>(
     pending: () => entries.size,
   };
 }
+
+/** Collects keys and runs one call for all of them (see {@link createBatchDebouncer}). */
+export interface BatchDebouncer {
+  call(key: string): void;
+  /** Runs the pending batch now. */
+  flush(): void;
+  /** Drops the pending batch. */
+  cancel(): void;
+  pending(): number;
+}
+
+/**
+ * Collects keys and runs `fn(keys)` once for all of them: `delayMs` after the last call, and at
+ * most `maxWaitMs` after the first key of the batch. For work that is cheaper in one go than key
+ * by key, such as one transaction for many pages.
+ */
+export function createBatchDebouncer(
+  fn: (keys: string[]) => void,
+  options: { delayMs: number; maxWaitMs: number },
+): BatchDebouncer {
+  const keys = new Set<string>();
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let firstAt = 0;
+  const run = () => {
+    if (timer) clearTimeout(timer);
+    timer = null;
+    if (keys.size === 0) return;
+    const batch = [...keys];
+    keys.clear();
+    fn(batch);
+  };
+  return {
+    call(key) {
+      const now = Date.now();
+      if (keys.size === 0) firstAt = now;
+      keys.add(key);
+      if (options.delayMs <= 0) return run();
+      if (timer) clearTimeout(timer);
+      const wait = Math.max(0, Math.min(options.delayMs, firstAt + options.maxWaitMs - now));
+      timer = setTimeout(run, wait);
+    },
+    flush: run,
+    cancel() {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      keys.clear();
+    },
+    pending: () => keys.size,
+  };
+}
