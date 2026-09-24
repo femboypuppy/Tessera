@@ -269,6 +269,20 @@ the 45 s test timeout). A failure is re-run alone before it counts as fixed or f
 | Graph view, 5,000 pages: frame time p95 | 415 ms | < 33.4 ms ❌ Headless software rendering (see the issue) |
 | Import 2,000 files: longest main-thread block | 129 ms (222 ms before) | < 100 ms ❌ The dev-mode harness (see the issue) |
 
+The owners' browser checks on a production build (`pnpm exec playwright test -c
+e2e/search/perf.config.ts`, GPU flags): the graph with 10,000 nodes pans and hovers at p95 16.8 ms
+frames once laid out ✅ (during layout, one run measured p95 100 ms); the bench's graph row is its
+dev-mode, headless harness (102 ms p95 with `--headed`, 415 ms without a GPU).
+
+**A regression found and fixed:** the palette's keystroke latency on 5,000 pages was p95 95–100 ms
+right after the pages were created, against 26.8 ms before the merge. Every local page edit
+scheduled its own `updatedAt` touch, one workspace transaction per page, and each rebuilt the page
+index and re-rendered the page tree: O(pages²) of work that kept the main thread busy for tens of
+seconds after any bulk write (an import too). The touches of a burst now share one transaction
+(`createBatchDebouncer` in core, with tests): the palette measured p95 30.4, 33.4 and 44.8 ms
+(one run at 58.8 ms while an orphaned full-disk `find` loaded the machine), and seeding 5,000 pages
+through the app went from 161 s to 53 s.
+
 Found on the way: in the dev harness the import worker never started (its DOM shim broke a browser
 check in `prosemirror-view`, which the dev server loads), so imports were planned on the main
 thread in dev. That is fixed; production was fine (checked by wrapping `Worker` in a production
@@ -362,14 +376,15 @@ merge's fixes), mostly synchronous React re-renders of the page tree as batches 
 **Next:** build the harness in production mode for benchmarks; then, if the import still blocks
 over 100 ms, render the page tree with `useDeferredValue` during bulk changes.
 
-#### Graph view frames at 5,000 pages without a GPU
+#### Graph view: frames while the layout runs, and without a GPU
 Labels: `performance`, `search`
 
-The benchmark measures 415 ms frame p95 for a 5,000-page graph in headless Chromium, which renders
-with SwiftShader (software). The search team's numbers with a GPU were fluid. Laying out 10,000
-nodes takes about 40 s to settle (in a worker; the page stays responsive). **Next:** run the graph
-benchmark with a GPU (headed, or `--use-gl=angle`), and reduce draw work on software renderers
-(fewer labels, no edge antialiasing).
+On a production build with the GPU, a 10,000-node graph pans and hovers at p95 16.8 ms frames once
+laid out, but one run measured p95 100 ms while the layout was still running
+(`e2e/search/perf.config.ts`). Without a GPU (headless Chromium, SwiftShader), `scripts/bench`
+measures 415 ms p95 at 5,000 pages (102 ms with `--headed`, in its dev-mode harness). Laying out
+10,000 nodes takes about 40 s to settle (in a worker). **Next:** send positions less often during
+layout, and reduce draw work on software renderers (fewer labels, no edge antialiasing).
 
 #### The Mermaid plugin loads 5.2 MB per block frame
 Labels: `performance`, `plugins`
