@@ -475,6 +475,7 @@ feature ID.
 | `onboardingActions` | The first-run screen ("Import from Notion", "Open demo workspace"). The shell creates the workspace, opens it, then calls `run(ctx)`. | `run(ctx)` |
 | `overlays` | Always mounted, for UI that commands open: the command palette, the import and export dialogs. Render nothing until opened (your own store holds the open state) and lazy-load the content. | none |
 | `workspaceMenuItems` | The sidebar's workspace menu, under "New workspace" (the desktop app's "Open folder…"). | `run(ctx)` |
+| `docViewers` | Read-only views of a `DocJSON` the way its page shows it (the editor registers one); previews such as version history use the first. Rendered in a `FeatureBoundary` and `Suspense`. | `DocViewerProps`: `{ doc, pageId }` |
 | `importers`, `exporters` | `ctx.importers`, `ctx.exporters`. | |
 | `services` | Service resolution ([6.4](#64-services-and-priorities)). | |
 | `activate(ctx)` | Runs per workspace session after services resolve; may return a cleanup. Register runtime contributions here with `ctx.contributions.register(kind, item, featureId)`. If it throws, everything the feature registered, statically or through `ctx` during `activate` (commands, blocks, contributions, importers, exporters, event handlers), is removed. | `AppContext` |
@@ -989,6 +990,7 @@ branch builds on its own.
 - Added at merge time from the agents' contract change requests (`HANDOFF/integration.md`):
   `createPages`, `addRows`, `checkRowValues` and `ctx.workspace.addDatabaseRows` (bulk creation),
   `MarkdownSerializeOptions.keepBlockId` (clean markdown exports and copies),
+  the `docViewers` contribution (history previews with the editor),
   the `credentialStore` service, `AssetStore.retainUrl`, `SyncStatusInfo.readOnly` (read-only
   viewers), `SearchHit.heading`/`blockId`, `Backlink.blockId`, the `workspaceMenuItems`
   contribution, and replaceable registrations for core's stub importer and exporter.

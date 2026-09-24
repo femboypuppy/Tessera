@@ -10,6 +10,7 @@ export const en = {
   // Placeholders
   slashPlaceholder: 'Type ‘/’ for commands',
   emptyPagePlaceholder: 'Start writing…',
+  docViewerLabel: 'Page content (read-only)',
   headingPlaceholder_1: 'Heading 1',
   headingPlaceholder_2: 'Heading 2',
   headingPlaceholder_3: 'Heading 3',

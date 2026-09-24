@@ -44,6 +44,7 @@ const KINDS = {
   editorExtensions: true,
   overlays: true,
   workspaceMenuItems: true,
+  docViewers: true,
 } satisfies Record<ContributionKind, true>;
 
 function contributionName(item: { id?: string; path?: string; kind?: string }): string {

@@ -8,6 +8,9 @@ const loadPageEditor = () => import('@tessera/editor/page-editor');
 /** The page body: TipTap, ProseMirror and Yjs bindings load only when needed. */
 const PageEditor = lazy(loadPageEditor);
 
+/** The read-only view previews use (version history): the same blocks as the page. */
+const DocViewer = lazy(() => import('@tessera/editor/doc-viewer'));
+
 /** The `web` embed renderer (YouTube, Vimeo, Loom, Figma, CodePen, bookmark cards). */
 const WebEmbed = lazy(() => import('@tessera/editor/web-embed'));
 
@@ -109,6 +112,7 @@ export const editorFeature = defineFeature({
   id: 'editor',
   pageBodies: { page: PageEditor },
   blockRenderers: [{ kind: 'web', component: WebEmbed, label: t('webEmbed') }],
+  docViewers: [{ id: 'editor', component: DocViewer }],
   commands,
   activate: (ctx) => {
     const stopPreload = preloadWhenIdle();

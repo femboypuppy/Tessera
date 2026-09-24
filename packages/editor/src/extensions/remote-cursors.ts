@@ -1,4 +1,5 @@
 import { colorForId, type SyncHandle } from '@tessera/core';
+import { readableTextColor } from '@tessera/ui';
 import type { Editor } from '@tiptap/core';
 import { yCursorPlugin, yCursorPluginKey } from '@tiptap/y-tiptap';
 import { t } from '../i18n';
@@ -33,10 +34,8 @@ export function buildRemoteCaret(user: RemoteUser, clientId: number): HTMLElemen
   const label = document.createElement('span');
   label.className = 'tess-remote-label';
   label.textContent = remoteName(user);
-  // Dark text on light colors (yellow), white on the rest.
-  const [r, g, b] = [1, 3, 5].map((index) => Number.parseInt(color.slice(index, index + 2), 16));
-  const luminance = (0.299 * (r ?? 0) + 0.587 * (g ?? 0) + 0.114 * (b ?? 0)) / 255;
-  label.style.color = luminance > 0.6 ? '#1f1e1d' : '#ffffff';
+  // White or near-black, whichever contrasts more with the presence color (as avatars do).
+  label.style.color = readableTextColor(color);
   caret.append(document.createTextNode('⁠'), label, document.createTextNode('⁠'));
   return caret;
 }

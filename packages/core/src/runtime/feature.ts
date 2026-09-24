@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { PageKind, PageMeta } from '../model/page-meta';
+import type { DocJSON } from '../schema/types';
 import type { Exporter, Importer } from '../services/import-export';
 import type { AnyServiceRegistration } from '../services/registry';
 import type { AppContext, IconComponent } from './app-context';
@@ -144,6 +145,28 @@ export interface OverlayContribution {
   component: ComponentType;
 }
 
+/** Props of a {@link DocViewerContribution}. */
+export interface DocViewerProps {
+  /** The document to show, in the canonical schema. */
+  doc: DocJSON;
+  /** The page it is a version or a preview of (live link titles, embeds), or null. */
+  pageId: string | null;
+}
+
+/**
+ * A read-only view of a document the way its page shows it (the editor registers one). Previews
+ * use the first one registered: version history, and anything else that shows a `DocJSON`. It
+ * renders inside a `FeatureBoundary` and a `Suspense` boundary, so lazy-load it.
+ *
+ * @example
+ * docViewers: [{ id: 'editor', component: lazy(() => import('@tessera/editor/doc-viewer')) }],
+ */
+export interface DocViewerContribution {
+  id: string;
+  order?: number;
+  component: ComponentType<DocViewerProps>;
+}
+
 /**
  * An item of the sidebar's workspace menu, under "New workspace" (the desktop app's "Open
  * folder…"). `run` gets the current session's context.
@@ -186,6 +209,7 @@ export interface ContributionMap {
   editorExtensions: EditorExtensionContribution;
   overlays: OverlayContribution;
   workspaceMenuItems: WorkspaceMenuItemContribution;
+  docViewers: DocViewerContribution;
 }
 
 export type ContributionKind = keyof ContributionMap;
@@ -301,6 +325,7 @@ export interface FeatureModule {
   onboardingActions?: OnboardingActionContribution[];
   overlays?: OverlayContribution[];
   workspaceMenuItems?: WorkspaceMenuItemContribution[];
+  docViewers?: DocViewerContribution[];
   importers?: Importer[];
   exporters?: Exporter[];
   services?: AnyServiceRegistration[];

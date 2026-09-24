@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { Awareness, build } from '@tessera/core';
+import { Awareness, build, defineFeature, type DocViewerProps } from '@tessera/core';
 import { AppContextProvider } from '@tessera/core/react';
 import { createTestAppContext, kitchenSinkDoc } from '@tessera/core/testing';
 import { TooltipProvider } from '@tessera/ui';
@@ -9,12 +9,16 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { DocPreview } from './history/DocPreview';
+import { VersionContent } from './history/HistoryPanel';
 import { peopleFrom } from './PresenceAvatars';
 import { describeUserAgent } from './settings/ConnectedWorkspace';
 import { SyncStatusIndicator } from './SyncStatusIndicator';
 
-async function withContext(ui: ReactNode) {
-  const test = await createTestAppContext();
+async function withContext(
+  ui: ReactNode,
+  options: Parameters<typeof createTestAppContext>[0] = {},
+) {
+  const test = await createTestAppContext(options);
   const view = render(
     <AppContextProvider value={test.ctx}>
       <TooltipProvider>{ui}</TooltipProvider>
@@ -87,6 +91,38 @@ describe('DocPreview', () => {
     const { dispose } = await withContext(<DocPreview doc={build.doc()} />);
     expect(screen.getByText('This version is empty.')).toBeInTheDocument();
     await dispose();
+  });
+});
+
+describe('version previews', () => {
+  function FakeViewer({ doc, pageId }: DocViewerProps) {
+    return (
+      <p>
+        Viewer of {pageId}: {doc.content.length} blocks
+      </p>
+    );
+  }
+
+  it('show a version through the registered doc viewer (the editor)', async () => {
+    const { dispose } = await withContext(
+      <VersionContent doc={kitchenSinkDoc()} pageId="page-1" />,
+      {
+        features: [
+          defineFeature({ id: 'viewer', docViewers: [{ id: 'fake', component: FakeViewer }] }),
+        ],
+      },
+    );
+    expect(await screen.findByText(/^Viewer of page-1: \d+ blocks$/)).toBeInTheDocument();
+    await dispose();
+  });
+
+  it('fall back to the plain renderer, and say when a version is empty', async () => {
+    const plain = await withContext(<VersionContent doc={kitchenSinkDoc()} pageId="page-1" />);
+    expect(plain.view.container.querySelector('table')).not.toBeNull();
+    await plain.dispose();
+    const empty = await withContext(<VersionContent doc={build.doc()} pageId="page-1" />);
+    expect(screen.getByText('This version is empty.')).toBeInTheDocument();
+    await empty.dispose();
   });
 });
 

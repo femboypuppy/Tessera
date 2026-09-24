@@ -11,6 +11,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./page-editor": "./src/react/PageEditor.tsx",
+    "./doc-viewer": "./src/react/DocViewer.tsx",
     "./web-embed": "./src/embeds/WebEmbed.tsx",
     "./commands": "./src/commands.ts",
     "./i18n": "./src/i18n/index.ts",

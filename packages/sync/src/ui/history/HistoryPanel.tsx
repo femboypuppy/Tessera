@@ -1,18 +1,19 @@
-import { colorForId, type SidePanelProps } from '@tessera/core';
-import { useAppContext, usePages } from '@tessera/core/react';
+import { colorForId, isDocEmpty, type DocJSON, type SidePanelProps } from '@tessera/core';
+import { useAppContext, useContributions, usePages } from '@tessera/core/react';
 import {
   Avatar,
   Badge,
   Button,
   Callout,
   EmptyState,
+  FeatureBoundary,
   Input,
   Skeleton,
   Spinner,
   getLocale,
 } from '@tessera/ui';
 import { ArrowLeft, History, RotateCcw, Save } from 'lucide-react';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   historyServiceOf,
   type HistoryService,
@@ -260,9 +261,37 @@ function VersionPreview({
         {content.status === 'error' ? (
           <LoadError error={content.error} onRetry={content.reload} />
         ) : null}
-        {content.status === 'ready' ? <DocPreview doc={content.data.doc} /> : null}
+        {content.status === 'ready' ? (
+          <VersionContent doc={content.data.doc} pageId={pageId} />
+        ) : null}
       </div>
     </div>
+  );
+}
+
+const previewSkeleton = (
+  <div className="flex flex-col gap-2" aria-hidden="true">
+    <Skeleton className="h-6 w-2/3" />
+    <Skeleton className="h-4 w-full" />
+    <Skeleton className="h-4 w-5/6" />
+  </div>
+);
+
+/**
+ * A version's content, read-only: through the editor's `docViewers` contribution (the same blocks
+ * as the page) when there is one, else this package's plain renderer.
+ */
+export function VersionContent({ doc, pageId }: { doc: DocJSON; pageId: string }) {
+  const [viewer] = useContributions('docViewers');
+  if (isDocEmpty(doc)) return <p className="text-ui text-fg-subtle italic">{t('emptyPage')}</p>;
+  if (!viewer) return <DocPreview doc={doc} />;
+  const Viewer = viewer.component;
+  return (
+    <FeatureBoundary featureId={viewer.featureId} resetKeys={[pageId]}>
+      <Suspense fallback={previewSkeleton}>
+        <Viewer doc={doc} pageId={pageId} />
+      </Suspense>
+    </FeatureBoundary>
   );
 }
 

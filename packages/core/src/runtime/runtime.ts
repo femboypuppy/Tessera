@@ -808,6 +808,7 @@ async function openWorkspaceSession(input: SessionInput): Promise<WorkspaceSessi
       add('editorExtensions', feature.editorExtensions);
       add('overlays', feature.overlays);
       add('workspaceMenuItems', feature.workspaceMenuItems);
+      add('docViewers', feature.docViewers);
       for (const [kind, component] of Object.entries(feature.pageBodies ?? {})) {
         if (component)
           offs.push(

@@ -126,7 +126,7 @@ describe('remote caret builder', () => {
     expect(caret.querySelector('img')).toBeNull();
     expect(caret.textContent).toContain('<img');
     expect((caret.querySelector('.tess-remote-label') as HTMLElement).style.color).toBe(
-      'rgb(31, 30, 29)',
+      'rgb(17, 17, 16)',
     );
   });
 });

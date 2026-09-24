@@ -16,6 +16,7 @@ import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
 import { unified, type Processor } from 'unified';
 import { docToMdast } from './from-doc';
+import { escapesFromMarkdown, restoreEscapes } from './syntax/escapes';
 import { parseFrontmatter } from './frontmatter';
 import { parseHtmlToDoc } from './html/parse-html';
 import { tesseraFromMarkdown, tesseraToMarkdown } from './syntax/mdast';
@@ -32,7 +33,7 @@ export interface TesseraParseOptions extends MarkdownParseOptions {
 export function remarkTessera(this: Processor): void {
   const data = this.data();
   (data.micromarkExtensions ??= []).push(tesseraSyntax());
-  (data.fromMarkdownExtensions ??= []).push(tesseraFromMarkdown());
+  (data.fromMarkdownExtensions ??= []).push(tesseraFromMarkdown(), escapesFromMarkdown());
   (data.toMarkdownExtensions ??= []).push(tesseraToMarkdown());
 }
 
@@ -128,12 +129,12 @@ export class RemarkMarkdownCodec implements MarkdownCodec {
 
   /** Parses markdown into a syntax tree (for tools that need mdast). */
   parseTree(markdown: string): Root {
-    return this.processor.parse(normalizeNewlines(markdown));
+    return restoreEscapes(this.processor.parse(normalizeNewlines(markdown)));
   }
 
   parse(markdown: string, options: TesseraParseOptions = {}): MarkdownParseResult {
     const source = normalizeNewlines(markdown);
-    const tree = this.processor.parse(source);
+    const tree = restoreEscapes(this.processor.parse(source));
     const warnings: string[] = [];
     let frontmatter: Record<string, JsonValue> = {};
     const yaml = tree.children[0];
@@ -147,7 +148,11 @@ export class RemarkMarkdownCodec implements MarkdownCodec {
       resolveAsset: options.resolveAsset,
       isDatabase: options.isDatabase,
     };
-    const ctx = createContext(toDocOptions, (nested) => this.processor.parse(nested), source);
+    const ctx = createContext(
+      toDocOptions,
+      (nested) => restoreEscapes(this.processor.parse(nested)),
+      source,
+    );
     const doc = normalizeDocJSON(mdastToDoc(tree, ctx));
     return { doc, frontmatter, warnings: [...warnings, ...ctx.warnings] };
   }

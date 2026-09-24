@@ -369,6 +369,24 @@ describe('parse: markdown', () => {
 describe('serialize', () => {
   const doc = (content: AnyNodeJSON[]): DocJSON => ({ type: 'doc', content }) as DocJSON;
 
+  it('keeps plain URLs and emails plain across a round trip, and links linked', () => {
+    for (const text of [
+      'see http://example.com here',
+      'www.example.com',
+      'mail bob@example.com now',
+      'a@a.a',
+    ]) {
+      const plain = doc([{ type: 'paragraph', content: [{ type: 'text', text }] }]);
+      const back = codec.parse(codec.serialize(plain)).doc;
+      expect(back.content[0]).toMatchObject({ content: [{ type: 'text', text }] });
+      expect(JSON.stringify(back)).not.toContain('"link"');
+    }
+    // Literals typed in markdown are still links.
+    const typed = codec.parse('see http://example.com and bob@example.com').doc;
+    expect(JSON.stringify(typed)).toContain('mailto:bob@example.com');
+    expect(JSON.stringify(typed)).toContain('"href":"http://example.com"');
+  });
+
   it('writes only the block IDs keepBlockId accepts', () => {
     const blocks = doc([
       {
