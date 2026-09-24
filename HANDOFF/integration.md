@@ -83,32 +83,452 @@ the 45 s test timeout). A failure is re-run alone before it counts as fixed or f
 
 ## Follow-ups from the handoffs
 
-Status is filled in as the merges land (✅ done, ⏳ in progress, ➡️ deferred with an issue below).
+✅ done (with where), ➡️ deferred (an issue below).
 
 ### Architect / shell
-- Read-only for viewers (sync CCR 1). ✅
+- Read-only for viewers (sync CCR 1). ✅ `useViewOnly()`; `App.test.tsx` › "makes pages read-only
+  for viewers".
 - `Suspense` for lazy page sections (search). ✅
-- Block and heading links from the URL hash (editor). ✅
-- Test timeouts for the jsdom shell tests (ci, sync, editor, search, desktop). ✅ Measured alone on
-  this machine: one `getAllByRole('button', { name })` over the picker's ~1,870 buttons takes
-  9.9 s in jsdom (the picker renders in 1 s), and "onboards, then creates…" takes 10.5 s. Nothing
-  hangs, so `testTimeout: 15_000` for the `ui`, `web` and `core` projects.
-- Root `prepare` script for the git hooks, `.lighthouseci/` in `.gitignore`, contrast token fixes
-  and an empty accessibility baseline (ci). ⏳ with the CI merge.
-- Final logo and favicon from `assets/brand` (docs). ⏳ with the docs merge.
-- A print rule for bare routes (importers), desktop wording for "Delete workspace" (desktop). ⏳
-- Service worker for offline cold starts (sync). ⏳
+- Block and heading links from the URL hash (editor). ✅ `bridge.ts` `targetFromHash`, with tests.
+- Test timeouts for the jsdom tests (ci, sync, editor, search, desktop). ✅ 15 s for `ui`, `web`,
+  `core`, `editor` and `db-views`, 20 s for the testkit (measured: one `getAllByRole` over the
+  emoji picker's ~1,870 buttons takes 9.9 s in jsdom; nothing hangs).
+- Root `prepare` (git hooks), `.lighthouseci/` ignored, contrast tokens, focusable ScrollArea,
+  empty accessibility baseline (ci). ✅ With the CI merge.
+- Print rule for bare routes (importers). ✅ `AppLayout.tsx` (`print:h-auto print:overflow-visible`).
+- Desktop wording for "Delete workspace". ✅ "Remove from the list" for folder workspaces;
+  `App.test.tsx` › "removes a folder workspace from the list instead of deleting it".
+- Final logo and favicon (docs). ✅
+- Service worker for offline cold starts (sync). ✅ `apps/web/service-worker.js` (built to
+  `/sw.js`) and `apps/web/src/offline.ts`; `e2e/architect/offline.spec.ts` (Chromium and Firefox):
+  after one visit, offline, the app, the page tree, the editor and the page's text load and stay
+  editable.
 
-### Cross-feature wiring (agents/11-merge.md)
-Collaboration cursors, paste and copy through the real codec, search indexing of database rows,
-inline databases, plugin blocks in the slash menu, importers writing to the asset store, the
-desktop markdown mirror through the exporter, "Open demo workspace", history previews with the
-editor, plugin docs in the docs sidebar. ⏳
+### Sync (03)
+- Remote cursors in the editor, checked with two browsers against the real server. ✅ Journey 9
+  (`e2e/journeys/09-live-collaboration.spec.ts`), also against `docker compose up`; the presence
+  screenshot shows the labeled caret.
+- History previews with the editor instead of `DocPreview`. ✅ The `docViewers` contribution
+  (`@tessera/editor/doc-viewer`) in `VersionContent`; `ui.test.tsx` › "version previews".
+- Desktop tokens in the keychain. ✅ The `credentialStore` service `keychain` (priority 100); the
+  real-app smoke test checks it.
+- The server's CSP against plugin frames. ✅ See the plugins merge.
+- The Tauri doc store with the replicator's transactional dirty flag. ➡️ Issue "Desktop: a
+  transactional dirty flag in the SQLite doc store".
+- Nightly load test (`pnpm --filter @tessera/server load-test`). ➡️ Issue "CI: nightly
+  performance and load jobs".
+- Screenshots retaken with the editor. ✅
+
+### Editor (02)
+- Clipboard with the real codec (lists, tasks, quotes, code, marks). ✅ `e2e/editor/clipboard.spec.ts`
+  (its stub-codec branches are gone).
+- Plugin and database blocks in the slash menu. ✅ `e2e/plugins/plugins.spec.ts` › Mermaid and
+  `e2e/databases/inline.spec.ts`.
+- Tag clicks run search with `#tag`. ✅ The search command takes `args.query`.
+- "Copy link" hash → `target.blockId`. ✅
+- Upstream y-tiptap work. ➡️ Issues "Firefox typing latency…" and "Undo or redo can desync…".
+- The Firefox typing budget, measured but not enforced (owner note). ✅ Profiled: y-tiptap's
+  selection mapping (4.5 ms per keystroke) and undo state (1.2 ms); the editor's own plugins take
+  under 0.3 ms. `performance.spec.ts` enforces < 16 ms p95 in Chromium and < 24 ms in Firefox
+  (SPEC.md §10).
+
+### Importers (08)
+- `createPages` and `addRows` in `applyPlan`. ✅ The 2,000-note page phase went from 11.8 s to
+  0.17 s.
+- Paste through the codec; "Export…" in the top bar and the palette. ✅
+- `AssetStore.getInfo` in the IndexedDB and server stores. ✅ Both implement it, and the desktop's.
+- The desktop mirror through the exporter. ✅ `MIRROR_EXPORTERS` picks `markdown`; Settings →
+  Desktop shows "Updated now · 7 files" in the screenshot run.
+- Downloads and printing inside the desktop webview. ➡️ Issue "Desktop: export downloads and
+  printing in the webview".
+- "Open demo workspace" from `examples/demo-workspace`; the bundled demo deleted. ✅ `demo.test.ts`
+  (no import issues, 200+ links resolve, images in the asset store, typed databases).
+- Nightly 2,000-note benchmark. ➡️ Issue "CI: nightly performance and load jobs".
+
+### Search (05)
+- Collaborators' edits pulled in the background get re-indexed. ✅ `onPulled` →
+  `searchIndex.upsert`.
+- Database row values indexed. ✅ And fixed: a batch holding pages and databases detached the
+  databases' buffers, so they went unindexed (`services.test.ts` › "indexes pages and databases
+  read in the same batch", through a `postMessage`-like transport).
+- `perf.config.ts` and the search bench in CI. ➡️ Issue "CI: nightly performance and load jobs".
+
+### Databases (04)
+- The inline database e2e runs. ✅ Its skip became an assertion.
+- `addRowsInBulk` on core's helpers. ✅
+- The query engine's 95% coverage gate in CI. ✅ A new step in `ci.yml` (98.7% lines, 95.9%
+  branches).
+- Plugin database queries with the views' engine. ➡️ Issue "Plugin API: database queries with
+  date ranges and relative dates".
+
+### Plugins (06)
+- The slash-menu path end to end, and live Word count while typing. ✅
+- The malicious test plugin (owner note). ✅ `e2e/plugins/fixtures/escape` (20 probes; it stays in
+  the test suite), `sandbox.spec.ts` and `served.spec.ts` › "a malicious plugin reaches nothing
+  outside its sandbox" (preview and server CSP, Chromium and Firefox).
+- CSP for self-hosting and the desktop. ✅ A per-response nonce, Tauri's nonce token, `blob:`.
+- Publish the registry, the example zips and the npm packages. ➡️ Owner checklist (release).
+- Plugin docs in the docs sidebar. ✅ Listed from `docs/plugins`, no dead links.
+
+### Desktop (07)
+- The CCRs (credential store, workspace menu items, stylesheet). ✅
+- The container smoke test without `--allow-stub`. ✅ `node deploy/smoke/smoke-test.mjs --build`:
+  PASS.
+- Undo and Redo from the native menu reach the editor. ✅ `desktop.spec.ts` › "Edit → Undo and
+  Redo…".
+- Plugin iframes and workers in the desktop app. ✅ `smoke-app.mjs` › "plugin sandboxes run under
+  the app CSP".
+- Desktop icons from the final logo. ✅
+
+### Docs (10)
+- The README showcase, the logo swap, the demo workspace checks, plugin docs, CONTRIBUTING
+  commands, server configuration and self-hosting pages checked against the code. ✅
+- Owner tasks before launch. ➡️ The checklist at the end.
+
+### CI (09)
+- The journeys' `requireFeatures` guards removed. ✅ They became `expectFeatures`, which fails and
+  never skips.
+- Benchmarks after the merge. ✅ Below.
+- `assets/screenshots/ci` retaken. ✅
+- Workflows that only run on GitHub. ➡️ Checked with actionlint; the first GitHub run confirms.
 
 ### Owner notes for this merge
-- The malicious test plugin for the sandbox escape tests, as a fixture inside the test suite. ⏳
-- Tests that skipped without the editor (plugin blocks in the slash menu, inline database e2e) must
-  run for real. ⏳
-- After `feat/docs`: the README screenshot table from `HANDOFF/docs.md`, once every image exists;
-  `femboypuppy@tutanota.de` as the contact in `SECURITY.md`. ⏳
-- The Firefox typing-latency budget the editor measured but did not enforce. ⏳
+- History replayed with cherry-picks, no `--allow-unrelated-histories`, author emails checked. ✅
+- The approved contract changes applied first. ✅
+- The malicious test plugin, as a test fixture. ✅
+- Tests that skipped without the editor now run for real. ✅
+- The README screenshot table swapped once every image existed; `femboypuppy@tutanota.de` in
+  `SECURITY.md`. ✅
+- EmojiPicker and `App.test.tsx`: they still passed 5 s alone on this machine, so their timeouts
+  were raised as the handoffs suggested. ✅
+- The Firefox typing-latency budget. ✅
+
+## Cross-feature wiring (agents/11-merge.md)
+
+| Flow | How it's wired | Checked by |
+|---|---|---|
+| Collaboration cursors | The editor's remote cursors from the sync provider's awareness | Journey 9 in two browsers, also on `docker compose up` |
+| Copy and paste through the codec | Editor clipboard → `markdownCodec` (remark), `keepBlockId: () => false` | `e2e/editor/clipboard.spec.ts` |
+| Search indexing of database rows | Row values from the database doc; background pulls re-indexed | `services.test.ts`, journey 3 |
+| Inline databases | `embed` of kind `database` through the block registry | `e2e/databases/inline.spec.ts` |
+| Plugin blocks in the slash menu | Registered block kinds become slash items | `plugins.spec.ts` › Mermaid |
+| Importers writing to the asset store | Attachments go to `assetStore`, image nodes get an `assetId` | `demo.test.ts`, `e2e/importers` |
+| Desktop mirror through the exporter | The `markdown` exporter into a folder sink | Desktop e2e, Settings → Desktop |
+| "Open demo workspace" | The markdown importer over `examples/demo-workspace` | `demo.test.ts`, the importers screenshots |
+| History preview with the editor | The `docViewers` contribution | `ui.test.tsx`, `doc-viewer.test.tsx` |
+| Plugin docs in the docs sidebar | `docs/.vitepress/config.mts` lists `docs/plugins` | `pnpm --dir docs build` |
+
+## Integration work
+
+- **Every stub replaced.** With every feature registered, the app resolves `workspaceRegistry`
+  (IndexedDB; `tauri-folders` on the desktop), `markdownCodec` `remark`, `credentialStore`
+  (`indexeddb`; `keychain`), `docStore` and `assetStore` (IndexedDB; `tauri-sqlite` and
+  `tauri-files`), `syncProvider`, `searchIndex` `minisearch` and `linkIndex` `graph`. The real-app
+  smoke test prints them, and `e2e/architect/shell.spec.ts` checks the list.
+- **Journeys** all run for real, none skipped; journey 9 (two people typing in one page) is new.
+- **`pnpm dev`** runs the web app and the server; the app reaches the server through Vite's `/api`
+  and `/sync` proxy (checked: health through the proxy, and a WebSocket to `/sync`).
+- **`pnpm build`** builds every package, the web app, the server and the desktop app
+  (`scripts/build-desktop.mjs`: `tauri build --no-bundle`, when Rust is installed).
+- **`docker compose up`** (the repository's `docker-compose.yml`, built from this checkout): the
+  server serves the app. With `TESSERA_E2E_SERVER_URL=http://localhost:8787`, journey 9 ran against
+  it: two browsers and two accounts (the owner created with the logged setup code, the second
+  through an invite link), both typing in one page and seeing each other live. PASS.
+- **Dead code removed:** the importers' bundled demo, the desktop's own stylesheet, the clipboard
+  spec's stub-codec branches, the journeys' skip guards, stale "until the storage feature lands"
+  comments.
+- **SPEC.md and CLAUDE.md** updated: the CSP and its nonce, offline, validation, the e2e
+  environment, `pnpm dev` and `pnpm build`, the contract changes and the budgets.
+
+## Security review
+
+| Area | What was checked | Evidence |
+|---|---|---|
+| Authentication | argon2id hashes; httpOnly SameSite=Lax cookies, Secure over https; bearer tokens only for the desktop, kept in the OS keychain; rate limits on setup, sign-up and login; CSRF: a cookie-authenticated write must come from an allowed origin; sessions expire, and revoking one closes its sockets; viewers are read-only on the server, even for hand-crafted messages | `apps/server/src/http/auth.test.ts`, `sync/sync.test.ts` |
+| Plugin sandbox | `sandbox="allow-scripts"` frames without `allow-same-origin`, a strict CSP per frame, nested UI frames against navigation, host-side permission checks and schema validation. A hostile fixture plugin probes the app document, the top window, cookies, storage, IndexedDB, fetch, beacons, images, scripts, WebSockets, `importScripts`, `eval`, popups, forged messages, the CSP nonce and navigations: all blocked, and no request reaches the attacker's origin | `e2e/plugins/sandbox.spec.ts`, `served.spec.ts`, `host.test.ts`, `endpoint.test.ts` |
+| CSP | The server's policy: `script-src 'self' 'nonce-…' blob:` with a fresh nonce per page, no `unsafe-inline` scripts, no `eval` (zod runs jitless), `frame-ancestors 'none'`. The desktop's is the same, with Tauri's nonce | `auth.test.ts` › "serves the web app with a CSP…", `served.spec.ts` (no CSP violation) |
+| XSS through import, paste and embeds | HTML is sanitized (DOMPurify) and simplified, unsafe links and images are dropped, embeds come only from allowlisted providers, plugin READMEs are sanitized | `markdown/src/html/parse-html.test.ts`, `codec.test.ts`, `editor/src/clipboard/clipboard.test.ts` and the clipboard e2e's `__pwned` trap, `embeds/providers.test.ts`, `ReadmeView.test.tsx`, `sync/src/ui/ui.test.tsx` |
+| Path traversal | The static server, asset routes, backup and restore archives, import paths | `auth.test.ts` (four traversal attempts), `assets.test.ts`, `cli/backup.test.ts`, `importers.test.ts` |
+| Upload limits | Declared and chunked uploads over `MAX_UPLOAD_MB` answer 413 | `assets/assets.test.ts` |
+| Dependencies | `pnpm audit --prod`: no known vulnerabilities. `pnpm audit`: two advisories in `lodash-es` ≤ 4.17.23 (through mermaid, in the Mermaid example plugin), fixed with an override to 4.18.1. The docs site's VitePress 1.6.4 brings Vite 5 advisories that affect its dev server only | `pnpm audit` |
+
+## Benchmarks
+
+`pnpm exec tsx scripts/bench/run.ts --runs 3` (the seeded harness, headless Chromium, this machine):
+
+| Benchmark | Result | Budget |
+|---|---|---|
+| Cold start, 5,000 pages → interactive sidebar | 1,090 ms | < 2,000 ms ✅ |
+| Search, 5,000 pages: query p95 | 14.4 ms | < 50 ms ✅ |
+| Command palette: keystroke → results p95 | 15.4 ms | < 50 ms ✅ |
+| Open a 2,000-block page | 1,284 ms | – |
+| Typing, keystroke → next frame p95 (end to end) | 46 ms | Reported only. The budget is the editor's processing: 9.9 ms p95, enforced by `e2e/editor/performance.spec.ts` ✅ |
+| Graph view, 5,000 pages: frame time p95 | 415 ms | < 33.4 ms ❌ Headless software rendering (see the issue) |
+| Import 2,000 files: longest main-thread block | 129 ms (222 ms before) | < 100 ms ❌ The dev-mode harness (see the issue) |
+
+Found on the way: in the dev harness the import worker never started (its DOM shim broke a browser
+check in `prosemirror-view`, which the dev server loads), so imports were planned on the main
+thread in dev. That is fixed; production was fine (checked by wrapping `Worker` in a production
+build). Pages are now created 50 per batch.
+
+## Known bugs and deferred work (ready-to-file issues)
+
+Each entry is a GitHub issue: the heading is its title, the first line its labels.
+
+### Bugs
+
+#### Firefox typing latency grows with page size (y-tiptap selection mapping)
+Labels: `bug`, `performance`, `editor`, `upstream`
+
+In Firefox, the editor's processing per keystroke on a 2,000-block page is 12–21 ms p95, against
+7–11 ms in Chromium (`e2e/editor/performance.spec.ts` prints both). A profile puts the time in
+dependencies: `@tiptap/y-tiptap` converts the selection to Yjs relative positions three times per
+keystroke (undo plugin state, `beforeAllTransactions`, `_prosemirrorChanged`), each walking the
+fragment up to the caret, and diffs every top-level child (`updateYFragment`); ProseMirror's view
+update walks every top-level child. The editor's own plugins take under 0.3 ms.
+**Expected:** under 16 ms in every browser. **Now:** the spec enforces 16 ms in Chromium and 24 ms
+in Firefox (SPEC.md §10). **Next:** report upstream with the profile; cache relative positions per
+transaction.
+
+#### Undo or redo can desync ProseMirror and Yjs (`@tiptap/y-tiptap` 3.0.9)
+Labels: `bug`, `editor`, `upstream`
+
+After an undo or redo step, y-tiptap keeps absolute positions from an older document, which can
+throw a `RangeError` and leave ProseMirror out of sync with Yjs (a redo that never shows up).
+Worked around in `packages/editor/src/extensions/history-guard.ts`, with tests. Report upstream,
+then remove the guard.
+
+#### Vitest's server worker sometimes aborts (0xC0000409) in a full Windows run
+Labels: `bug`, `tests`, `windows`
+
+In a full `pnpm test` on Windows 11 (Node 24), the forked worker running
+`apps/server/src/sync/sync.test.ts` or `crash.test.ts` exits with code 3221226505 (0xC0000409,
+how Windows reports Node's `abort()`), and Vitest reports "Worker exited unexpectedly". The server
+project passes alone (`pnpm --filter @tessera/server test`: 10 files, 78 tests), memory was not
+exhausted, and the project runs last (`sequence.groupOrder: 2`). **Next:** run with Node's
+`--report-on-fatalerror` in the fork's `execArgv` to get the fatal report; the native addons
+(`better-sqlite3`, `argon2`) are the suspects. Linux CI has not shown it.
+
+#### A loop in a plugin's panel or block freezes the app in Firefox and headless Chromium
+Labels: `bug`, `plugins`
+
+UI frames run on the app's main thread where the browser has no out-of-process iframes (Firefox,
+headless Chromium), so a panel or block stuck in a loop freezes the app. Worker loops, where plugin
+logic runs, are detected and stopped in both browsers (`e2e/plugins/sandbox.spec.ts`). Documented
+in `docs/plugins/permissions.md` › Limits. **Next:** a watchdog ping from the outer frame, and
+unloading the frame when it stops answering.
+
+#### Relation cleanup can leave dangling IDs if the tab closes right after a permanent delete
+Labels: `bug`, `databases`
+
+Relation cleanup after a permanent deletion runs on the deleting client; if it closes in the few
+milliseconds before the cleanup runs, dangling IDs stay in the data. Cells and "Linked from"
+ignore pages that don't exist, so nothing shows. **Next:** clean up in the same transaction, or
+lazily when a relation is read.
+
+#### Escape during a popover's exit animation needs a second press
+Labels: `bug`, `databases`, `accessibility`
+
+Pressing Escape during a closing popover's exit animation (about 150 ms) reaches the closing
+popover (Radix keeps it mounted while it animates), so a second press is needed to close the next
+one.
+
+#### The top bar squeezes the page title at phone width
+Labels: `bug`, `mobile`, `shell`
+
+At 390 px the top bar shows seven icon buttons (sync status, export, favorite, copy link, local
+graph, history, the page menu), and the title shrinks to "Apollo pro…"
+(`assets/screenshots/architect/phone-light.png`). **Expected:** below 768 px, keep the sync status
+and the page menu and move the rest into the page menu.
+
+#### Search: linked titles in page text catch up only on the next edit
+Labels: `bug`, `search`
+
+Renaming a link target updates titles live in panels and results, but the source page's
+searchable text keeps the old title until that page is next edited.
+
+### Performance
+
+#### Benchmarks run against a development build of the app
+Labels: `performance`, `ci`, `tests`
+
+`scripts/bench` measures the seeded harness (`packages/testkit/harness`), which runs on the Vite
+dev server with React's development build, so every render-heavy number is inflated. The import
+benchmark's longest main-thread block is 129 ms against a 100 ms budget (it was 222 ms before this
+merge's fixes), mostly synchronous React re-renders of the page tree as batches of pages arrive.
+**Next:** build the harness in production mode for benchmarks; then, if the import still blocks
+over 100 ms, render the page tree with `useDeferredValue` during bulk changes.
+
+#### Graph view frames at 5,000 pages without a GPU
+Labels: `performance`, `search`
+
+The benchmark measures 415 ms frame p95 for a 5,000-page graph in headless Chromium, which renders
+with SwiftShader (software). The search team's numbers with a GPU were fluid. Laying out 10,000
+nodes takes about 40 s to settle (in a worker; the page stays responsive). **Next:** run the graph
+benchmark with a GPU (headed, or `--use-gl=angle`), and reduce draw work on software renderers
+(fewer labels, no edge antialiasing).
+
+#### The Mermaid plugin loads 5.2 MB per block frame
+Labels: `performance`, `plugins`
+
+Each Mermaid block frame loads the whole bundle (from a blob, so no network). A page with dozens
+of diagrams uses a lot of memory. **Next:** share one renderer frame per page, or render SVG in
+the worker.
+
+#### Cross-tab sync waits for the durable IndexedDB commit
+Labels: `performance`, `sync`
+
+A tab broadcasts an update only after its `durability: 'strict'` commit: usually well under a
+second, once over 2 s in Firefox on a saturated machine.
+
+### Deferred features and gaps
+
+#### Plugin API: database queries with date ranges and relative dates
+Labels: `enhancement`, `plugins`, `databases`
+
+`api.databases.query` uses the SDK's own engine (`@tessera/plugin-api/query`), so plugins tested
+in the SDK harness get the same results as in the app. Its filters lack the views' date ranges and
+relative dates ("this week"). Add them to the SDK engine, matching `packages/db-views/src/query`.
+
+#### Plugin storage is per device and shared across workspaces
+Labels: `enhancement`, `plugins`
+
+A plugin that stores page IDs sees IDs from other workspaces. Add a workspace ID to the plugin API
+(compatible through `apiVersion`) and scope storage by workspace.
+
+#### Version history for database structure
+Labels: `enhancement`, `sync`, `databases`
+
+Version history covers pages, not database docs (no core helper replaces a database doc's
+structure as a new edit); the panel says so for databases.
+
+#### Server: account administration and asset garbage collection
+Labels: `enhancement`, `server`
+
+No admin UI for accounts (a password reset is `create-owner` for the first account only), and
+asset files are never garbage-collected.
+
+#### Search: index collaborators' pages this device never pulled
+Labels: `enhancement`, `search`, `sync`
+
+A doc never stored on this device is indexed by title only. Background pulls are re-indexed now
+(`onPulled`), but a page nobody on this device has pulled stays title-only.
+
+#### Search: phrase queries
+Labels: `enhancement`, `search`
+
+Quotes group words for `in:"…"`, but quotes in free text are plain words.
+
+#### Formulas: lists, regular expressions and date formats
+Labels: `enhancement`, `databases`
+
+No lists or list functions (`map`, `filter`), no regular expressions (on purpose, for safety), and
+`formatDate` has no format codes (it uses the viewer's locale).
+
+#### Importers for Logseq, Bear, Evernote and HTML
+Labels: `enhancement`, `importers`
+
+The stretch importers (Logseq, Bear, Evernote `.enex`, HTML files) are not built.
+
+#### Exports: what markdown and CSV can't hold
+Labels: `enhancement`, `importers`
+
+Exports drop database views and formulas, comments and version history; formula columns are left
+out of CSV. Pasted HTML tables with merged cells lose the merge. Backups are one in-memory JSON
+string (2 GB limit); a streaming format would suit very large workspaces.
+
+#### The print view doesn't follow live edits
+Labels: `enhancement`, `importers`
+
+The print view renders the page when opened; databases print as tables (every column, rows in
+stored order), not as their views.
+
+#### Drag blocks by touch
+Labels: `enhancement`, `editor`, `mobile`
+
+Dragging blocks by touch isn't supported; on touch screens the handle opens the block menu (Move
+up, Move down).
+
+#### Link previews for bookmark cards
+Labels: `enhancement`, `editor`, `server`
+
+Bookmark cards show a title, description and host from the embed's data, or the URL. The app is
+offline-first and never contacts the linked site; the server could offer a preview endpoint.
+
+#### Orphaned local docs after a permanent delete on another device
+Labels: `bug`, `sync`
+
+A page deleted permanently elsewhere leaves its local docs until the replicator meets the server's
+tombstone for a dirty doc; clean orphans stay on disk (invisible, small).
+
+#### Desktop: a transactional dirty flag in the SQLite doc store
+Labels: `enhancement`, `desktop`, `sync`
+
+The browser's IndexedDB store marks a doc dirty in the same transaction as its update; the
+desktop's SQLite store relies on the replicator's change handler. Doing it in the store's
+transaction closes the window where a crash between the two loses the "needs upload" mark.
+
+#### Desktop: export downloads and printing in the webview
+Labels: `desktop`, `importers`
+
+The export dialog downloads through `<a download>` and the PDF export uses `window.print()`; both
+depend on the webview. Check them in the real app on each OS, and use a native save dialog where a
+webview ignores downloads.
+
+#### Desktop: builds and paths not verified on this machine
+Labels: `desktop`, `release`
+
+Verified here: the Windows app (debug, `smoke-app.mjs` end to end) and, by the desktop team, the
+Linux packages in Docker. Not verified: macOS (no Mac), the updater's install path (needs a signed
+release), global shortcuts on Wayland, the keychain on Linux CI (no Secret Service). The markdown
+copy re-exports the whole workspace after edits settle; an incremental exporter would suit very
+large workspaces.
+
+#### Self-hosting templates not verified on their platforms
+Labels: `self-hosting`
+
+The Fly.io, Railway and Render configs and the Unraid, CasaOS and Umbrel templates follow each
+platform's documented format but were not deployed (no accounts). The root-owned-volume path they
+rely on was tested locally. The arm64 image was not built locally.
+
+#### CI: nightly performance and load jobs
+Labels: `ci`, `performance`
+
+Not scheduled yet: the server load test (`pnpm --filter @tessera/server load-test`, exits non-zero
+on lost deliveries or divergence), the 2,000-note import benchmark (`TESSERA_IMPORT_BENCH_NOTES`),
+the search benchmark (`pnpm --filter @tessera/search bench`) and browser checks
+(`e2e/search/perf.config.ts`, `PERF_SOFTWARE_GL=1` on Linux), and `scripts/bench --compare`.
+
+#### CI: workflows that only run on GitHub
+Labels: `ci`
+
+`desktop.yml`, `docker.yml`, the docs deploy, `release.yml`, CodeQL, the labeler and Dependabot
+were checked with actionlint (every workflow valid) and the workflow policy tests, not executed;
+shellcheck wasn't installed here. The first run on GitHub confirms them.
+
+#### Docs: VitePress 1.x brings dev-server advisories
+Labels: `docs`, `security`, `dependencies`
+
+`pnpm --dir docs audit` reports Vite 5 advisories (`server.fs.deny` bypass on Windows, path
+traversal in optimized deps, esbuild's dev server) through VitePress 1.6.4. They affect `vitepress
+dev` only, not the built site. Move to VitePress 2 (Vite 6+) once it is stable.
+
+#### Screen readers: check with real ones
+Labels: `accessibility`
+
+ARIA roles, names and keyboard paths are checked with Playwright role queries and axe
+(`e2e/ci/accessibility.spec.ts`), not with NVDA, VoiceOver or Orca.
+
+## Owner checklist before launch
+
+- Push `main` (nothing is pushed yet), and watch the first CI run on GitHub.
+- Repository settings: upload `assets/brand/social-preview.png`; enable Discussions with a Q&A
+  category; create the labels `bug`, `enhancement`, `question`, `triage`, `roadmap`,
+  `good first issue`; enable private vulnerability reporting.
+- Release: the updater signing key (`TAURI_SIGNING_PRIVATE_KEY`, its password, and
+  `TAURI_SIGNING_PUBLIC_KEY` as a variable); publish `examples/plugins/registry.json`,
+  `registry.schema.json` and the example zips to GitHub Pages under `/plugins/`; publish
+  `@tessera/plugin-api` and `create-tessera-plugin` to npm (both `private` for now).
+- Content: pick a tagline; fill `LAUNCH.md`'s `[link to the README or an album]`; the
+  `assets/demo.gif` placeholder is replaced in the polish phase (`agents/12-polish.md`); decide
+  whether to keep the `BUILT_WITH_AGENTS.md` link in the README footer.
