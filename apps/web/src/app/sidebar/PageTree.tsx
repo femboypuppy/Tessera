@@ -29,6 +29,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -113,16 +114,15 @@ function flatten(tree: readonly PageTreeNode[], expanded: ReadonlySet<string>): 
   return rows;
 }
 
-/** Actions shared by the row's "…" menu and its context menu. */
-function usePageActions(page: PageMeta, parentId: string | null, onExpand: (id: string) => void) {
+/**
+ * Actions shared by the row's "…" menu and its context menu. They don't read the page index, so a
+ * row doesn't re-render when other pages change (an import adds thousands); the moves, which need
+ * the siblings, are worked out by {@link useMoves} while a menu is open.
+ */
+function usePageActions(page: PageMeta, onExpand: (id: string) => void) {
   const ctx = useAppContext();
   const navigate = useNavigate();
-  const snapshot = usePages();
   const viewOnly = useViewOnly();
-  const siblings = snapshot.children(parentId);
-  const index = siblings.findIndex((sibling) => sibling.id === page.id);
-  const previous = index > 0 ? siblings[index - 1] : undefined;
-  const move = (target: MoveTarget) => attempt(() => ctx.workspace.movePage(page.id, target));
   const copyLink = () => {
     void navigator.clipboard
       ?.writeText(pageUrl(page.id))
@@ -144,6 +144,19 @@ function usePageActions(page: PageMeta, parentId: string | null, onExpand: (id: 
             void ctx.workspace.duplicatePage(page.id).then((copy) => ctx.navigate(copy.id));
           }
         : null,
+    trash: () => trashWithUndo(ctx, page.id),
+  };
+}
+
+/** Move up, down, in and out, from the page's place among its siblings (menus only). */
+function useMoves(page: PageMeta, parentId: string | null, onExpand: (id: string) => void) {
+  const ctx = useAppContext();
+  const snapshot = usePages();
+  const siblings = snapshot.children(parentId);
+  const index = siblings.findIndex((sibling) => sibling.id === page.id);
+  const previous = index > 0 ? siblings[index - 1] : undefined;
+  const move = (target: MoveTarget) => attempt(() => ctx.workspace.movePage(page.id, target));
+  return {
     moveUp: index > 0 ? () => move({ parentId, position: { index: index - 1 } }) : null,
     moveDown:
       index >= 0 && index < siblings.length - 1
@@ -159,21 +172,25 @@ function usePageActions(page: PageMeta, parentId: string | null, onExpand: (id: 
         ? () =>
             move({ parentId: snapshot.effectiveParentId(parentId), position: { after: parentId } })
         : null,
-    trash: () => trashWithUndo(ctx, page.id),
   };
 }
 
 function MenuItems({
   page,
+  parentId,
+  onExpand,
   actions,
   Item,
   Separator,
 }: {
   page: PageMeta;
+  parentId: string | null;
+  onExpand: (id: string) => void;
   actions: ReturnType<typeof usePageActions>;
   Item: typeof DropdownMenuItem | typeof ContextMenuItem;
   Separator: typeof DropdownMenuSeparator | typeof ContextMenuSeparator;
 }) {
+  const moves = useMoves(page, parentId, onExpand);
   if (actions.viewOnly) {
     return (
       <Item icon={<Link2 />} onSelect={actions.copyLink}>
@@ -200,32 +217,32 @@ function MenuItems({
       <Separator />
       <Item
         icon={<ArrowUp />}
-        disabled={!actions.moveUp}
-        onSelect={() => actions.moveUp?.()}
+        disabled={!moves.moveUp}
+        onSelect={() => moves.moveUp?.()}
         shortcut={['Alt', 'Shift', '↑']}
       >
         {t('moveUp')}
       </Item>
       <Item
         icon={<ArrowDown />}
-        disabled={!actions.moveDown}
-        onSelect={() => actions.moveDown?.()}
+        disabled={!moves.moveDown}
+        onSelect={() => moves.moveDown?.()}
         shortcut={['Alt', 'Shift', '↓']}
       >
         {t('moveDown')}
       </Item>
       <Item
         icon={<CornerDownRight />}
-        disabled={!actions.indent}
-        onSelect={() => actions.indent?.()}
+        disabled={!moves.indent}
+        onSelect={() => moves.indent?.()}
         shortcut={['Alt', 'Shift', '→']}
       >
         {t('indent')}
       </Item>
       <Item
         icon={<CornerLeftUp />}
-        disabled={!actions.outdent}
-        onSelect={() => actions.outdent?.()}
+        disabled={!moves.outdent}
+        onSelect={() => moves.outdent?.()}
         shortcut={['Alt', 'Shift', '←']}
       >
         {t('outdent')}
@@ -238,18 +255,7 @@ function MenuItems({
   );
 }
 
-function TreeRow({
-  row,
-  active,
-  focused,
-  dropZone,
-  dragging,
-  onFocusRow,
-  onToggle,
-  onExpand,
-  onKeyDown,
-  dragHandlers,
-}: {
+interface TreeRowProps {
   row: Row;
   active: boolean;
   focused: boolean;
@@ -265,10 +271,23 @@ function TreeRow({
     onDrop: (event: DragEvent<HTMLDivElement>, row: Row) => void;
     onDragEnd: () => void;
   };
-}) {
+}
+
+const TreeRow = memo(function TreeRow({
+  row,
+  active,
+  focused,
+  dropZone,
+  dragging,
+  onFocusRow,
+  onToggle,
+  onExpand,
+  onKeyDown,
+  dragHandlers,
+}: TreeRowProps) {
   const ctx = useAppContext();
   const { page } = row;
-  const actions = usePageActions(page, row.parentId, onExpand);
+  const actions = usePageActions(page, onExpand);
   const title = displayTitle(page);
   const indicator: ReactNode =
     dropZone === 'before' || dropZone === 'after' ? (
@@ -353,6 +372,8 @@ function TreeRow({
               <DropdownMenuContent align="start" onClick={(event) => event.stopPropagation()}>
                 <MenuItems
                   page={page}
+                  parentId={row.parentId}
+                  onExpand={onExpand}
                   actions={actions}
                   Item={DropdownMenuItem}
                   Separator={DropdownMenuSeparator}
@@ -379,12 +400,38 @@ function TreeRow({
       <ContextMenuContent>
         <MenuItems
           page={page}
+          parentId={row.parentId}
+          onExpand={onExpand}
           actions={actions}
           Item={ContextMenuItem}
           Separator={ContextMenuSeparator}
         />
       </ContextMenuContent>
     </ContextMenu>
+  );
+}, sameRow);
+
+/** A row re-renders only when what it shows changed (page objects are kept while unchanged). */
+function sameRow(before: TreeRowProps, after: TreeRowProps): boolean {
+  const a = before.row;
+  const b = after.row;
+  return (
+    a.page === b.page &&
+    a.depth === b.depth &&
+    a.parentId === b.parentId &&
+    a.hasChildren === b.hasChildren &&
+    a.expanded === b.expanded &&
+    a.position === b.position &&
+    a.siblings === b.siblings &&
+    before.active === after.active &&
+    before.focused === after.focused &&
+    before.dropZone === after.dropZone &&
+    before.dragging === after.dragging &&
+    before.onFocusRow === after.onFocusRow &&
+    before.onToggle === after.onToggle &&
+    before.onExpand === after.onExpand &&
+    before.onKeyDown === after.onKeyDown &&
+    before.dragHandlers === after.dragHandlers
   );
 }
 
@@ -585,6 +632,25 @@ export function PageTree() {
     },
   };
 
+  // Rows are memoized: they get handlers that never change and call the latest ones.
+  const latest = useRef({ onKeyDown, dragHandlers });
+  useLayoutEffect(() => {
+    latest.current = { onKeyDown, dragHandlers };
+  });
+  const stableKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => latest.current.onKeyDown(event),
+    [],
+  );
+  const stableDragHandlers = useMemo<typeof dragHandlers>(
+    () => ({
+      onDragStart: (event, row) => latest.current.dragHandlers.onDragStart(event, row),
+      onDragOver: (event, row) => latest.current.dragHandlers.onDragOver(event, row),
+      onDrop: (event, row) => latest.current.dragHandlers.onDrop(event, row),
+      onDragEnd: () => latest.current.dragHandlers.onDragEnd(),
+    }),
+    [],
+  );
+
   if (rows.length === 0) {
     return <p className="px-2 py-1 text-ui text-fg-subtle">{t('noPagesYet')}</p>;
   }
@@ -611,8 +677,8 @@ export function PageTree() {
           onFocusRow={setFocusedId}
           onToggle={toggle}
           onExpand={expand}
-          onKeyDown={onKeyDown}
-          dragHandlers={dragHandlers}
+          onKeyDown={stableKeyDown}
+          dragHandlers={stableDragHandlers}
         />
       ))}
       {/* Dropping below the last page moves the dragged page to the end of the top level. */}
