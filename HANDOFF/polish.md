@@ -24,7 +24,7 @@ assets, the v0.1.0 release checklist with the GitHub Release notes, and what's l
    brand checked.
 6. **Release** (§6): version 0.1.0, `CHANGELOG.md` with highlights, the release workflow read end
    to end, the release notes, the README's links and both quickstarts in fresh containers, and
-   `ISSUES_TO_FILE.md`.
+   the issues to file (now #1–#55).
 
 ## First-run audit
 
@@ -101,8 +101,8 @@ Seen and left as they are, with the reason:
 
 - The import report counts **0 links** and warns about a link to a page that's not in the import
   when a vault links to a page the workspace already has. Imports never touch existing pages;
-  linking to them is an enhancement in `ISSUES_TO_FILE.md` ("Imports could link to pages already
-  in the workspace").
+  linking to them is an enhancement, #17 ("Imports could link to pages already in the
+  workspace").
 - The graph's "Arranging…" badge shows for a moment after an import: the layout really is running.
 
 ## Design consistency
@@ -155,7 +155,7 @@ import again after `f92daee`:
 
 1. The benchmark timed the graph while the search and link indexes were still reading 5,000
    pages on the main thread; it now waits for them (`97e1232`), as a person opening the graph a
-   minute later would. First-open indexing is an issue of its own in `ISSUES_TO_FILE.md`.
+   minute later would. First-open indexing is an issue of its own, #12.
 2. It included loading the import's code on the first click; the dialog now loads it while it
    shows what it found (`e7a2390`), and the benchmark pauses where a person reads the preview.
 3. The first attempt in the full run timed out while the harness generated its workspace; the
@@ -172,8 +172,8 @@ sidebar tree, favorites, the top bar, every relation cell of an open database), 
 batch is a page change. Batches of 25 and a task of its own for the root page (`f92daee`) cut the
 long tasks per import from 7–20 to 1–4, but the longest still lands at 76–102 ms across runs. The
 UI keeps rendering the progress throughout; the fix (selector hooks, so a component re-renders
-only when the pages it shows change) is an issue in `ISSUES_TO_FILE.md` ("Every page change
-re-renders every `usePages()` subscriber").
+only when the pages it shows change) is #13 ("Every page change re-renders
+every `usePages()` subscriber").
 
 **What changed for speed:** page tree rows re-render only when what they show changes (`8ce2d4c`);
 Radix tabs, radio groups, the cover picker and the importers' strings left the startup bundle
@@ -238,22 +238,23 @@ band it held from minute 4; DOM nodes 780 → 705 and listeners 666 → 654. No 
   reports 0.1.0, `docker logs tessera` shows the setup code and "Set up this server" creates the
   owner; from source in `node:24`, `git clone -b main`, `corepack enable`, `pnpm install` (45 s)
   and `pnpm dev` serve the app on 5173 and the API on 8787.
-- [x] `ISSUES_TO_FILE.md`: 55 ready-to-file issues (bugs, performance, deferred work, good first
-  issues, and the checks that only run on GitHub), with labels matching `.github/labeler.yml`.
+- [x] The known bugs and deferred work, filed as GitHub issues #1–#55 (bugs, performance,
+  deferred work, good first issues, and the checks that only run on GitHub), with labels matching
+  `.github/labeler.yml`; 13 are labeled `good first issue`.
 - [ ] **Owner, on GitHub** (can't be done from here):
-  1. Push `main` (the commits since `136c1a7` are local).
-  2. Make the repository public (the README's badges, contrib.rocks and CodeQL depend on it).
-  3. Settings → Pages → Source: GitHub Actions, so `docs.yml` deploys the docs site.
-  4. Settings → Code security → enable code scanning (CodeQL fails until then).
-  5. Settings → General → Social preview: upload `docs/public/social-preview.png`.
-  6. Auto-updates (optional): generate a key with `pnpm --filter @tessera/desktop tauri signer
+  1. [x] Push `main`.
+  2. [ ] Make the repository public (the README's badges, contrib.rocks and CodeQL depend on it).
+  3. [ ] Settings → Pages → Source: GitHub Actions, so `docs.yml` deploys the docs site.
+  4. [ ] Settings → Code security → enable code scanning (CodeQL fails until then).
+  5. [ ] Settings → General → Social preview: upload `docs/public/social-preview.png`.
+  6. [ ] Auto-updates (optional): generate a key with `pnpm --filter @tessera/desktop tauri signer
      generate`, add the secrets `TAURI_SIGNING_PRIVATE_KEY` and
      `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` and the variable `TAURI_SIGNING_PUBLIC_KEY`. Without
      them the release has no update bundles, and the apps don't auto-update.
-  7. Create the labels listed at the top of `ISSUES_TO_FILE.md`.
-  8. `git tag v0.1.0 && git push origin v0.1.0`, watch the Release workflow, check the draft's
+  7. [x] Create the labels (the `area:` labels of `.github/labeler.yml` and the topic labels).
+  8. [ ] `git tag v0.1.0 && git push origin v0.1.0`, watch the Release workflow, check the draft's
      files, and let it publish.
-  9. File the issues in `ISSUES_TO_FILE.md`, then delete the file.
+  9. [x] File the issues (#1–#55); `ISSUES_TO_FILE.md` is deleted.
 
 ### GitHub Release notes (draft)
 
@@ -328,7 +329,7 @@ On `e3f2475`, this machine (Windows 11, Node 24, Playwright 1.63):
 | --- | --- |
 | `pnpm typecheck` | ✅ every package |
 | `pnpm lint` | ✅ ESLint with no warnings, Prettier clean |
-| `pnpm test` | ✅ 171 files, 1,399 tests. Two earlier full runs each lost one test to load: the desktop picker waited 1 s for its lazy chunk (now 15 s, `e3f2475`), and the server project's forked worker aborted once (0xC0000409, the known Windows issue in `ISSUES_TO_FILE.md`; it passes alone, 79/79). |
+| `pnpm test` | ✅ 171 files, 1,399 tests. Two earlier full runs each lost one test to load: the desktop picker waited 1 s for its lazy chunk (now 15 s, `e3f2475`), and the server project's forked worker aborted once (0xC0000409, the known Windows issue, #5; it passes alone, 79/79). |
 | `pnpm test:e2e --project=chromium --grep-invert @perf` | ✅ 155/155 (9.2 min, 2 workers) |
 | `pnpm test:e2e --project=firefox --grep-invert @perf` | ✅ 155/155 (21.1 min, 1 worker) |
 | `pnpm test:e2e --grep @perf --workers=1` | ✅ 7 passed; the 10,000-row scroll spec skips Firefox by design (frame timing is Chromium-only) |
@@ -343,7 +344,7 @@ Nothing new plugs in: the fixes live in the packages and the shell they belong t
 `packages/search/src/graph/label-layout.ts`, `packages/editor/src/extensions/remote-edit-caret.ts`,
 `packages/importers/src/option-colors.ts`, `packages/importers/src/i18n/registration.ts`,
 `apps/web/src/version.ts`, `apps/web/public/robots.txt`, `.github/releases/v0.1.0.md`,
-`CHANGELOG.md`, `ISSUES_TO_FILE.md`.
+`CHANGELOG.md`.
 
 ## Decisions
 
@@ -373,7 +374,7 @@ None. `packages/core` changed only its version.
 
 ## Known gaps and bugs
 
-Each is a ready-to-file issue in `ISSUES_TO_FILE.md`. The ones a user may notice first:
+Each is a GitHub issue (#1–#55). The ones a user may notice first:
 
 - Typing on pages of thousands of blocks is slower in Firefox (up to 24 ms p95) than in Chromium
   (under 16 ms): `@tiptap/y-tiptap` does per-keystroke work proportional to the page. SPEC.md §10
