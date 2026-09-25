@@ -3,6 +3,7 @@ export const en = {
   appName: 'Tessera',
   tagline: 'Your notes, your server. Local-first, private and yours to keep.',
   loading: 'Loading…',
+  preparingWorkspace: 'Setting up your workspace…',
   untitled: 'Untitled',
   defaultUserName: 'You',
   defaultWorkspaceName: 'My workspace',

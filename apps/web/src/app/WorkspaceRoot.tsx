@@ -48,6 +48,7 @@ export function useWorkspaceControl(): WorkspaceControl {
 
 type Phase =
   | { kind: 'loading' }
+  | { kind: 'preparing' }
   | { kind: 'onboarding' }
   | { kind: 'ready'; session: WorkspaceSession }
   | { kind: 'failed'; error: Error };
@@ -133,10 +134,13 @@ export function WorkspaceRoot({ runtime }: { runtime: AppRuntime }) {
             description: error.message,
           });
         }
-        setPhase({ kind: 'ready', session: opened });
         const action = pendingAction.current;
         pendingAction.current = null;
         if (action) {
+          // The workspace shows once its first-run action is done (the demo imports its pages),
+          // so nobody starts working in a half-made workspace or is moved away when it finishes.
+          // Actions that open a dialog are done at once, and the dialog shows with the workspace.
+          setPhase({ kind: 'preparing' });
           try {
             await action.run(opened.ctx);
           } catch (error) {
@@ -145,7 +149,9 @@ export function WorkspaceRoot({ runtime }: { runtime: AppRuntime }) {
               title: t('onboardingActionFailed', { message: toError(error).message }),
             });
           }
+          if (cancelled) return;
         }
+        setPhase({ kind: 'ready', session: opened });
       } catch (error) {
         if (!cancelled) setPhase({ kind: 'failed', error: toError(error) });
       }
@@ -213,6 +219,8 @@ export function WorkspaceRoot({ runtime }: { runtime: AppRuntime }) {
   if (phase.kind === 'failed') content = <FatalErrorScreen error={phase.error} />;
   else if (phase.kind === 'onboarding') content = <Onboarding />;
   else if (phase.kind === 'loading') content = <FullScreenLoading />;
+  else if (phase.kind === 'preparing')
+    content = <FullScreenLoading label={t('preparingWorkspace')} />;
   else {
     content = (
       <AppContextProvider value={phase.session.ctx}>
