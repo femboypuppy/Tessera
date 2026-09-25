@@ -3,6 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, type CSSProperties 
 import Sigma from 'sigma';
 import type { Settings } from 'sigma/settings';
 import type { EdgeAttributes, NodeAttributes, TesseraGraph } from './build';
+import { placeLabels, type LabelCandidate } from './label-layout';
 import { mix, type GraphTheme } from './theme';
 
 /**
@@ -78,6 +79,33 @@ export interface GraphCanvasProps {
 
 type SigmaSettings = Partial<Settings<NodeAttributes, EdgeAttributes>>;
 
+/** A label sigma picked during a render, drawn once the render is done (see `drawLabels`). */
+interface QueuedLabel extends LabelCandidate {
+  context: CanvasRenderingContext2D;
+  text: string;
+  x: number;
+  y: number;
+  font: string;
+}
+
+/**
+ * Draws the labels picked during a render, leaving out any that would run into another
+ * (`placeLabels`), then empties the queue. Labels get a halo in the background color, so they stay
+ * legible over edges and nodes.
+ */
+function drawLabels(queue: QueuedLabel[], theme: GraphTheme): void {
+  for (const { context, text, x, y, font } of placeLabels(queue)) {
+    context.font = font;
+    context.lineJoin = 'round';
+    context.lineWidth = 4;
+    context.strokeStyle = theme.background;
+    context.strokeText(text, x, y);
+    context.fillStyle = theme.label;
+    context.fillText(text, x, y);
+  }
+  queue.length = 0;
+}
+
 function roundRect(
   context: CanvasRenderingContext2D,
   x: number,
@@ -100,6 +128,7 @@ function settingsFor(
   labelThreshold: number,
   padding: number,
   large: boolean,
+  labels: QueuedLabel[],
 ): SigmaSettings {
   return {
     hideEdgesOnMove: large,
@@ -118,19 +147,26 @@ function settingsFor(
     maxCameraRatio: 6,
     stagePadding: padding,
     allowInvalidContainer: true,
-    // Labels get a halo in the background color, so they stay legible over edges and nodes.
+    // Sigma picks the labels; they are drawn after the render, so overlapping ones can be left out.
     defaultDrawNodeLabel: (context, data, settings) => {
       if (!data.label) return;
       const size = settings.labelSize;
-      context.font = `${settings.labelWeight} ${size}px ${settings.labelFont}`;
+      const font = `${settings.labelWeight} ${size}px ${settings.labelFont}`;
+      context.font = font;
       const x = data.x + data.size + 4;
       const y = data.y + size / 3;
-      context.lineJoin = 'round';
-      context.lineWidth = 4;
-      context.strokeStyle = theme.background;
-      context.strokeText(data.label, x, y);
-      context.fillStyle = theme.label;
-      context.fillText(data.label, x, y);
+      const width = context.measureText(data.label).width;
+      labels.push({
+        context,
+        text: data.label,
+        x,
+        y,
+        font,
+        size: data.size,
+        forced: data.forceLabel === true,
+        // The halo reaches 2 px around the text.
+        box: { left: x - 2, top: y - size, right: x + width + 2, bottom: y + size * 0.3 + 2 },
+      });
     },
     // The default hover label is always white; this one follows the theme.
     defaultDrawNodeHover: (context, data, settings) => {
@@ -206,6 +242,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   const initialPadding = useRef(padding);
   const initialLarge = useRef(large);
   const largeRef = useRef(large);
+  const labels = useRef<QueuedLabel[]>([]);
   useEffect(() => {
     clickRef.current = onNodeClick;
     errorRef.current = onError;
@@ -240,6 +277,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           initialThreshold.current,
           initialPadding.current,
           initialLarge.current,
+          labels.current,
         ),
         nodeReducer: (node, data) => {
           if (!active) return data;
@@ -310,6 +348,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       schedule();
     });
     renderer.on('clickNode', ({ node }) => clickRef.current(node));
+    renderer.on('afterRender', () => drawLabels(labels.current, themeRef.current));
     sigma.current = renderer;
     // The graphics driver can drop the context later (a GPU reset, too many contexts): the view
     // then shows its fallback, which can start a new renderer.
@@ -351,7 +390,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     dimmed.current.clear();
     const renderer = sigma.current;
     if (!renderer) return;
-    renderer.setSettings(settingsFor(theme, labelThreshold, padding, large));
+    renderer.setSettings(settingsFor(theme, labelThreshold, padding, large, labels.current));
     renderer.refresh();
   }, [theme, labelThreshold, padding, large]);
 

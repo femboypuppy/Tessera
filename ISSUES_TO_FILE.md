@@ -207,16 +207,6 @@ imported files.
 **Next:** after resolving within the import, resolve the remaining links by exact title (and
 aliases) against existing pages that aren't in the trash, and say so in the import report.
 
-### Graph labels overlap in dense areas
-Labels: `enhancement`, `area: search`
-
-At the demo workspace's default zoom, some labels in the graph view overlap, for example "Hohmann
-transfer orbit" and "Apollo 11". Sigma's label grid (`labelGridCellSize: 180` and
-`labelDensity: 0.4` in `packages/search/src/graph/graph-canvas.tsx`) limits how many labels each
-cell shows, but it doesn't check collisions.
-
-**Next:** tune the label grid settings, or skip labels whose boxes collide with ones already drawn.
-
 ### Plugin API: database queries with date ranges and relative dates
 Labels: `enhancement`, `area: plugins`, `area: databases`
 
