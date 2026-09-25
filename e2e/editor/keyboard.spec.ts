@@ -118,6 +118,31 @@ test('reaches the formatting toolbar from the keyboard', async ({ page }) => {
   await expect.poll(async () => marksOn(await docJSON(page), 'here.')).toEqual(['bold', 'italic']);
 });
 
+test('a key acts where the caret is, even before the browser reports the move', async ({
+  page,
+}) => {
+  await createWorkspace(page);
+  await createPage(page, 'Flight notes');
+  await writeLines(page, ['Notes', 'Liftoff']);
+  await expect.poll(() => outline(page)).toEqual(['paragraph:Notes', 'paragraph:Liftoff']);
+  await page.keyboard.press('Home');
+  await expect.poll(() => caret(page)).toEqual({ text: 'Liftoff', offset: 0 });
+  // End then Enter on a busy main thread: the caret moves, and Enter is handled before the
+  // browser's selectionchange event (always queued for later) tells the editor.
+  await editor(page).evaluate((element) => {
+    const text = [...element.querySelectorAll('p')].at(-1)?.firstChild;
+    if (!text) throw new Error('No "Liftoff" text');
+    element.ownerDocument.getSelection()?.collapse(text, text.textContent?.length ?? 0);
+    element.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    );
+  });
+  await expect
+    .poll(() => outline(page))
+    .toEqual(['paragraph:Notes', 'paragraph:Liftoff', 'paragraph:']);
+  await expect.poll(() => caret(page)).toEqual({ text: '', offset: 0 });
+});
+
 test.describe('at phone width', () => {
   test.use({ hasTouch: true });
 

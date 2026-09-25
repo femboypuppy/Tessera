@@ -89,9 +89,9 @@ function textOf(node: NodeJSON): string {
 
 /**
  * Where the editor thinks the caret is: the text of its block and the offset in it. The browser
- * moves the caret itself for Home, End and arrow keys and tells the editor a moment later, so a
- * test that sends the next key at machine speed first waits for this to match (a person's pause
- * between keys is always longer).
+ * moves the caret itself for Home, End and arrow keys and tells the editor a moment later, so an
+ * assertion on the caret polls this. (A key pressed in between still acts at the new caret: the
+ * editor reads the DOM selection before its key commands run, see `LiveSelection`.)
  */
 export async function caret(page: Page): Promise<{ text: string; offset: number }> {
   return editor(page).evaluate((element) => {

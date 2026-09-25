@@ -5,6 +5,7 @@ import type * as Y from 'yjs';
 import { BlockIds } from './extensions/block-ids';
 import { DeferredScroll } from './extensions/deferred-scroll';
 import { HistoryGuard, HistoryKeys } from './extensions/history-guard';
+import { LiveSelection } from './extensions/live-selection';
 import { Placeholder } from './extensions/placeholder';
 import { TitleNavigation } from './extensions/title-navigation';
 import { schemaExtensions } from './schema';
@@ -26,7 +27,8 @@ export interface EditorExtensionsOptions {
 /**
  * Everything the page editor runs: the canonical schema (with node views), Yjs collaboration
  * (undo through the Yjs undo manager, so undo only reverts this user's edits), block IDs,
- * scrolling the selection into view once per frame, placeholders and title navigation, plus `extra`.
+ * scrolling the selection into view once per frame, key commands that see the latest caret,
+ * placeholders and title navigation, plus `extra`.
  */
 export function editorExtensions(options: EditorExtensionsOptions = {}): AnyExtension[] {
   const nodeViews = options.nodeViews ?? {};
@@ -41,6 +43,7 @@ export function editorExtensions(options: EditorExtensionsOptions = {}): AnyExte
     ...schema,
     BlockIds,
     DeferredScroll,
+    LiveSelection,
     Placeholder,
     TitleNavigation.configure({ focusTitle: options.focusTitle ?? null }),
     Gapcursor,
