@@ -1,5 +1,5 @@
 import { toError } from '@tessera/core';
-import { Button, describeError, ErrorBoundary, tUi } from '@tessera/ui';
+import { Button, describeError, ErrorBoundary, ReportBugLink, tUi } from '@tessera/ui';
 import { AlertOctagon, Copy, RotateCw } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -20,7 +20,7 @@ export function FatalErrorScreen({ error }: { error: Error }) {
         <pre className="mt-4 max-h-40 overflow-auto rounded-md bg-bg-subtle p-3 font-mono text-xs text-fg-muted">
           {error.message}
         </pre>
-        <div className="mt-5 flex gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           <Button variant="primary" onClick={() => window.location.reload()}>
             <RotateCw aria-hidden="true" />
             {t('reload')}
@@ -35,6 +35,7 @@ export function FatalErrorScreen({ error }: { error: Error }) {
             <Copy aria-hidden="true" />
             {copied ? tUi('copied') : tUi('copyDetails')}
           </Button>
+          <ReportBugLink error={error} context={{ URL: window.location.href }} size="md" />
         </div>
       </div>
     </main>

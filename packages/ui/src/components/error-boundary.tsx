@@ -1,8 +1,9 @@
-import { AlertTriangle, Copy, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Bug, Copy, RotateCcw } from 'lucide-react';
 import { Component, useState, type ErrorInfo, type ReactNode } from 'react';
 import { tUi } from '../i18n/index';
 import { cn } from '../lib/cn';
 import { Button } from './button';
+import { buttonVariants } from './button-variants';
 
 interface ErrorBoundaryProps {
   /** Renders instead of the children after an error. */
@@ -61,6 +62,60 @@ export function describeError(error: Error, context: Record<string, string> = {}
   return lines.join('\n');
 }
 
+/** The repository's bug report form (`.github/ISSUE_TEMPLATE/bug_report.yml`). */
+const BUG_REPORT_FORM = 'https://github.com/femboypuppy/Tessera/issues/new';
+/** GitHub answers 414 above about 8 KB of URL; the stack is cut to stay well below. */
+const MAX_REPORT_DETAILS = 5000;
+let reportedVersion = '';
+
+/** The app version bug reports carry (the shell sets it once at startup). */
+export function setBugReportVersion(version: string): void {
+  reportedVersion = version;
+}
+
+/**
+ * A link to a new GitHub issue from the bug report form, prefilled with the error: its title, a
+ * first line for "What happened?", the version and the details (fields by their form IDs). The
+ * person reviews everything before submitting.
+ */
+export function bugReportUrl(error: Error, context: Record<string, string> = {}): string {
+  const details = describeError(error, context);
+  const params = new URLSearchParams({
+    template: 'bug_report.yml',
+    title: `[Bug]: ${error.message}`.slice(0, 120),
+    'what-happened': tUi('bugReportWhatHappened', { message: error.message }),
+    diagnostics:
+      details.length > MAX_REPORT_DETAILS ? `${details.slice(0, MAX_REPORT_DETAILS)}\n…` : details,
+  });
+  if (reportedVersion) params.set('version', reportedVersion);
+  return `${BUG_REPORT_FORM}?${params.toString()}`;
+}
+
+/** Opens the prefilled bug report in a new tab. */
+export function ReportBugLink({
+  error,
+  context,
+  size = 'sm',
+  className,
+}: {
+  error: Error;
+  context?: Record<string, string>;
+  size?: 'sm' | 'md';
+  className?: string;
+}) {
+  return (
+    <a
+      href={bugReportUrl(error, context)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(buttonVariants({ variant: 'ghost', size }), className)}
+    >
+      <Bug aria-hidden="true" />
+      {tUi('reportBug')}
+    </a>
+  );
+}
+
 function CopyDetailsButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -107,6 +162,7 @@ export function FeatureErrorFallback({
               {tUi('retry')}
             </Button>
             <CopyDetailsButton text={describeError(error, { Feature: featureId })} />
+            <ReportBugLink error={error} context={{ Feature: featureId }} />
           </div>
         </div>
       </div>

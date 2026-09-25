@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Button, IconButton } from './button';
 import { EmojiPicker, loadEmojiData } from './emoji-picker';
-import { FeatureBoundary, describeError } from './error-boundary';
+import {
+  FeatureBoundary,
+  bugReportUrl,
+  describeError,
+  setBugReportVersion,
+} from './error-boundary';
 import { Avatar, AvatarStack, Badge, EmptyState, KeyCombo, Spinner } from './feedback';
 import { Field, Input } from './forms';
 import { Select } from './select';
@@ -227,6 +232,33 @@ describe('FeatureBoundary', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(screen.getByText('Recovered')).toBeInTheDocument();
     expect(describeError(new Error('x'), { Feature: 'y' })).toContain('Feature: y');
+    error.mockRestore();
+  });
+
+  it('links to a bug report prefilled with the error', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    setBugReportVersion('0.1.0');
+    function Broken(): never {
+      throw new Error('graph layout failed');
+    }
+    render(
+      <FeatureBoundary featureId="graph">
+        <Broken />
+      </FeatureBoundary>,
+    );
+    const link = screen.getByRole('link', { name: 'Report on GitHub' });
+    expect(link).toHaveAttribute('target', '_blank');
+    const url = new URL(link.getAttribute('href') ?? '');
+    expect(url.origin + url.pathname).toBe('https://github.com/femboypuppy/Tessera/issues/new');
+    expect(url.searchParams.get('template')).toBe('bug_report.yml');
+    expect(url.searchParams.get('title')).toBe('[Bug]: graph layout failed');
+    expect(url.searchParams.get('version')).toBe('0.1.0');
+    expect(url.searchParams.get('what-happened')).toContain('graph layout failed');
+    expect(url.searchParams.get('diagnostics')).toContain('Feature: graph');
+    // Long stacks are cut so the link stays under GitHub's URL limit.
+    const huge = new Error('boom');
+    huge.stack = 'x'.repeat(50_000);
+    expect(bugReportUrl(huge).length).toBeLessThan(8_000);
     error.mockRestore();
   });
 });

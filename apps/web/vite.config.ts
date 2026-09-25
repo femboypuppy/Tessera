@@ -33,10 +33,18 @@ function serviceWorker(): Plugin {
   };
 }
 
+/** The version the app reports (Settings → About, bug reports): `apps/web/package.json`. */
+const version = (
+  JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
+    version: string;
+  }
+).version;
+
 // Packages ship TypeScript source; Vite compiles them like app code. Yjs and ProseMirror must be
 // single instances (duplicate copies break `instanceof` checks and Yjs warns), hence `dedupe`.
 export default defineConfig({
   plugins: [react(), tailwindcss(), serviceWorker()],
+  define: { __TESSERA_VERSION__: JSON.stringify(version) },
   resolve: {
     dedupe: [
       'react',

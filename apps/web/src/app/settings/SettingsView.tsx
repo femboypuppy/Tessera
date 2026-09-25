@@ -27,6 +27,7 @@ import {
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { availableLocales, localeName, t } from '../../i18n';
+import { APP_VERSION } from '../../version';
 import { ShortcutList } from '../shortcuts/ShortcutsDialog';
 import { getThemePreference } from '../theme';
 import { useWorkspaceControl } from '../WorkspaceRoot';
@@ -60,7 +61,13 @@ function GeneralSettings() {
     SETTING_KEYS.theme,
     getThemePreference(ctx.settings.device),
   );
-  const [name, setName] = useState(user.name);
+  // Until someone picks a name, the field is empty (the app calls them "You" meanwhile).
+  const savedName = ctx.settings.device.get(SETTING_KEYS.userName);
+  const [name, setName] = useState(typeof savedName === 'string' ? savedName : '');
+  const commitName = () => {
+    const trimmed = name.trim();
+    if (trimmed && trimmed !== user.name) control.runtime.updateCurrentUser({ name: trimmed });
+  };
   const [workspaceName, setWorkspaceName] = useState(control.current?.name ?? '');
   const locales = availableLocales();
   const [language] = useSetting<string>(
@@ -121,22 +128,29 @@ function GeneralSettings() {
             />
           </RadioGroup>
         </div>
-        <Field label={t('language')} description={t('languageHint')}>
-          {(props) => (
-            <Select
-              id={props.id}
-              aria-describedby={props['aria-describedby']}
-              value={language}
-              disabled={locales.length < 2}
-              onValueChange={(value) => {
-                ctx.settings.device.set(SETTING_KEYS.language, value);
-                window.location.reload();
-              }}
-              options={locales.map((locale) => ({ value: locale, label: localeName(locale) }))}
-              className="max-w-xs"
-            />
-          )}
-        </Field>
+        {locales.length > 1 ? (
+          <Field label={t('language')} description={t('languageHint')}>
+            {(props) => (
+              <Select
+                id={props.id}
+                aria-describedby={props['aria-describedby']}
+                value={language}
+                onValueChange={(value) => {
+                  ctx.settings.device.set(SETTING_KEYS.language, value);
+                  window.location.reload();
+                }}
+                options={locales.map((locale) => ({ value: locale, label: localeName(locale) }))}
+                className="max-w-xs"
+              />
+            )}
+          </Field>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <h3 className="text-sm font-medium text-fg">{t('language')}</h3>
+            <p className="text-sm text-fg">{localeName(language)}</p>
+            <p className="text-xs text-fg-muted">{t('languageOnlyOne')}</p>
+          </div>
+        )}
       </Section>
       <Separator />
       <Section title={t('profile')}>
@@ -146,11 +160,12 @@ function GeneralSettings() {
               {...props}
               value={name}
               maxLength={80}
+              placeholder={t('displayNamePlaceholder')}
               className="max-w-xs"
               onChange={(event) => setName(event.target.value)}
-              onBlur={() => control.runtime.updateCurrentUser({ name })}
+              onBlur={commitName}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') control.runtime.updateCurrentUser({ name });
+                if (event.key === 'Enter') commitName();
               }}
             />
           )}
@@ -183,8 +198,10 @@ function GeneralSettings() {
           )}
         </Field>
         <div>
+          {/* Quiet until asked: the confirmation is where the danger shows. */}
           <Button
-            variant={inFolder ? 'secondary' : 'danger'}
+            variant="secondary"
+            className={inFolder ? undefined : 'text-danger-text'}
             onClick={() => void removeWorkspace()}
           >
             {inFolder ? <FolderMinus aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
@@ -197,6 +214,7 @@ function GeneralSettings() {
       </Section>
       <Separator />
       <Section title={t('about')}>
+        <p className="text-sm text-fg">{t('aboutVersion', { version: APP_VERSION })}</p>
         <div>
           <h3 className="mb-2 text-ui font-medium text-fg">{t('aboutServices')}</h3>
           <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1 text-ui">

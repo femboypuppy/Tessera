@@ -1,6 +1,7 @@
 // First: configures zod before any module parses a schema.
 import './zod-config';
 import { createAppRuntime, LocalStorageSettingsStore } from '@tessera/core';
+import { setBugReportVersion } from '@tessera/ui';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
@@ -9,6 +10,9 @@ import { followTheme } from './app/theme';
 import { initI18n, t } from './i18n';
 import { registerServiceWorker } from './offline';
 import './styles.css';
+import { APP_VERSION } from './version';
+
+setBugReportVersion(APP_VERSION);
 
 async function start(): Promise<void> {
   const container = document.getElementById('root');

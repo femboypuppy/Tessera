@@ -8,6 +8,8 @@ export const en = {
   retry: 'Try again',
   copyDetails: 'Copy error details',
   copied: 'Copied',
+  reportBug: 'Report on GitHub',
+  bugReportWhatHappened: 'Tessera showed an error: {message}',
   featureCrashedTitle: 'Something went wrong here',
   featureCrashedDescription:
     'The {feature} part of Tessera ran into an error. The rest of the app still works.',
