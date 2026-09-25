@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { softwareWebGL } from '../support/webgl';
 import { newPage, openPalette, openWorkspace, seed, whenIndexed } from './helpers';
+
+// The graph draws with WebGL: in software on Linux CI, which has no GPU.
+test.use(softwareWebGL);
 
 interface GraphHooks {
   nodePosition(id: string): { x: number; y: number } | null;

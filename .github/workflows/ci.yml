@@ -243,7 +243,7 @@ jobs:
       - name: Install ${{ matrix.browser }}
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - name: Playwright
-        # A virtual display: Firefox runs headed there to get WebGL (playwright.config.ts).
+        # A virtual display: the graph specs run Firefox headed there to get WebGL (e2e/support/webgl.ts).
         run: xvfb-run -a pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2 --reporter=github,blob
         env:
           PLAYWRIGHT_BLOB_OUTPUT_FILE: blob-report/${{ matrix.browser }}-${{ matrix.shard }}.zip

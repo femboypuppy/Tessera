@@ -3,29 +3,10 @@
  * 2.2 A/AA and axe best practices) fails the test with a list of the offending elements, except
  * the known ones in accessibility-baseline.ts (code owned elsewhere, fixes proposed in
  * HANDOFF/ci.md), which are reported as annotations. Feature screens are checked once their
- * feature is registered.
+ * feature is registered. The graph view's check has a file of its own (accessibility-graph.spec.ts).
  */
-import type { Page } from '@playwright/test';
-import { expect, formatViolations, scanAccessibility, test, type TesseraApp } from '../support';
-import { partitionViolations } from './accessibility-baseline';
-
-async function expectAccessible(page: Page): Promise<void> {
-  const { fresh, known } = partitionViolations(await scanAccessibility(page));
-  if (known.length) {
-    test.info().annotations.push({
-      type: 'known accessibility issues',
-      description: formatViolations(known),
-    });
-  }
-  expect(fresh, formatViolations(fresh)).toEqual([]);
-}
-
-/** A workspace with a few nested pages, an icon and a favorite. */
-async function furnish(app: TesseraApp): Promise<void> {
-  await app.newPage('Apollo program');
-  await app.newPage('Mission control');
-  await app.newPage('Reading list');
-}
+import { expect, test } from '../support';
+import { expectAccessible, furnish } from './accessibility-checks';
 
 for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`${colorScheme} theme`, () => {
@@ -80,14 +61,6 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await furnish(app);
       await app.shortcut('Mod+K');
       await expect(page.getByRole('dialog')).toBeVisible();
-      await expectAccessible(page);
-    });
-
-    test('graph view', async ({ freshWorkspace: app, page }) => {
-      await app.expectFeatures('graph');
-      await furnish(app);
-      await page.goto('/graph');
-      await expect(page.locator('main')).toBeVisible();
       await expectAccessible(page);
     });
   });

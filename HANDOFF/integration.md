@@ -328,10 +328,12 @@ Xvfb, `CI=true`) and fixed at its cause; no budget, timeout or assertion was loo
   is forced, and headless Firefox on Linux has none at all. The graph now shows a proper fallback
   without WebGL or after a lost context (why, how to turn it on, Try again, and the most connected
   pages as a keyboard-friendly list; `graph-fallback.tsx`, specs under "without WebGL").
-  On Linux CI, Playwright passes `--use-angle=swiftshader --enable-unsafe-swiftshader` to
-  Chromium, with `--disable-gpu-compositing` so pages keep the software compositor (compositing
-  through SwiftShader halved the 10,000-row table's scroll frame rate), and runs Firefox headed
-  under `xvfb-run` (Mesa llvmpipe), so the WebGL specs really run.
+  On Linux CI, the specs that draw the graph (`e2e/search/graph.spec.ts`,
+  `e2e/ci/accessibility-graph.spec.ts`) `test.use(softwareWebGL)` (`e2e/support/webgl.ts`):
+  Chromium gets `--use-angle=swiftshader --enable-unsafe-swiftshader`, and Firefox runs headed
+  under `xvfb-run` (Mesa llvmpipe), so the WebGL specs really run. Only those specs: with
+  SwiftShader on for every spec, the runners drew the 10,000-row table at 30 fps instead of 60
+  (even with `--disable-gpu-compositing`).
   The flaky node click came from `useGraphLayout` reporting "settled" before the layout had
   started; it now tracks which graph and settings the finished layout belongs to.
 - **Backspace spec (`markdown-shortcuts.spec.ts:107`) on a busy runner.** Not a Linux behavior:
