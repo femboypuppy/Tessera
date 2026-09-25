@@ -101,9 +101,13 @@
   *,
   *::before,
   *::after {
+    /* Animations still run (for a moment) so exit animations end and Radix unmounts the content. */
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    /* Transitions are off, not shortened: every element's transition-property is `all` by
+       default, so any duration would turn every style change into a transition, and code that
+       sets a size and measures it right away (the page title's height) would read the old one. */
+    transition-duration: 0s !important;
     scroll-behavior: auto !important;
   }
 }

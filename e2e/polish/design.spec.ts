@@ -163,3 +163,21 @@ for (const theme of THEMES) {
     });
   });
 }
+
+test('with reduced motion, the page title fits its text on every page', async ({ page }) => {
+  test.setTimeout(90_000);
+  // At phone width the welcome page's title takes two lines and Yuri Gagarin's one. Reduced motion
+  // once shortened every transition instead of turning them off, so the title's height, set and
+  // measured in one go, kept the previous page's.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openDemo(page, 'light');
+  const lines = () =>
+    title(page).evaluate((element) => {
+      const lineHeight = Number.parseFloat(getComputedStyle(element).lineHeight);
+      return Math.round(element.getBoundingClientRect().height / lineHeight);
+    });
+  expect(await lines()).toBe(2);
+  await page.getByRole('button', { name: 'Open sidebar' }).click();
+  await openPage(page, 'Yuri Gagarin', 'Knowledge garden');
+  expect(await lines()).toBe(1);
+});
