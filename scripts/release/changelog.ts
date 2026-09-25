@@ -82,12 +82,28 @@ export interface ChangelogInput {
   serverUrl?: string;
 }
 
+/**
+ * Puts the @-words of a commit subject in code, so release notes never mention (and notify) a
+ * GitHub user or team: "time the @perf specs" becomes "time the `@perf` specs". Code spans and
+ * email addresses stay as they are.
+ */
+export function escapeMentions(text: string): string {
+  return text
+    .split(/(`[^`]*`)/)
+    .map((part, index) =>
+      index % 2 === 1
+        ? part
+        : part.replace(/(^|[^\w@`])(@[A-Za-z0-9][\w-]*(?:\/[\w.-]*\w)?)/g, '$1`$2`'),
+    )
+    .join('');
+}
+
 /** Renders the notes as markdown. Commits keep their order (newest first) within a section. */
 export function renderChangelog(input: ChangelogInput): string {
   const server = input.serverUrl ?? 'https://github.com';
   const link = (sha: string) => `[\`${sha.slice(0, 7)}\`](${server}/${input.repo}/commit/${sha})`;
   const entry = (text: string, scope: string | null, sha: string) =>
-    `- ${scope ? `**${scope}:** ` : ''}${text} (${link(sha)})`;
+    `- ${scope ? `**${scope}:** ` : ''}${escapeMentions(text)} (${link(sha)})`;
 
   const breaking: string[] = [];
   const bySection = new Map<string, string[]>();

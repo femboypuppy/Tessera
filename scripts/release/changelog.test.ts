@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { collectCommits, previousTag, renderChangelog } from './changelog.ts';
+import { collectCommits, escapeMentions, previousTag, renderChangelog } from './changelog.ts';
 
 const sha = (n: number) => String(n).repeat(40).slice(0, 40);
 
@@ -72,6 +72,35 @@ describe('renderChangelog', () => {
     expect(markdown).toBe(
       '## v0.1.0 (2026-09-23)\n\nNo changes.\n\n**Full changelog:** https://github.com/o/r/commits/v0.1.0\n',
     );
+  });
+});
+
+describe('escapeMentions', () => {
+  it('puts @-words in code so the notes mention nobody', () => {
+    expect(escapeMentions('time the @perf specs alone')).toBe('time the `@perf` specs alone');
+    expect(escapeMentions('@perf first, then @tessera/ui.')).toBe(
+      '`@perf` first, then `@tessera/ui`.',
+    );
+    expect(escapeMentions('(@team) and @user-name')).toBe('(`@team`) and `@user-name`');
+  });
+
+  it('leaves code spans, email addresses and lone @ signs alone', () => {
+    expect(escapeMentions('run `pnpm test --grep @perf` again')).toBe(
+      'run `pnpm test --grep @perf` again',
+    );
+    expect(escapeMentions('mail maya@example.com')).toBe('mail maya@example.com');
+    expect(escapeMentions('2 @ 3 and @@')).toBe('2 @ 3 and @@');
+  });
+
+  it('is applied to every entry of the notes', () => {
+    const markdown = renderChangelog({
+      repo: 'tessera/tessera',
+      from: null,
+      to: 'v0.1.0',
+      commits: [{ sha: sha(1), message: 'ci(e2e): time the @perf specs alone' }],
+    });
+    expect(markdown).toContain('time the `@perf` specs alone');
+    expect(markdown).not.toMatch(/[^`]@perf/);
   });
 });
 
