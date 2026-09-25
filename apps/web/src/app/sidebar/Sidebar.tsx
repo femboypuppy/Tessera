@@ -163,7 +163,7 @@ export function Sidebar({ resizable = false }: { resizable?: boolean }) {
             <SidebarItem
               icon={<SquarePen />}
               label={t('newPage')}
-              shortcut={formatShortcut('Mod+Alt+N', isApple)}
+              shortcut={formatShortcut(ctx.platform.isDesktopApp ? 'Mod+N' : 'Mod+Alt+N', isApple)}
               onClick={() => createPageAndOpen(ctx, navigate)}
             />
           )}

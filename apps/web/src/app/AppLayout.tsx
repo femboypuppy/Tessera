@@ -48,7 +48,9 @@ function useShellCommands(ctx: AppContext) {
         id: COMMANDS.newPage,
         title: t('cmdNewPage'),
         group: 'page',
-        shortcut: ['Mod+N', 'Mod+Alt+N'],
+        // Browsers keep Mod+N for a new window, so there the palette, tooltips and the shortcuts
+        // list show Mod+Alt+N (the first shortcut is the one shown); both always work.
+        shortcut: ctx.platform.isDesktopApp ? ['Mod+N', 'Mod+Alt+N'] : ['Mod+Alt+N', 'Mod+N'],
         // Viewers can't create pages: the server refuses their changes.
         when: () => ctx.services.syncProvider.getStatus().readOnly !== true,
         run: ({ args }) => {

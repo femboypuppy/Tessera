@@ -27,7 +27,8 @@ export function DatabaseOverlayHost() {
 export function NewDatabaseSidebarItem() {
   const ctx = useAppContext();
   return (
-    <div className="flex items-center gap-0.5">
+    // "Import CSV" shows on hover and focus, like the page tree's row actions.
+    <div className="group/newdb flex items-center gap-0.5">
       <SidebarItem
         className="flex-1"
         icon={<Database />}
@@ -42,6 +43,7 @@ export function NewDatabaseSidebarItem() {
         size="sm"
         label={tCore('importCsv')}
         icon={<FileUp />}
+        className="duration-fast opacity-0 transition-opacity group-focus-within/newdb:opacity-100 group-hover/newdb:opacity-100"
         onClick={() => overlays.openCsvImport(null)}
       />
     </div>

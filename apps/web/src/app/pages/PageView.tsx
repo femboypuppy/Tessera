@@ -11,15 +11,24 @@ import { PageCoverBand, PageHeader, focusPageTitle } from './PageHeader';
 
 export { focusPageTitle };
 
-/** Display props (`fullWidth`, `smallText`) from the page doc; the editor toggles them. */
-function useDisplayProps(pageId: string): { fullWidth: boolean; smallText: boolean } {
+/**
+ * Display props (`fullWidth`, `smallText`) from the page doc; the editor toggles them.
+ * `fullWidth` is null while the page hasn't chosen.
+ */
+function useDisplayProps(pageId: string): { fullWidth: boolean | null; smallText: boolean } {
   const { handle, loaded } = usePageDoc(pageId);
-  const [props, setProps] = useState({ fullWidth: false, smallText: false });
+  const [props, setProps] = useState<{ fullWidth: boolean | null; smallText: boolean }>({
+    fullWidth: null,
+    smallText: false,
+  });
   useEffect(() => {
     if (!handle || !loaded) return undefined;
     const read = () => {
       const current = getPageProps(handle.doc);
-      setProps({ fullWidth: current.fullWidth === true, smallText: current.smallText === true });
+      setProps({
+        fullWidth: typeof current.fullWidth === 'boolean' ? current.fullWidth : null,
+        smallText: current.smallText === true,
+      });
     };
     read();
     return observePageProps(handle.doc, read);
@@ -177,13 +186,15 @@ export function PageView() {
 
   const trashed = snapshot.isTrashed(page.id);
   const readOnly = trashed || viewOnly;
+  // Tables, boards and calendars need the room, so database pages are wide unless they say not.
+  const fullWidth = display.fullWidth ?? page.kind === 'database';
   const sections = topSections.filter((section) => !section.when || section.when(page, ctx));
   const footers = footerSections.filter((section) => !section.when || section.when(page, ctx));
 
   return (
     <article
       aria-label={displayTitle(page)}
-      data-full-width={display.fullWidth || undefined}
+      data-full-width={fullWidth || undefined}
       data-small-text={display.smallText || undefined}
       className="group/page pb-[40vh]"
     >
@@ -192,7 +203,7 @@ export function PageView() {
       <div
         className={cn(
           'mx-auto w-full px-4 md:px-[var(--tess-page-padding)]',
-          display.fullWidth
+          fullWidth
             ? 'max-w-none'
             : 'max-w-[calc(var(--tess-page-width)+2*var(--tess-page-padding))]',
         )}
