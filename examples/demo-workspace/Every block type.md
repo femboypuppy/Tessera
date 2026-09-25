@@ -4,20 +4,16 @@ aliases: [Block gallery]
 status: reference
 ---
 
-# Every block type
-
 One page with every kind of block Tessera has. Type `/` on an empty line to add any of them.
 
 ## Text
 
-A paragraph is the default block. Text can be **bold**, *italic*, ~~struck through~~, `inline
-code`, ==highlighted==, or a [link to the Tessera docs](https://femboypuppy.github.io/Tessera/).
+A paragraph is the default block. Text can be **bold**, *italic*, ~~struck through~~, `inline code`, ==highlighted==, or a [link to the Tessera docs](https://femboypuppy.github.io/Tessera/).
 
 A line can end with a hard break (backslash and Enter),\
 so the next line stays in the same paragraph.
 
-Pages link to each other: [[Apollo 11]], [[Neil Armstrong|the first person on the Moon]], or a
-heading inside a page: [[Apollo 13#How they got home]]. Tags look like this: #tutorial.
+Pages link to each other: [[Apollo 11]], [[Neil Armstrong|the first person on the Moon]], or a heading inside a page: [[Apollo 13#How they got home]]. Tags look like this: #tutorial.
 
 # Heading 1
 

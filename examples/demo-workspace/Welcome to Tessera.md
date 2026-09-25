@@ -1,17 +1,13 @@
 ---
+icon: 👋
 tags: [tutorial]
 aliases: [Start here, Welcome]
 ---
 
-# Welcome to Tessera 👋
-
-This is a demo workspace. It belongs to **Orbit Lab**, a small team building a traveling museum
-exhibit called *Leaving Earth*, about the history of space exploration. Poke around, change
-anything, delete anything: it's yours to play with.
+This is a demo workspace. It belongs to **Orbit Lab**, a small team building a traveling museum exhibit called *Leaving Earth*, about the history of space exploration. Poke around, change anything, delete anything: it's yours to play with.
 
 > [!tip] Learn by doing
-> Work through the checklist below. Check each box as you go; it takes about ten minutes. `Mod`
-> means ⌘ on a Mac and Ctrl everywhere else.
+> Work through the checklist below. Check each box as you go; it takes about ten minutes. `Mod` means ⌘ on a Mac and Ctrl everywhere else.
 
 ## Your first ten minutes
 
@@ -61,7 +57,6 @@ anything, delete anything: it's yours to play with.
 | [[Inbox]]                        | Where quick captures land                                  |
 
 > [!note] Done with the demo?
-> Create a new, empty workspace from the workspace menu at the top of the sidebar, or import your
-> notes from Notion or Obsidian. This demo stays here until you delete it.
+> Create a new, empty workspace from the workspace menu at the top of the sidebar, or import your notes from Notion or Obsidian. This demo stays here until you delete it.
 
 Happy exploring! 🚀

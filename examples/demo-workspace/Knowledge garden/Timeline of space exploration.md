@@ -3,8 +3,6 @@ tags: [space, timeline]
 aliases: [Space timeline]
 ---
 
-# Timeline of space exploration
-
 The milestones in this garden, in order. Part of [[Space exploration]].
 
 | Date         | Milestone                                                       | Note                          |
@@ -39,6 +37,4 @@ The milestones in this garden, in order. Part of [[Space exploration]].
 | 2022-11-16   | Artemis I launches                                              | [[Artemis program]]           |
 
 > [!note] Dates are in UTC
-> Some events happened on a different calendar day in the local time of mission control. The
-> Apollo 11 landing, for example, was on the evening of July 20 in Houston and after midnight in
-> Europe when Armstrong stepped outside.
+> Some events happened on a different calendar day in the local time of mission control. The Apollo 11 landing, for example, was on the evening of July 20 in Houston and after midnight in Europe when Armstrong stepped outside.

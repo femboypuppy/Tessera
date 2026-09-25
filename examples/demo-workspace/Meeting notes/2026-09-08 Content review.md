@@ -4,8 +4,6 @@ date: 2026-09-08
 attendees: [Maya, Sam, Priya]
 ---
 
-# 2026-09-08 Content review
-
 **Attendees:** Maya, Sam, Priya. Theo sent notes.
 
 Previous: [[2026-09-01 Exhibit kickoff]]
@@ -21,14 +19,12 @@ Previous: [[2026-09-01 Exhibit kickoff]]
 | [[Katherine Johnson]]         | Approved      | Pair with a "check the math yourself" activity card.         |
 
 > [!warning] Accuracy
-> Sam found two drafts with "Houston, we have a problem." The real quote is "Houston, we've had a
-> problem." See [[Apollo 13]]. Every quote gets checked against a primary source from now on.
+> Sam found two drafts with "Houston, we have a problem." The real quote is "Houston, we've had a problem." See [[Apollo 13]]. Every quote gets checked against a primary source from now on.
 
 ## Theo's notes (async)
 
 - The orbit simulator runs at 60 fps on the kiosk hardware.
-- Visitors need a hint when their transfer misses Mars; the [[Gravity assist]] is too advanced for
-  the first version.
+- Visitors need a hint when their transfer misses Mars; the [[Gravity assist]] is too advanced for the first version.
 
 ## Action items
 

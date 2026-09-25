@@ -3,10 +3,7 @@ tags: [tutorial, reference]
 aliases: [Shortcuts, Cheat sheet]
 ---
 
-# Keyboard shortcuts
-
-`Mod` is ⌘ on macOS and Ctrl on Windows and Linux. Press `?` anywhere (outside a text field) for
-the complete, always-current list, including shortcuts that plugins add.
+`Mod` is ⌘ on macOS and Ctrl on Windows and Linux. Press `?` anywhere (outside a text field) for the complete, always-current list, including shortcuts that plugins add.
 
 ## Everywhere
 

@@ -4,8 +4,6 @@ date: 2026-09-22
 attendees: [Maya, Theo, Priya, Sam]
 ---
 
-# 2026-09-22 Launch planning
-
 **Attendees:** Maya, Theo, Priya, Sam
 
 Previous: [[2026-09-15 Design critique]]
@@ -20,12 +18,9 @@ Seven and a half weeks to opening. The [[Projects]] board has everything; the sh
 
 ## Discussion
 
-- Sam's two pilot school visits are booked for October 20 and 22. We'll playtest the simulator and
-  a printed mock-up of zone 3 ([[Apollo program]]).
-- Theo proposed a "launch window" countdown on the simulator: visitors wait for Earth and Mars to
-  line up, like real missions every 26 months (see [[Mars rovers]]). Everyone loved it.
-- Maya wants the last wall to end on a question, not a date: "Who goes next?" with the
-  [[Artemis program]] crew and a mirror.
+- Sam's two pilot school visits are booked for October 20 and 22. We'll playtest the simulator and a printed mock-up of zone 3 ([[Apollo program]]).
+- Theo proposed a "launch window" countdown on the simulator: visitors wait for Earth and Mars to line up, like real missions every 26 months (see [[Mars rovers]]). Everyone loved it.
+- Maya wants the last wall to end on a question, not a date: "Who goes next?" with the [[Artemis program]] crew and a mirror.
 - Priya: the [[Voyager program]] Golden Record needs a listening station. Budget check needed.
 
 ## Decisions

@@ -2,8 +2,6 @@
 tags: [meeting, template]
 ---
 
-# Meeting template
-
 Duplicate this page for a new meeting, then rename it to `YYYY-MM-DD Topic`.
 
 **Attendees:**

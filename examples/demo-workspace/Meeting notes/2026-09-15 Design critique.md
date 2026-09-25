@@ -4,8 +4,6 @@ date: 2026-09-15
 attendees: [Maya, Theo, Priya, Sam]
 ---
 
-# 2026-09-15 Design critique
-
 **Attendees:** Maya, Theo, Priya, Sam
 
 Previous: [[2026-09-08 Content review]]
@@ -21,8 +19,7 @@ Three directions for the panels:
 ## Feedback
 
 - Everyone liked **Mosaic** for wayfinding: "go to the blue zone" is easy for kids.
-- Sam: contrast must pass WCAG AA at the distance people read panels from. Priya will test prints
-  at 2 m.
+- Sam: contrast must pass WCAG AA at the distance people read panels from. Priya will test prints at 2 m.
 - Theo: the orbit simulator's screen should use the same zone colors, so it feels part of zone 5.
 - Maya: keep photos large. The [[Apollo 11]] and *Earthrise* images should stop people walking.
 
