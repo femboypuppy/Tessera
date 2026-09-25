@@ -783,6 +783,13 @@
   -webkit-box-decoration-break: clone;
 }
 
+/* The icon never ends a line on its own: no break between it and the title, which still wraps
+   between its words. (More specific than ProseMirror's `[contenteditable='false']` rule, which
+   resets white-space to normal.) */
+.tess-editor .tess-page-link[data-type='page-link'] {
+  white-space: nowrap;
+}
+
 .tess-editor .tess-page-link-icon {
   display: inline-block;
   margin-right: 2px;
@@ -798,6 +805,7 @@
 }
 
 .tess-editor .tess-page-link-title {
+  white-space: normal;
   border-bottom: 1px solid var(--tess-border-strong);
   transition: border-color var(--tess-duration-fast) var(--tess-ease-out);
 }
