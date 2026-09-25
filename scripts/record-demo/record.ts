@@ -10,12 +10,12 @@
  * Without `--url` it builds the web app and serves it with `vite preview` on a free port.
  * `--keep` leaves the raw recording in `node_modules/.cache/record-demo`. Needs ffmpeg on PATH.
  */
-import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium, type Locator, type Page } from '@playwright/test';
-import { freePort } from '../../packages/testkit/src/playwright/sync-server';
+import { serveApp } from '../lib/serve-app.ts';
 
 const root = path.resolve(import.meta.dirname, '..', '..');
 const { values } = parseArgs({
@@ -35,34 +35,6 @@ const work = mkdtempSync(path.join(cache, 'run-'));
 
 const log = (message: string) => console.info(message);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/** Serves the production build (building it first) unless `--url` names a running app. */
-async function serveApp(): Promise<{ url: string; stop(): void }> {
-  if (values.url) return { url: values.url, stop: () => undefined };
-  log('Building the web app…');
-  execFileSync('pnpm', ['--filter', '@tessera/web', 'build'], {
-    cwd: root,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  });
-  const port = await freePort();
-  const preview: ChildProcess = spawn(
-    'pnpm',
-    ['--filter', '@tessera/web', 'exec', 'vite', 'preview', '--port', String(port), '--strictPort'],
-    { cwd: root, stdio: 'ignore', shell: process.platform === 'win32' },
-  );
-  const url = `http://localhost:${port}`;
-  for (let attempt = 0; attempt < 120; attempt += 1) {
-    try {
-      if ((await fetch(url)).ok) return { url, stop: () => preview.kill() };
-    } catch {
-      // Not listening yet.
-    }
-    await sleep(500);
-  }
-  preview.kill();
-  throw new Error(`vite preview did not answer at ${url}`);
-}
 
 /**
  * A visible mouse pointer: videos don't show the real one, and a card moving by itself on the
@@ -278,7 +250,7 @@ function convert(recording: { video: string; start: number; end: number }): void
   throw new Error('The GIF is over 8 MB even at 800 px and 10 fps');
 }
 
-const app = await serveApp();
+const app = await serveApp(values.url);
 try {
   log(`Recording the demo from ${app.url}…`);
   const recording = await record(app.url);
