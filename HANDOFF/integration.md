@@ -307,6 +307,44 @@ On `main` at `ea14918` (the last code change, `244666f`), on this machine:
 | Real desktop app (`smoke-app.mjs`) | PASS |
 | Rust (`cargo test`) | 45 passed |
 
+## First CI runs on GitHub
+
+The first run on GitHub's Linux runners (`b82827a`) failed on things this Windows machine couldn't
+show. Each was reproduced in a Linux container (`mcr.microsoft.com/playwright:v1.63.0-noble`,
+Xvfb, `CI=true`) and fixed at its cause; no budget, timeout or assertion was loosened.
+
+- **Startup JS 265.7 kB of 250 kB.** Three things reached the entry chunk: zod (through
+  `zod-config.ts`, which now sets zod's shared `globalThis.__zod_globalConfig` without importing
+  it), Radix Select, Checkbox, Switch, RadioGroup, Tabs and ScrollArea (all in `forms.tsx`, now one
+  module each in `packages/ui/src/components/`), and the full string tables of the editor, search
+  and plugins (the feature registrations now import only the strings startup uses, from
+  `<package>/i18n/registration`, tested to match `en.ts`). Now 244.8 kB.
+- **`demo.test.ts` ENOENT.** The fetch stub stripped `/@fs/` and with it the leading `/` of POSIX
+  paths; it now maps URLs to files with `URL` and `fileURLToPath`.
+- **Version history order.** Versions saved in the same millisecond sorted arbitrarily: each
+  version now carries a per-device save sequence (`seq`, `newestFirst` in `version-store.ts`),
+  and the server orders by `created_at DESC, rowid DESC`.
+- **Graph specs without a GPU.** Headless Chromium on the runners has no WebGL unless SwiftShader
+  is forced, and headless Firefox on Linux has none at all. The graph now shows a proper fallback
+  without WebGL or after a lost context (why, how to turn it on, Try again, and the most connected
+  pages as a keyboard-friendly list; `graph-fallback.tsx`, specs under "without WebGL").
+  On Linux CI, Playwright passes `--use-angle=swiftshader --enable-unsafe-swiftshader` to
+  Chromium, with `--disable-gpu-compositing` so pages keep the software compositor (compositing
+  through SwiftShader halved the 10,000-row table's scroll frame rate), and runs Firefox headed
+  under `xvfb-run` (Mesa llvmpipe), so the WebGL specs really run.
+  The flaky node click came from `useGraphLayout` reporting "settled" before the layout had
+  started; it now tracks which graph and settings the finished layout belongs to.
+- **Backspace spec (`markdown-shortcuts.spec.ts:107`) on a busy runner.** Not a Linux behavior:
+  the browser reports End's caret move with a `selectionchange` event that comes after the key,
+  and on a busy main thread Chromium runs the next key (Enter) first, so Enter split the line at
+  the old caret. That can happen to a person on a busy page too. `LiveSelection`
+  (`packages/editor/src/extensions/live-selection.ts`) checks the DOM selection before any key
+  command and lets ProseMirror read it first; unit and e2e tests reproduce the race
+  deterministically and fail without it.
+- **Markdown round trip property** (found in the container, a random seed): a code span across
+  lines kept its line ending, so a heading holding one was written setext once and ATX the next
+  time. Line endings in code spans now become spaces, as CommonMark specifies.
+
 ## Known bugs and deferred work (ready-to-file issues)
 
 Each entry is a GitHub issue: the heading is its title, the first line its labels.
