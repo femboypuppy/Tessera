@@ -140,8 +140,11 @@ export async function expandArchives(
   return { files, issues, skipped };
 }
 
-/** Lists the entry names of a zip without decompressing it (for format detection). */
-export async function listZipEntries(file: ImportFile): Promise<string[]> {
+/**
+ * Lists the entry names of a zip without decompressing it (for format detection), or null when
+ * the archive can't be opened (damaged, cut short, or not a zip).
+ */
+export async function listZipEntries(file: ImportFile): Promise<string[] | null> {
   const names: string[] = [];
   try {
     await unzipAsync(await file.bytes(), (name) => {
@@ -149,17 +152,25 @@ export async function listZipEntries(file: ImportFile): Promise<string[]> {
       return false;
     });
   } catch {
-    return [];
+    return null;
   }
   return names;
 }
 
-/** Paths of the files, with zips replaced by their entries' names (for detection). */
-export async function peekPaths(files: readonly ImportFile[]): Promise<string[]> {
+/**
+ * Paths of the files, with zips replaced by their entries' names (for detection and the
+ * preview), and the zips that could not be opened.
+ */
+export async function peekFiles(
+  files: readonly ImportFile[],
+): Promise<{ paths: string[]; unreadable: string[] }> {
   const paths: string[] = [];
+  const unreadable: string[] = [];
   for (const file of files) {
     if (isZipFile(file)) {
-      for (const name of await listZipEntries(file)) {
+      const names = await listZipEntries(file);
+      if (!names) unreadable.push(file.path);
+      for (const name of names ?? []) {
         if (isZipFile({ path: name })) paths.push(name.replace(/\.zip$/i, '/'));
         else paths.push(name);
       }
@@ -167,7 +178,12 @@ export async function peekPaths(files: readonly ImportFile[]): Promise<string[]>
       paths.push(file.path);
     }
   }
-  return paths;
+  return { paths, unreadable };
+}
+
+/** Paths of the files, with zips replaced by their entries' names (for detection). */
+export async function peekPaths(files: readonly ImportFile[]): Promise<string[]> {
+  return (await peekFiles(files)).paths;
 }
 
 /**

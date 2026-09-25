@@ -1,5 +1,5 @@
 import type { ImportFile } from '@tessera/core';
-import { commonRootFolder, isZipFile, peekPaths } from '../files';
+import { commonRootFolder, isZipFile, peekFiles } from '../files';
 import { t } from '../i18n';
 import { IMPORTER_IDS } from '../importers';
 import { basename, extension, isIgnoredPath, MARKDOWN_EXTENSIONS, naturalCompare } from '../paths';
@@ -25,6 +25,8 @@ export interface FileSummary {
   /** The folder everything is in (a vault's name), if there is one. */
   root: string | null;
   entries: PreviewEntry[];
+  /** Zips that could not be opened (damaged, cut short, or not a zip). */
+  unreadable: string[];
 }
 
 function kindOf(path: string): PreviewEntry['kind'] {
@@ -49,6 +51,7 @@ export function summarizePaths(paths: readonly string[], picked = paths.length):
     ignored: kept.length - visible.length,
     root,
     entries: [],
+    unreadable: [],
   };
   const folders = new Set<string>();
   const top = new Map<string, PreviewEntry>();
@@ -90,8 +93,8 @@ export function summarizePaths(paths: readonly string[], picked = paths.length):
 
 /** Summarizes picked files, looking inside zips. */
 export async function summarizeFiles(files: readonly ImportFile[]): Promise<FileSummary> {
-  const paths = await peekPaths(files);
-  const summary = summarizePaths(paths, files.length);
+  const { paths, unreadable } = await peekFiles(files);
+  const summary = { ...summarizePaths(paths, files.length), unreadable };
   // A single zip without a root folder inside is named after the zip.
   const [only] = files;
   if (!summary.root && files.length === 1 && only && isZipFile(only))

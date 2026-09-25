@@ -38,6 +38,7 @@ import {
 import { useCallback, useMemo, useRef, useState, type DragEvent } from 'react';
 import { t } from '../i18n';
 import { CORE_MARKDOWN_ID, IMPORTER_IDS } from '../importers';
+import { basename } from '../paths';
 import { startImport } from './jobs';
 import { groupIssues, overallProgress, phaseLabel } from './labels';
 import { dragHasFiles, filesFromDrop, filesFromInput } from './pick';
@@ -358,7 +359,18 @@ function ImportPicker({ initialSource }: { initialSource: string | null }) {
       if (chosen === IMPORTER_IDS.backup && first) {
         setWorkspaceName(await suggestWorkspaceName(first));
       } else if (summary.notes + summary.databases + summary.attachments === 0) {
-        setStep({ kind: 'empty' });
+        // A damaged zip says so, rather than "nothing to import".
+        setStep(
+          summary.unreadable.length
+            ? {
+                kind: 'error',
+                message: t('archiveUnreadable', {
+                  names: summary.unreadable.map((path) => `“${basename(path)}”`).join(', '),
+                  count: summary.unreadable.length,
+                }),
+              }
+            : { kind: 'empty' },
+        );
         return;
       }
       setSource(chosen);

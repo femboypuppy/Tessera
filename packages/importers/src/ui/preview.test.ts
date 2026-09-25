@@ -1,8 +1,8 @@
-import { importFileFromText } from '@tessera/core';
+import { importFileFromBytes, importFileFromText } from '@tessera/core';
 import { describe, expect, it } from 'vitest';
 import { createBackupImporter } from '../importers';
 import { filesFromDrop, filesFromInput } from './pick';
-import { suggestRootTitle, suggestWorkspaceName, summarizePaths } from './preview';
+import { suggestRootTitle, suggestWorkspaceName, summarizeFiles, summarizePaths } from './preview';
 
 describe('summarizePaths', () => {
   it('counts notes, databases, attachments and folders under the common root', () => {
@@ -137,5 +137,19 @@ describe('picking files', () => {
     const files = await filesFromDrop(transfer);
     expect(files.map((entry) => entry.path)).toEqual(['Vault/A.md', 'Vault/Sub/B.md']);
     expect(await files[1]?.text()).toBe('B.md');
+  });
+});
+
+describe('summarizeFiles', () => {
+  it('names zips that cannot be opened instead of calling them empty', async () => {
+    const damaged = importFileFromBytes(
+      'Notes export.zip',
+      new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x08, 0x00, 1, 2, 3]),
+      'application/zip',
+    );
+    const note = importFileFromText('Loose note.md', '# Loose note');
+    const summary = await summarizeFiles([damaged, note]);
+    expect(summary.unreadable).toEqual(['Notes export.zip']);
+    expect(summary.notes).toBe(1);
   });
 });

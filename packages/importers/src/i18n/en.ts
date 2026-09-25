@@ -82,6 +82,10 @@ export const en = {
   nothingToImportHint: 'These files hold no notes, CSV files or attachments.',
   chooseOtherFiles: 'Choose other files',
   readFailedTitle: 'These files could not be read',
+  archiveUnreadable_one:
+    '{names} is damaged or isn’t a zip file. Download or zip it again, then choose it here.',
+  archiveUnreadable_other:
+    '{names} are damaged or aren’t zip files. Download or zip them again, then choose them here.',
   tryAgain: 'Try again',
   notionRootTitle: 'Notion import',
   rootTitleFallback: '{source} import',
