@@ -6,18 +6,27 @@ import { createMarkdownImporter } from '../importers';
 import { databaseOf, docOf, importWorkspace, nodesOf, pageAt, runImporter } from '../test/helpers';
 import { loadDemoFiles, openDemo } from './demo';
 
-const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
+const REPO = new URL('../../../../', import.meta.url);
+
+/**
+ * The file behind a dev-server URL of the checkout: `/@fs/<absolute path>` (outside the project
+ * root) or a path from the repository root. URL APIs do the decoding and the platform's path rules.
+ */
+function checkoutFile(url: string): string {
+  const { pathname } = new URL(url, 'http://localhost');
+  return pathname.startsWith('/@fs/')
+    ? fileURLToPath(`file://${pathname.slice('/@fs'.length)}`)
+    : fileURLToPath(new URL(`.${pathname}`, REPO));
+}
 
 describe('demo workspace (examples/demo-workspace)', () => {
   let test: TestAppContext | null = null;
   beforeEach(() => {
     // Attachments load through their built URL in the app; here they are read from the checkout.
-    vi.stubGlobal('fetch', async (url: string) => {
-      const path = decodeURIComponent(String(url))
-        .replace(/^\/@fs\//, '')
-        .replace(/^\/(?=examples\/)/, REPO);
-      return new Response(readFileSync(path));
-    });
+    vi.stubGlobal(
+      'fetch',
+      async (url: string) => new Response(readFileSync(checkoutFile(String(url)))),
+    );
   });
   afterEach(async () => {
     vi.unstubAllGlobals();
