@@ -1,0 +1,50 @@
+[
+  {
+    "step": "landing",
+    "ms": 4446
+  },
+  {
+    "step": "onboarding",
+    "ms": 2580
+  },
+  {
+    "step": "demo workspace",
+    "ms": 23848
+  },
+  {
+    "step": "create a page",
+    "ms": 9100
+  },
+  {
+    "step": "slash menu",
+    "ms": 8815
+  },
+  {
+    "step": "link pages",
+    "ms": 12241
+  },
+  {
+    "step": "search",
+    "ms": 5196
+  },
+  {
+    "step": "database",
+    "ms": 9127
+  },
+  {
+    "step": "graph",
+    "ms": 9219
+  },
+  {
+    "step": "import",
+    "ms": 11197
+  },
+  {
+    "step": "settings",
+    "ms": 1889
+  },
+  {
+    "step": "dark mode",
+    "ms": 2062
+  }
+]
