@@ -225,6 +225,13 @@ export default withMermaid({
   },
   vite: {
     plugins: [screenshotsPlugin()],
+    // vitepress-plugin-mermaid pre-bundles mermaid's CommonJS dependencies by bare name, which
+    // pnpm's strict node_modules can't resolve from here, so `vitepress dev` served them as they
+    // are (dayjs, fastdom) and every page stayed blank. Pre-bundling mermaid itself converts all
+    // of them.
+    optimizeDeps: {
+      include: ['mermaid'],
+    },
   },
   async buildEnd(siteConfig) {
     if (existsSync(screenshotsDir)) {
