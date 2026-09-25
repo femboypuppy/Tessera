@@ -514,10 +514,14 @@ function convertPhrasing(
         );
         break;
       case 'inlineCode':
+        // CommonMark turns the line endings of a code span into spaces (mdast keeps them).
         if (node.value)
           items.push({
             kind: 'inline',
-            node: text(node.value, [...withHtmlMarks(marks, state), { type: 'code' }]),
+            node: text(node.value.replace(/\r\n|\r|\n/g, ' '), [
+              ...withHtmlMarks(marks, state),
+              { type: 'code' },
+            ]),
           });
         break;
       case 'break':

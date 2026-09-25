@@ -338,6 +338,18 @@ describe('parse: markdown', () => {
     expect(warnings).toContain('Footnotes were imported as plain text');
   });
 
+  it('reads a code span across lines as one line, as CommonMark does', () => {
+    expect(inline('Run `pnpm\ntest` now, `a\r\nb`')).toEqual([
+      { type: 'text', text: 'Run ' },
+      { type: 'text', text: 'pnpm test', marks: [{ type: 'code' }] },
+      { type: 'text', text: ' now, ' },
+      { type: 'text', text: 'a b', marks: [{ type: 'code' }] },
+    ]);
+    // A heading holding one is written the same way every time (found by the round trip property).
+    const once = codec.serialize(codec.parse('`a\n**bold** `code`\n===\n# Heading').doc);
+    expect(codec.serialize(codec.parse(once).doc)).toBe(once);
+  });
+
   it('handles a byte order mark and Windows line endings', () => {
     expect(inline('\uFEFFHello\r\nWorld')).toEqual([
       { type: 'text', text: 'Hello' },
