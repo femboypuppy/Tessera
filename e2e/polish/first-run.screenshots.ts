@@ -110,7 +110,8 @@ test('first run: a new user from the landing screen to dark mode', async ({ page
       .first()
       .click();
     await expect(body(page).getByText('Apollo 11', { exact: true })).toBeVisible();
-    await page.keyboard.type(' and the Saturn V page.');
+    // The link leaves a space after itself, so the sentence goes on without one.
+    await page.keyboard.type('and the Saturn V page.');
     await snap(page, '07-linked');
     await body(page).getByText('Apollo 11', { exact: true }).click();
     await expect(title(page)).toHaveValue('Apollo 11');
@@ -207,6 +208,7 @@ test('first run: a new user from the landing screen to dark mode', async ({ page
     await page.screenshot({ path: `${OUT}18-dark-mode.png`, animations: 'disabled' });
     await tree(page).getByRole('treeitem', { name: 'Welcome to Tessera', exact: true }).click();
     await expect(title(page)).toHaveValue('Welcome to Tessera');
+    await page.mouse.move(page.viewportSize()?.width ?? 0, 0);
     await page.screenshot({ path: `${OUT}19-dark-page.png`, animations: 'disabled' });
   });
 
