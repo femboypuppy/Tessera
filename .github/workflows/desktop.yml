@@ -84,18 +84,26 @@ jobs:
         with:
           workspaces: apps/desktop/src-tauri -> target
           key: ${{ matrix.target }}
-      # Updater bundles need the signing key, so they are only built when it is configured. The
-      # action splits `args` like a shell, so the inline JSON is single-quoted.
+      # Updater bundles need the signing key, so they are only built when it is configured, and
+      # the app then embeds the public key (the TAURI_SIGNING_PUBLIC_KEY variable) to verify them;
+      # tauri.conf.json only holds a placeholder. The action splits `args` like a shell, so the
+      # inline JSON is single-quoted.
       - name: Build options
         id: options
         shell: bash
         env:
           TARGET: ${{ matrix.target }}
           HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+          UPDATER_PUBLIC_KEY: ${{ vars.TAURI_SIGNING_PUBLIC_KEY }}
         run: |
           args="--target $TARGET"
           if [ "$HAS_UPDATER_KEY" = "true" ]; then
-            args="$args --config '{\"bundle\":{\"createUpdaterArtifacts\":true}}'"
+            if [ -z "$UPDATER_PUBLIC_KEY" ]; then
+              echo "::error::TAURI_SIGNING_PRIVATE_KEY is set but the TAURI_SIGNING_PUBLIC_KEY variable is not: the app could not verify its updates."
+              exit 1
+            fi
+            config="{\"bundle\":{\"createUpdaterArtifacts\":true},\"plugins\":{\"updater\":{\"pubkey\":\"$UPDATER_PUBLIC_KEY\"}}}"
+            args="$args --config '$config'"
           fi
           echo "args=$args" >> "$GITHUB_OUTPUT"
       - name: Tauri build
