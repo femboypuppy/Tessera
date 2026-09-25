@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { buildGraph, colorGraph, DEFAULT_FILTERS, type TesseraGraph } from './build';
 import { loadNeighborhood, useGraphData } from './data';
 import { GraphCanvas, useGraphTestHooks, type GraphCanvasHandle } from './graph-canvas';
+import { GraphFallback } from './graph-fallback';
 import { openGraph } from './location';
 import { useGraphTheme } from './theme';
 import { useGraphLayout } from './use-layout';
@@ -29,6 +30,7 @@ export default function LocalGraphPanel({ pageId }: SidePanelProps) {
   const sliderId = useId();
   const hintId = useId();
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const load = useCallback(
     (app: AppContext) =>
       pageId
@@ -110,15 +112,21 @@ export default function LocalGraphPanel({ pageId }: SidePanelProps) {
             className="py-10"
           />
         ) : failed ? (
-          <EmptyState
-            tone="danger"
-            icon={<TriangleAlert />}
-            title={t('graphFailed')}
-            description={t('graphFailedHint')}
-            className="py-10"
-          />
+          <div className="absolute inset-0 overflow-y-auto">
+            <GraphFallback
+              compact
+              graph={graph}
+              exclude={pageId}
+              onOpen={(id) => ctx.navigate(id)}
+              onRetry={() => {
+                setFailed(false);
+                setAttempt((value) => value + 1);
+              }}
+            />
+          </div>
         ) : (
           <GraphCanvas
+            key={attempt}
             ref={canvas}
             graph={graph}
             theme={theme}

@@ -27,6 +27,23 @@ export function useGraphTestHooks(
   }, [canvas, running]);
 }
 
+/**
+ * Whether this browser can create a WebGL context: graphics acceleration can be off, blocked or
+ * missing (some virtual machines, locked-down or old browsers). The probe's context is released.
+ */
+export function webglAvailable(): boolean {
+  if (typeof document === 'undefined') return false;
+  try {
+    const probe = document.createElement('canvas');
+    const context = probe.getContext('webgl2') ?? probe.getContext('webgl');
+    if (!context) return false;
+    context.getExtension('WEBGL_lose_context')?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Imperative controls of a {@link GraphCanvas}. */
 export interface GraphCanvasHandle {
   /** Centers the camera on a node (zooming in). */
@@ -211,6 +228,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     };
     let active: string | null = null;
     let near = new Set<string>();
+    if (!webglAvailable()) {
+      errorRef.current?.(new Error('WebGL is not available in this browser'));
+      return undefined;
+    }
     let renderer: Sigma<NodeAttributes, EdgeAttributes>;
     try {
       renderer = new Sigma<NodeAttributes, EdgeAttributes>(initialGraph.current, element, {
@@ -290,6 +311,14 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     });
     renderer.on('clickNode', ({ node }) => clickRef.current(node));
     sigma.current = renderer;
+    // The graphics driver can drop the context later (a GPU reset, too many contexts): the view
+    // then shows its fallback, which can start a new renderer.
+    const lost = (event: Event) => {
+      event.preventDefault();
+      errorRef.current?.(new Error('The WebGL context was lost'));
+    };
+    const canvases = Object.values(renderer.getCanvases());
+    for (const canvas of canvases) canvas.addEventListener('webglcontextlost', lost);
     // Sigma only listens to window resizes; panels and the sidebar resize the container too.
     const observer =
       typeof ResizeObserver === 'undefined'
@@ -302,6 +331,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     return () => {
       if (timer) clearTimeout(timer);
       observer?.disconnect();
+      for (const canvas of canvases) canvas.removeEventListener('webglcontextlost', lost);
       renderer.kill();
       sigma.current = null;
       highlight.current = () => undefined;
@@ -355,6 +385,8 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         const element = container.current;
         if (!renderer || !element || !graph.hasNode(id)) return null;
         const attributes = graph.getNodeAttributes(id);
+        // Positions arrive once per frame; a refresh brings the camera's framing up to date first.
+        renderer.refresh();
         const point = renderer.graphToViewport({ x: attributes.x, y: attributes.y });
         const box = element.getBoundingClientRect();
         return { x: box.left + point.x, y: box.top + point.y };

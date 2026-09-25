@@ -50,6 +50,7 @@ import {
 } from './build';
 import { loadGraph, useGraphData } from './data';
 import { GraphCanvas, useGraphTestHooks, type GraphCanvasHandle } from './graph-canvas';
+import { GraphFallback } from './graph-fallback';
 import { readGraphFocus } from './location';
 import { useGraphTheme } from './theme';
 import { useGraphLayout } from './use-layout';
@@ -362,6 +363,8 @@ export default function GraphView() {
   const current = useRef<TesseraGraph | null>(null);
   const hintId = useId();
   const [failed, setFailed] = useState(false);
+  // A new key mounts a new renderer (Try again after WebGL failed).
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     document.title = t('graphDocumentTitle');
@@ -460,15 +463,19 @@ export default function GraphView() {
         {t('graphDescription')}
       </p>
       {failed ? (
-        <EmptyState
-          className="mt-24"
-          tone="danger"
-          icon={<TriangleAlert />}
-          title={t('graphFailed')}
-          description={t('graphFailedHint')}
-        />
+        <div className="absolute inset-0 overflow-y-auto">
+          <GraphFallback
+            graph={graph}
+            onOpen={open}
+            onRetry={() => {
+              setFailed(false);
+              setAttempt((value) => value + 1);
+            }}
+          />
+        </div>
       ) : (
         <GraphCanvas
+          key={attempt}
           ref={canvas}
           graph={graph}
           theme={theme}
@@ -531,11 +538,16 @@ export default function GraphView() {
           />
         </div>
       </div>
-      <div className="pointer-events-none absolute bottom-3 left-3 hidden sm:block">
-        <Legend groups={legend} />
-      </div>
+      {failed ? null : (
+        <div className="pointer-events-none absolute bottom-3 left-3 hidden sm:block">
+          <Legend groups={legend} />
+        </div>
+      )}
       <div className="pointer-events-none absolute right-3 bottom-3 flex flex-col items-end gap-2">
-        <div className="pointer-events-auto flex flex-col overflow-hidden rounded-lg border border-border bg-surface/95 shadow-popover backdrop-blur">
+        <div
+          hidden={failed}
+          className="pointer-events-auto flex flex-col overflow-hidden rounded-lg border border-border bg-surface/95 shadow-popover backdrop-blur"
+        >
           <IconButton
             label={t('graphZoomIn')}
             icon={<Plus />}

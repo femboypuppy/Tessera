@@ -136,4 +136,67 @@ test.describe('graph view', () => {
     await page.mouse.click(x, y);
     await expect(page.getByRole('textbox', { name: 'Page title' })).not.toHaveValue('Europa');
   });
+
+  test.describe('without WebGL', () => {
+    // A browser with graphics acceleration off: every WebGL context request fails.
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(() => {
+        const original = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (
+          this: HTMLCanvasElement,
+          type: string,
+          ...rest: unknown[]
+        ) {
+          if (/webgl/i.test(type)) return null;
+          return (original as (...args: unknown[]) => unknown).call(this, type, ...rest);
+        } as typeof original;
+      });
+    });
+
+    test('the graph view explains why and lists the most connected pages', async ({ page }) => {
+      await openWorkspace(page);
+      await seed(page, 60, 5);
+      await openGraph(page);
+      const fallback = page.getByRole('region', { name: 'The graph needs WebGL' });
+      await expect(fallback).toBeVisible();
+      await expect(fallback.getByText(/hardware acceleration/)).toBeVisible();
+      // The controls that only work on a drawn graph are gone; the search box stays.
+      await expect(page.getByRole('button', { name: 'Zoom in' })).toBeHidden();
+      await expect(page.getByPlaceholder('Find a page…')).toBeVisible();
+      const list = fallback.getByRole('region', { name: 'Most connected pages' });
+      const entries = list.getByRole('button');
+      await expect(entries).toHaveCount(12);
+      // Most connected first: link counts never go up down the list.
+      const counts = (await entries.allTextContents()).map((text) =>
+        Number(/(\d+) links?$/.exec(text)?.[1] ?? Number.NaN),
+      );
+      expect(counts.every((count, index) => index === 0 || count <= (counts[index - 1] ?? 0))).toBe(
+        true,
+      );
+      // Trying again without WebGL keeps the fallback; opening a page from the list works.
+      await fallback.getByRole('button', { name: 'Try again' }).click();
+      await expect(fallback).toBeVisible();
+      const first = (await entries.first().textContent())?.replace(/\d+ links?$/, '').trim();
+      await entries.first().click();
+      await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue(first ?? '');
+    });
+
+    test('the local graph lists the linked pages', async ({ page }) => {
+      await openWorkspace(page);
+      await seed(page, 60, 5);
+      await openPalette(page);
+      await page.keyboard.type('europa');
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('textbox', { name: 'Page title' })).toHaveValue('Europa');
+      await page.getByRole('button', { name: 'Local graph', exact: true }).first().click();
+      const fallback = page.getByRole('region', { name: 'The graph needs WebGL' });
+      await expect(fallback).toBeVisible();
+      const linked = fallback.getByRole('region', { name: 'Linked pages' }).getByRole('button');
+      await expect(linked.first()).toBeVisible();
+      // The page itself isn't listed ("Europa reading notes", a neighbor, is): its title then its count.
+      await expect(linked.filter({ hasText: /^Europa\d/ })).toHaveCount(0);
+      await linked.first().click();
+      await expect(page.getByRole('textbox', { name: 'Page title' })).not.toHaveValue('Europa');
+    });
+  });
 });
