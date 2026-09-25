@@ -22,7 +22,16 @@ export const CORE_MARKDOWN_ID = 'markdown-basic';
 const TEXT = /\.(md|markdown|mdown|mkd|txt|csv)$/i;
 const NOTION_NAME = /[ _-]?[0-9a-f]{32}(\.(md|csv)|_all\.csv)?$/i;
 
+/**
+ * Loads the import's code (reading, planning, writing) while the dialog shows what it detected.
+ * Loaded when the import starts, compiling it blocked the page for 200 to 400 ms.
+ */
+function preloadImport(): void {
+  import('./run').catch(() => undefined);
+}
+
 async function paths(files: readonly ImportFile[]): Promise<string[]> {
+  preloadImport();
   const { peekPaths } = await import('./files');
   return peekPaths(files);
 }
