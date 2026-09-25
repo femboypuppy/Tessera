@@ -5,7 +5,7 @@ import type {
   Importer,
   ImportReport,
 } from '@tessera/core';
-import { t } from './i18n';
+import { t } from './i18n/registration';
 import type { SourceFormat } from './plan/types';
 
 /** IDs of the importers this package registers. */

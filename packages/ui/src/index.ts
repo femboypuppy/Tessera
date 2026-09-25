@@ -37,5 +37,6 @@ export * from './components/toggles';
 export * from './components/notify';
 export * from './components/error-boundary';
 export * from './components/layout';
+export * from './components/color-swatches';
 export { EmojiPicker, loadEmojiData, type EmojiEntry } from './components/emoji-picker';
 export { COVER_PRESETS, coverPresetBackground } from './covers';

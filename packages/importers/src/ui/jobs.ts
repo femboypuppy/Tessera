@@ -8,7 +8,7 @@ import {
   type Importer,
   type ImportReport,
 } from '@tessera/core';
-import { t } from '../i18n';
+import { t } from '../i18n/registration';
 import { getImportExportState, setImportExportState } from './store';
 
 /** What importers write with, bound to the open workspace. */

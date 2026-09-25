@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { createBackupImporter, IMPORTER_IDS } from '../importers';
-import { t } from '../i18n';
+import { t } from '../i18n/registration';
 import { startImport } from './jobs';
 import { PRINT_ROUTE } from './routes';
 import {

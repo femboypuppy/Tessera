@@ -14,7 +14,8 @@ import { Avatar, AvatarStack, Badge, EmptyState, KeyCombo, Spinner } from './fee
 import { Field, Input } from './forms';
 import { Select } from './select';
 import { Checkbox, Switch } from './toggles';
-import { ColorSwatches, SidebarItem, SidebarSection } from './layout';
+import { ColorSwatches } from './color-swatches';
+import { SidebarItem, SidebarSection } from './layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './menus';
 import { ConfirmHost, Toaster, confirm, toast } from './notify';
 import { Dialog, DialogContent, DialogTitle, TooltipProvider } from './overlays';

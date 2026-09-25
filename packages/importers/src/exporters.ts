@@ -7,7 +7,7 @@ import type {
 } from '@tessera/core';
 import type { HtmlLabels } from './export/html';
 import type { MarkdownExportOptions } from './export/markdown';
-import { t } from './i18n';
+import { t } from './i18n/registration';
 
 /** IDs of the exporters this package registers. */
 export const EXPORTER_IDS = {

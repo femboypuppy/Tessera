@@ -1,5 +1,4 @@
 import { ChevronRight, X } from 'lucide-react';
-import { RadioGroup as RadioGroupPrimitive } from 'radix-ui';
 import { useEffect, useId, useState, type ComponentProps, type ReactNode } from 'react';
 import { tUi } from '../i18n/index';
 import { cn } from '../lib/cn';
@@ -192,50 +191,6 @@ export function PanelHeader({
 
 export function PanelBody({ className, ...props }: ComponentProps<'div'>) {
   return <div className={cn('min-h-0 flex-1 overflow-y-auto p-3', className)} {...props} />;
-}
-
-// ---------------------------------------------------------------------------------------------
-// Color swatches
-// ---------------------------------------------------------------------------------------------
-
-/**
- * A row of round color choices (a radio group).
- *
- * @example
- * <ColorSwatches label={t('color')} colors={USER_COLORS} value={color} onChange={setColor} />
- */
-export function ColorSwatches({
-  label,
-  colors,
-  value,
-  onChange,
-  className,
-}: {
-  label: string;
-  colors: readonly string[];
-  value: string;
-  onChange: (color: string) => void;
-  className?: string;
-}) {
-  return (
-    <RadioGroupPrimitive.Root
-      aria-label={label}
-      value={value}
-      onValueChange={onChange}
-      className={cn('flex flex-wrap gap-2', className)}
-      orientation="horizontal"
-    >
-      {colors.map((color) => (
-        <RadioGroupPrimitive.Item
-          key={color}
-          value={color}
-          aria-label={color}
-          className="duration-fast size-6 rounded-full ring-offset-2 ring-offset-bg transition-transform hover:scale-110 data-[state=checked]:ring-2 data-[state=checked]:ring-fg"
-          style={{ backgroundColor: color }}
-        />
-      ))}
-    </RadioGroupPrimitive.Root>
-  );
 }
 
 // ---------------------------------------------------------------------------------------------
