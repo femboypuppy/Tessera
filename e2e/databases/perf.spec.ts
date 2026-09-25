@@ -81,7 +81,8 @@ test.describe('10,000-row table', { tag: '@perf' }, () => {
     const rendered = await grid(page).locator('[role="row"][data-row-id]').count();
     expect(rendered).toBeGreaterThan(5);
     expect(rendered).toBeLessThan(80);
-    await expect(grid(page)).toHaveAttribute('aria-rowcount', String(ROWS + 2));
+    // Every row of the grid counts: the header, the rows, the "New" row and the summaries.
+    await expect(grid(page)).toHaveAttribute('aria-rowcount', String(ROWS + 3));
 
     // Warm up (fonts, first paint of every column), then measure. The machine running the tests
     // may be busy (other workers come and go), so keep the best of five runs.

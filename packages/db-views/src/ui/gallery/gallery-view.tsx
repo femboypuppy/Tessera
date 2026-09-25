@@ -41,21 +41,24 @@ export function GalleryView(props: ViewBodyProps) {
               allProperties={snapshot.properties}
               options={view.gallery}
               queryCtx={queryCtx}
-              role="button"
-              tabIndex={0}
-              aria-label={displayTitle(row.title)}
-              data-card-id={row.id}
-              onClick={() => props.onOpenRow(row.id, 'peek')}
-              onKeyDown={(event) => {
-                if (
-                  (event.key === 'Enter' || event.key === ' ') &&
-                  event.target === event.currentTarget
-                ) {
-                  event.preventDefault();
-                  props.onOpenRow(row.id, 'peek');
-                }
+              surface={{
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': displayTitle(row.title),
+                'data-card-id': row.id,
+                onClick: () => props.onOpenRow(row.id, 'peek'),
+                onKeyDown: (event) => {
+                  if (
+                    (event.key === 'Enter' || event.key === ' ') &&
+                    event.target === event.currentTarget
+                  ) {
+                    event.preventDefault();
+                    props.onOpenRow(row.id, 'peek');
+                  }
+                },
+                className: 'cursor-pointer',
               }}
-              className="h-full cursor-pointer"
+              className="h-full"
               actions={
                 <RowMenu
                   database={props.database}

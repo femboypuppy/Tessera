@@ -119,22 +119,24 @@ const SortableCard = memo(function SortableCard({
       queryCtx={props.queryCtx}
       dragging={isDragging}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      data-card-id={row.id}
-      {...attributes}
-      {...listeners}
-      aria-roledescription={undefined}
-      role="button"
-      aria-label={displayTitle(row.title)}
-      onClick={() => open('peek')}
-      onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Enter' && event.target === event.currentTarget) {
-          event.preventDefault();
-          open('peek');
-          return;
-        }
-        listeners?.onKeyDown?.(event);
+      surface={{
+        ...attributes,
+        ...listeners,
+        'data-card-id': row.id,
+        'aria-roledescription': undefined,
+        role: 'button',
+        'aria-label': displayTitle(row.title),
+        onClick: () => open('peek'),
+        onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+          if (event.key === 'Enter' && event.target === event.currentTarget) {
+            event.preventDefault();
+            open('peek');
+            return;
+          }
+          listeners?.onKeyDown?.(event);
+        },
+        className: 'cursor-pointer',
       }}
-      className="cursor-pointer"
       actions={
         <RowMenu
           database={props.database}
@@ -218,7 +220,7 @@ function Column({
           )}
         >
           <ChevronsLeftRight aria-hidden="true" className="size-4 text-fg-muted" />
-          <span className="text-xs text-fg-subtle tabular-nums">{group.rows.length}</span>
+          <span className="text-xs text-fg-muted tabular-nums">{group.rows.length}</span>
           <span className="[writing-mode:vertical-rl]">
             <GroupLabel group={group} property={groupProperty} queryCtx={queryCtx} pages={pages} />
           </span>
@@ -234,7 +236,7 @@ function Column({
     >
       <header className="flex h-10 items-center gap-1.5 px-2">
         <GroupLabel group={group} property={groupProperty} queryCtx={queryCtx} pages={pages} />
-        <span className="text-xs text-fg-subtle tabular-nums">{group.rows.length}</span>
+        <span className="text-xs text-fg-muted tabular-nums">{group.rows.length}</span>
         <span className="flex-1" />
         {!readOnly ? (
           <>
@@ -311,7 +313,7 @@ function Column({
             <button
               type="button"
               onClick={onAdd}
-              className="flex h-8 items-center gap-1.5 rounded-md px-2 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
+              className="flex h-8 items-center gap-1.5 rounded-md px-2 text-ui text-fg-muted hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
             >
               <Plus aria-hidden="true" className="size-4" />
               {t('addCard')}

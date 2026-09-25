@@ -252,6 +252,11 @@ export function TableView({
 
   // Selection -----------------------------------------------------------------------------------
   const rowCount = navRows.length;
+  // Ungrouped, editable tables end with a "New" row (grouped ones add rows per group). ARIA
+  // counts every row of the grid: the header, data rows, group headers, "New" rows, summaries.
+  const hasNewRow = !readOnly && !result.groups;
+  const newRowIndex = items.length + 2;
+  const summaryRowIndex = newRowIndex + (hasNewRow ? 1 : 0);
   const colCount = columns.length;
   const toIndex = (key: string): number | null => {
     if (key === HEADER_KEY) return -1;
@@ -866,8 +871,8 @@ export function TableView({
           role="grid"
           tabIndex={0}
           aria-label={t('tableGrid', { name: databaseTitle })}
-          aria-rowcount={rowCount + 2}
-          aria-colcount={colCount + 1}
+          aria-rowcount={summaryRowIndex}
+          aria-colcount={colCount + (readOnly ? 1 : 2)}
           aria-multiselectable="true"
           aria-readonly={readOnly || undefined}
           aria-activedescendant={activeDescendant}
@@ -959,7 +964,11 @@ export function TableView({
                 ))}
               </SortableContext>
               {!readOnly ? (
+                // A header cell of its own (a row holds only cells), after the property columns.
                 <div
+                  role="columnheader"
+                  aria-colindex={colCount + 2}
+                  aria-label={t('addProperty')}
                   className="flex shrink-0 items-center justify-center border-b border-border"
                   style={{ width: ADD_COLUMN_WIDTH }}
                 >
@@ -1009,24 +1018,28 @@ export function TableView({
               onAddInGroup={addInGroup}
             />
 
-            {/* New row */}
-            {!readOnly && !result.groups ? (
+            {/* New row: a row of its own, so the grid holds only rows. */}
+            {hasNewRow ? (
               <div
+                role="row"
+                aria-rowindex={newRowIndex}
                 className="flex border-b border-border"
                 style={{ width: totalWidth, height: ROW_HEIGHT }}
               >
-                <button
-                  type="button"
-                  onClick={() => void createRow({ after: navRows[rowCount - 1]?.row.id ?? null })}
-                  className={cn(
-                    'left-0 flex h-full items-center gap-1.5 pr-3 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
-                    STICKY,
-                  )}
-                  style={{ paddingLeft: GUTTER_WIDTH + 8 }}
-                >
-                  <Plus aria-hidden="true" className="size-4" />
-                  {t('new')}
-                </button>
+                <div role="gridcell" aria-colspan={colCount + 1} className="contents">
+                  <button
+                    type="button"
+                    onClick={() => void createRow({ after: navRows[rowCount - 1]?.row.id ?? null })}
+                    className={cn(
+                      'left-0 flex h-full items-center gap-1.5 pr-3 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
+                      STICKY,
+                    )}
+                    style={{ paddingLeft: GUTTER_WIDTH + 8 }}
+                  >
+                    <Plus aria-hidden="true" className="size-4" />
+                    {t('new')}
+                  </button>
+                </div>
               </div>
             ) : null}
 
@@ -1044,7 +1057,7 @@ export function TableView({
                 setFooterMenu(col);
                 if (col === null) focusGrid();
               }}
-              ariaRowIndex={rowCount + 2}
+              ariaRowIndex={summaryRowIndex}
               readOnly={readOnly}
             />
           </div>

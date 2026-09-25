@@ -88,6 +88,15 @@
   }
 }
 
+@layer utilities {
+  /* Subtle text steps up to muted on a highlighted row (a selected option, a highlighted menu
+     item, the current page): only muted text keeps AA contrast on those backgrounds. */
+  :where([aria-selected='true'], [data-highlighted], [aria-current='page']) .text-fg-subtle,
+  .text-fg-subtle:where([aria-selected='true'], [data-highlighted], [aria-current='page']) {
+    color: var(--tess-fg-muted);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

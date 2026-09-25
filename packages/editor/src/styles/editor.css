@@ -112,7 +112,7 @@
   padding: 0.15em 0.35em;
   border-radius: var(--tess-radius-sm);
   background: var(--tess-tag-default-bg);
-  color: var(--tess-danger-text);
+  color: var(--tess-code-fg);
 }
 
 .tess-editor mark {
@@ -340,37 +340,54 @@
 }
 
 .tess-editor ul[data-type='taskList'] > li > label input[type='checkbox'] {
+  /* A 24 px target (WCAG 2.5.8) that looks like a 16 px box: ::before draws the box, ::after
+     the check, and the negative margin keeps the line's layout. */
   appearance: none;
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  border: 1.5px solid var(--tess-fg-muted);
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  margin: -4px;
+  border: 0;
+  border-radius: 6px;
   background: transparent;
   display: grid;
-  place-content: center;
+  place-items: center;
   cursor: pointer;
+}
+
+.tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']::before {
+  content: '';
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--tess-fg-muted);
+  border-radius: 4px;
   transition:
     background-color var(--tess-duration-fast) var(--tess-ease-out),
     border-color var(--tess-duration-fast) var(--tess-ease-out);
 }
 
-.tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:hover {
+.tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:hover::before {
   background: var(--tess-hover);
 }
 
 .tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:focus-visible {
+  outline: none;
+}
+
+.tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:focus-visible::before {
   outline: 2px solid var(--tess-focus);
   outline-offset: 2px;
 }
 
-.tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:checked {
+.tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:checked::before {
   background: var(--tess-accent);
   border-color: var(--tess-accent);
 }
 
 .tess-editor ul[data-type='taskList'] > li > label input[type='checkbox']:checked::after {
   content: '';
+  grid-area: 1 / 1;
   width: 9px;
   height: 5px;
   border-left: 2px solid var(--tess-accent-fg);

@@ -149,6 +149,11 @@ export interface CardProps extends Omit<ComponentProps<'div'>, 'children'> {
   options: CardOptions;
   queryCtx: QueryContext;
   dragging?: boolean;
+  /**
+   * The clickable surface's props (role, label, handlers, drag listeners, `data-card-id`). It
+   * holds everything but `actions`, so the card menu is its sibling, not nested in it.
+   */
+  surface?: ComponentProps<'div'> & { 'data-card-id'?: string };
   /** Trailing controls (the card menu). */
   actions?: ReactNode;
 }
@@ -156,7 +161,18 @@ export interface CardProps extends Omit<ComponentProps<'div'>, 'children'> {
 /** A board or gallery card: optional cover, icon and title, then the chosen properties. */
 export const Card = memo(
   forwardRef<HTMLDivElement, CardProps>(function Card(
-    { row, properties, allProperties, options, queryCtx, dragging, actions, className, ...props },
+    {
+      row,
+      properties,
+      allProperties,
+      options,
+      queryCtx,
+      dragging,
+      surface,
+      actions,
+      className,
+      ...props
+    },
     forwarded,
   ) {
     const [visibleRef, visible] = useVisible<HTMLDivElement>();
@@ -182,74 +198,82 @@ export const Card = memo(
       <div
         ref={setRefs}
         className={cn(
-          'group/card duration-fast relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface text-left shadow-subtle transition-shadow outline-none hover:shadow-popover focus-visible:ring-2 focus-visible:ring-focus',
+          'group/card duration-fast relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface text-left shadow-subtle transition-shadow hover:shadow-popover',
           dragging && 'opacity-40',
           className,
         )}
         {...props}
       >
-        {options.cover.kind !== 'none' ? (
-          <div
-            aria-hidden="true"
-            className={cn('w-full shrink-0 bg-bg-subtle', COVER_HEIGHT[options.size])}
-            style={cover?.kind === 'background' ? { background: cover.value } : undefined}
-          >
-            {!cover ? (
-              <span className="flex size-full items-center justify-center text-fg-disabled">
-                {row.icon ? (
-                  <span className="text-3xl opacity-60">{row.icon}</span>
-                ) : (
-                  <FileText className="size-6" strokeWidth={1.5} />
-                )}
-              </span>
-            ) : null}
-            {cover?.kind === 'image' ? (
-              <img
-                src={cover.url}
-                alt=""
-                loading="lazy"
-                className={cn('size-full', options.fitCover ? 'object-contain' : 'object-cover')}
-              />
-            ) : null}
-          </div>
-        ) : null}
         <div
+          {...surface}
           className={cn(
-            'flex min-w-0 flex-col gap-1.5',
-            options.size === 'small' ? 'p-2' : 'p-2.5',
+            'flex min-h-0 flex-1 flex-col rounded-[inherit] outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus',
+            surface?.className,
           )}
         >
-          <div className="flex min-w-0 items-start gap-1.5">
-            {row.icon ? (
-              <span aria-hidden="true" className="shrink-0 text-base leading-5">
-                {row.icon}
-              </span>
-            ) : null}
-            <span
-              className={cn(
-                'min-w-0 flex-1 text-sm leading-5 font-medium break-words',
-                !row.title.trim() && 'text-fg-subtle',
-              )}
+          {options.cover.kind !== 'none' ? (
+            <div
+              aria-hidden="true"
+              className={cn('w-full shrink-0 bg-bg-subtle', COVER_HEIGHT[options.size])}
+              style={cover?.kind === 'background' ? { background: cover.value } : undefined}
             >
-              {displayTitle(row.title)}
-            </span>
-          </div>
-          {values.map((property) => (
-            <div key={property.id} className="flex min-w-0 flex-col gap-0.5">
-              {options.showPropertyNames ? (
-                <span className="text-2xs text-fg-subtle">{property.name || t('untitled')}</span>
+              {!cover ? (
+                <span className="flex size-full items-center justify-center text-fg-disabled">
+                  {row.icon ? (
+                    <span className="text-3xl opacity-60">{row.icon}</span>
+                  ) : (
+                    <FileText className="size-6" strokeWidth={1.5} />
+                  )}
+                </span>
               ) : null}
-              <div className="flex min-w-0 items-center text-ui">
-                <CellDisplay
-                  row={row}
-                  property={property}
-                  queryCtx={queryCtx}
-                  wrap
-                  className="text-ui"
+              {cover?.kind === 'image' ? (
+                <img
+                  src={cover.url}
+                  alt=""
+                  loading="lazy"
+                  className={cn('size-full', options.fitCover ? 'object-contain' : 'object-cover')}
                 />
-              </div>
+              ) : null}
             </div>
-          ))}
+          ) : null}
+          <div
+            className={cn(
+              'flex min-w-0 flex-col gap-1.5',
+              options.size === 'small' ? 'p-2' : 'p-2.5',
+            )}
+          >
+            <div className="flex min-w-0 items-start gap-1.5">
+              {row.icon ? (
+                <span aria-hidden="true" className="shrink-0 text-base leading-5">
+                  {row.icon}
+                </span>
+              ) : null}
+              <span
+                className={cn(
+                  'min-w-0 flex-1 text-sm leading-5 font-medium break-words',
+                  !row.title.trim() && 'text-fg-subtle',
+                )}
+              >
+                {displayTitle(row.title)}
+              </span>
+            </div>
+            {values.map((property) => (
+              <div key={property.id} className="flex min-w-0 flex-col gap-0.5">
+                {options.showPropertyNames ? (
+                  <span className="text-2xs text-fg-subtle">{property.name || t('untitled')}</span>
+                ) : null}
+                <div className="flex min-w-0 items-center text-ui">
+                  <CellDisplay
+                    row={row}
+                    property={property}
+                    queryCtx={queryCtx}
+                    wrap
+                    className="text-ui"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         {actions}
       </div>

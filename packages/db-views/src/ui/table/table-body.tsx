@@ -161,6 +161,8 @@ export function TableBody({
               pages={pages}
               top={top}
               width={totalWidth}
+              ariaRowIndex={virtualItem.index + 2}
+              colSpan={columns.length + 1}
               onToggle={onToggleGroup}
               onHide={onHideGroup}
             />
@@ -168,24 +170,28 @@ export function TableBody({
         }
         if (item.kind === 'add') {
           return (
+            // Rows of the grid like the others (a grid holds rows, rows hold cells).
             <div
               key={item.key}
-              role="presentation"
+              role="row"
+              aria-rowindex={virtualItem.index + 2}
               className="absolute top-0 left-0 flex items-center border-b border-border"
               style={{ width: totalWidth, height: ROW_HEIGHT, transform: `translateY(${top}px)` }}
             >
-              <button
-                type="button"
-                onClick={() => onAddInGroup(item.group)}
-                className={cn(
-                  'left-0 flex h-full items-center gap-1.5 px-2 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
-                  STICKY,
-                )}
-                style={{ paddingLeft: GUTTER_WIDTH }}
-              >
-                <Plus aria-hidden="true" className="size-4" />
-                {t('new')}
-              </button>
+              <div role="gridcell" aria-colspan={columns.length + 1} className="contents">
+                <button
+                  type="button"
+                  onClick={() => onAddInGroup(item.group)}
+                  className={cn(
+                    'left-0 flex h-full items-center gap-1.5 px-2 text-ui text-fg-muted hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
+                    STICKY,
+                  )}
+                  style={{ paddingLeft: GUTTER_WIDTH }}
+                >
+                  <Plus aria-hidden="true" className="size-4" />
+                  {t('new')}
+                </button>
+              </div>
             </div>
           );
         }
@@ -204,7 +210,7 @@ export function TableBody({
             database={database}
             row={item.row}
             rowIndex={item.navIndex}
-            ariaRowIndex={item.navIndex + 2}
+            ariaRowIndex={virtualItem.index + 2}
             columns={columns}
             totalWidth={totalWidth}
             top={top}
@@ -235,6 +241,8 @@ const GroupHeader = memo(function GroupHeader({
   pages,
   top,
   width,
+  ariaRowIndex,
+  colSpan,
   onToggle,
   onHide,
 }: {
@@ -244,6 +252,8 @@ const GroupHeader = memo(function GroupHeader({
   pages: PagesSnapshot;
   top: number;
   width: number;
+  ariaRowIndex: number;
+  colSpan: number;
   onToggle: (group: RowGroup<ResolvedRow>) => void;
   onHide: ((group: RowGroup<ResolvedRow>) => void) | undefined;
 }) {
@@ -251,11 +261,16 @@ const GroupHeader = memo(function GroupHeader({
   const name = groupName(group, property, queryCtx, pages);
   return (
     <div
-      role="presentation"
+      role="row"
+      aria-rowindex={ariaRowIndex}
       className="absolute top-0 left-0 flex items-end border-b border-border bg-bg"
       style={{ width, height: GROUP_HEIGHT, transform: `translateY(${top}px)` }}
     >
-      <div className={cn('left-0 flex h-9 items-center gap-1.5 px-2', STICKY)}>
+      <div
+        role="gridcell"
+        aria-colspan={colSpan}
+        className={cn('left-0 flex h-9 items-center gap-1.5 px-2', STICKY)}
+      >
         <button
           type="button"
           aria-expanded={!collapsed}
@@ -269,7 +284,7 @@ const GroupHeader = memo(function GroupHeader({
           />
         </button>
         <GroupLabel group={group} property={property} queryCtx={queryCtx} pages={pages} />
-        <span className="text-xs text-fg-subtle tabular-nums">{group.rows.length}</span>
+        <span className="text-xs text-fg-muted tabular-nums">{group.rows.length}</span>
         {onHide && group.key !== EMPTY_GROUP_KEY ? (
           <IconButton
             size="sm"

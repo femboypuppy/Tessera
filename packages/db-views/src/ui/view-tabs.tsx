@@ -87,6 +87,9 @@ function Tab({
   });
   const Icon = VIEW_ICONS[view.type];
   const name = view.name || viewTypeName(view.type);
+  const hasMenu = active && !readOnly;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const tabRef = useRef<HTMLButtonElement>(null);
   if (renaming) {
     return (
       <div className="flex h-8 w-40 items-center">
@@ -109,14 +112,34 @@ function Tab({
       className={cn('relative flex items-center', isDragging && 'z-10 opacity-80')}
     >
       <button
+        ref={tabRef}
         type="button"
         role="tab"
         id={tabId}
         aria-selected={active}
         aria-controls={panelId}
+        aria-haspopup={hasMenu ? 'menu' : undefined}
         tabIndex={active ? 0 : -1}
         onPointerDown={(event) => listeners?.onPointerDown?.(event)}
-        onKeyDown={onKeyDown}
+        onKeyDown={(event) => {
+          // The active tab's menu: ↓, Shift+F10 or the menu key (its chevron is for the mouse).
+          if (
+            hasMenu &&
+            (event.key === 'ArrowDown' ||
+              event.key === 'ContextMenu' ||
+              (event.key === 'F10' && event.shiftKey))
+          ) {
+            event.preventDefault();
+            setMenuOpen(true);
+            return;
+          }
+          onKeyDown(event);
+        }}
+        onContextMenu={(event) => {
+          if (!hasMenu) return;
+          event.preventDefault();
+          setMenuOpen(true);
+        }}
         onClick={onSelect}
         onDoubleClick={() => {
           if (!readOnly) onRename();
@@ -131,18 +154,29 @@ function Tab({
         <Icon aria-hidden="true" className="size-3.5 shrink-0" />
         <span className="truncate">{name}</span>
       </button>
-      {active && !readOnly ? (
-        <DropdownMenu modal={false}>
+      {hasMenu ? (
+        <DropdownMenu modal={false} open={menuOpen} onOpenChange={setMenuOpen}>
+          {/* Outside the tab list's accessibility tree (a tab list holds only tabs): keyboard
+              and screen reader users open this menu from the tab itself. */}
           <DropdownMenuTrigger asChild>
             <IconButton
               size="sm"
               label={t('viewOptions')}
               icon={<ChevronDown />}
               tooltip={false}
-              className="-ml-1 size-5"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="-ml-1.5"
             />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent
+            align="start"
+            onCloseAutoFocus={(event) => {
+              // Back to the tab (the chevron takes no focus); a rename focuses its own field.
+              event.preventDefault();
+              tabRef.current?.focus();
+            }}
+          >
             <DropdownMenuItem icon={<Pencil />} onSelect={onRename}>
               {t('renameView')}
             </DropdownMenuItem>

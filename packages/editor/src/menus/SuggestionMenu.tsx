@@ -38,21 +38,16 @@ export function SuggestionMenu({
   const position = useFloatingPosition(panel, state?.getRect ?? null, {}, state?.flat.length);
   const optionId = (index: number) => `${baseId}-option-${index}`;
 
-  // Accessibility: the editor owns the listbox while the menu is open.
+  // Accessibility: the editor owns the listbox while the menu is open. (A textbox has no
+  // aria-expanded; aria-controls and aria-autocomplete say a list goes with it.)
   useEffect(() => {
     const dom = editor.view.dom;
     if (!state) {
-      for (const name of [
-        'aria-controls',
-        'aria-activedescendant',
-        'aria-expanded',
-        'aria-autocomplete',
-      ])
+      for (const name of ['aria-controls', 'aria-activedescendant', 'aria-autocomplete'])
         dom.removeAttribute(name);
       return;
     }
     dom.setAttribute('aria-controls', listId);
-    dom.setAttribute('aria-expanded', 'true');
     dom.setAttribute('aria-autocomplete', 'list');
     if (state.flat.length) dom.setAttribute('aria-activedescendant', optionId(state.active));
     else dom.removeAttribute('aria-activedescendant');
@@ -74,6 +69,12 @@ export function SuggestionMenu({
       role="listbox"
       aria-label={state.label}
       data-menu={state.kind}
+      // A scrolling region is reachable by keyboard (axe), like the palette's list. Tab selects
+      // the active item while the menu is open, so focus never lands here from the editor, and
+      // a click keeps the focus in the editor.
+
+      tabIndex={0}
+      onMouseDown={(event) => event.preventDefault()}
       className={cn(
         'tess-suggestion-menu fixed z-[var(--tess-z-popover)] w-[min(20rem,calc(100vw-16px))] overflow-y-auto overscroll-contain rounded-lg border border-border bg-surface-raised p-1 shadow-popover',
         position ? 'visible animate-pop-in' : 'invisible',
@@ -101,7 +102,7 @@ export function SuggestionMenu({
               {section.label ? (
                 <div
                   id={labelId}
-                  className="px-2 pt-2 pb-1 text-2xs font-medium text-fg-subtle select-none"
+                  className="px-2 pt-2 pb-1 text-2xs font-medium text-fg-muted select-none"
                 >
                   {section.label}
                 </div>
@@ -141,14 +142,14 @@ export function SuggestionMenu({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-fg">{item.title}</span>
                       {item.description ? (
-                        <span className="block truncate text-2xs text-fg-subtle">
+                        <span className="block truncate text-2xs text-fg-muted">
                           {item.description}
                         </span>
                       ) : null}
                     </span>
                     {item.hint ? (
                       <span
-                        className="flex-none font-mono text-2xs text-fg-subtle"
+                        className="flex-none font-mono text-2xs text-fg-muted"
                         aria-hidden="true"
                       >
                         {item.hint}

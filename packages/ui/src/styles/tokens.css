@@ -43,6 +43,8 @@
   --tess-danger-fg: #ffffff;
   --tess-danger-subtle: #fdecec;
   --tess-danger-text: #ce2c31;
+  /* Inline code: red on its gray chip, AA (4.8:1) at the chip's small size. */
+  --tess-code-fg: #c42a2f;
   --tess-success: #30a46c;
   --tess-success-subtle: #e6f6eb;
   --tess-success-text: #18794e;
@@ -152,6 +154,7 @@
   --tess-danger-fg: #ffffff;
   --tess-danger-subtle: rgb(229 72 77 / 0.16);
   --tess-danger-text: #ff9592;
+  --tess-code-fg: #ff9592;
   --tess-success: #30a46c;
   --tess-success-subtle: rgb(48 164 108 / 0.18);
   --tess-success-text: #3dd68c;
