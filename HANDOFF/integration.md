@@ -324,16 +324,17 @@ Xvfb, `CI=true`) and fixed at its cause; no budget, timeout or assertion was loo
 - **Version history order.** Versions saved in the same millisecond sorted arbitrarily: each
   version now carries a per-device save sequence (`seq`, `newestFirst` in `version-store.ts`),
   and the server orders by `created_at DESC, rowid DESC`.
-- **Graph specs without a GPU.** Headless Chromium on the runners has no WebGL unless SwiftShader
-  is forced, and headless Firefox on Linux has none at all. The graph now shows a proper fallback
-  without WebGL or after a lost context (why, how to turn it on, Try again, and the most connected
-  pages as a keyboard-friendly list; `graph-fallback.tsx`, specs under "without WebGL").
-  On Linux CI, the specs that draw the graph (`e2e/search/graph.spec.ts`,
-  `e2e/ci/accessibility-graph.spec.ts`) `test.use(softwareWebGL)` (`e2e/support/webgl.ts`):
-  Chromium gets `--use-angle=swiftshader --enable-unsafe-swiftshader`, and Firefox runs headed
-  under `xvfb-run` (Mesa llvmpipe), so the WebGL specs really run. Only those specs: with
-  SwiftShader on for every spec, the runners drew the 10,000-row table at 30 fps instead of 60
-  (even with `--disable-gpu-compositing`).
+- **Graph specs without a GPU.** Headless Firefox on Linux has no WebGL at all. The graph now
+  shows a proper fallback without WebGL or after a lost context (why, how to turn it on, Try
+  again, and the most connected pages as a keyboard-friendly list; `graph-fallback.tsx`, specs
+  under "without WebGL"). On Linux CI, the specs that draw the graph (`e2e/search/graph.spec.ts`,
+  `e2e/ci/accessibility-graph.spec.ts`) `test.use(softwareWebGL)` (`e2e/support/webgl.ts`), which
+  runs Firefox headed under `xvfb-run` (Mesa llvmpipe), so the WebGL specs really run; the other
+  Firefox specs stay headless (headed, the 2,000-block typing latency went over its budget).
+  Chromium needs nothing: Playwright passes `--enable-unsafe-swiftshader`, so WebGL falls back to
+  SwiftShader by itself. Forcing it with `--use-angle=swiftshader` put all of Chromium's drawing
+  through SwiftShader: the 10,000-row table scrolled at 30 fps instead of 60, the graph specs ran
+  twice as slow, and a first local graph could stall 7 s.
   The flaky node click came from `useGraphLayout` reporting "settled" before the layout had
   started; it now tracks which graph and settings the finished layout belongs to.
 - **Backspace spec (`markdown-shortcuts.spec.ts:107`) on a busy runner.** Not a Linux behavior:
@@ -346,6 +347,14 @@ Xvfb, `CI=true`) and fixed at its cause; no budget, timeout or assertion was loo
 - **Markdown round trip property** (found in the container, a random seed): a code span across
   lines kept its line ending, so a heading holding one was written setext once and ATX the next
   time. Line endings in code spans now become spaces, as CommonMark specifies.
+- **Palette: Enter opened the wrong page** (flaky `palette.spec.ts:19`). When the index changed
+  while the palette was open (a page created a moment before), the same query ran again, and an
+  Enter pressed meanwhile waited for it and then opened the *first* result, not the one chosen
+  with the arrows. Enter now waits only when the list shows an older text's results.
+- **Observed once, not fixed:** journey 9 in Firefox, where `page.goto` to the invite link never
+  resolved although the page had loaded and rendered (every request answered, no "navigated"
+  event reached Playwright). It passed on retry and in every other run; nothing in the app delays
+  the load. Worth watching: if it recurs, it is Playwright's Firefox navigation tracking.
 
 ## Known bugs and deferred work (ready-to-file issues)
 
