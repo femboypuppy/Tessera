@@ -6,3 +6,9 @@ packages:
 
 allowBuilds:
   esbuild: true
+
+# VitePress 1.6.4 (the latest stable) asks for Vite 5, whose dev server has advisories fixed only
+# in Vite 6.4.3 (and esbuild 0.25). VitePress 1.6 builds and serves on Vite 6; drop this override
+# for VitePress 2 once it's stable.
+overrides:
+  vite: 6.4.3
