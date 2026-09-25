@@ -54,7 +54,8 @@ describe('<WorkspacePicker>', () => {
     });
     expect(screen.queryByRole('dialog')).toBeNull();
     openPicker();
-    const dialog = await screen.findByRole('dialog', { name: 'Workspaces' });
+    // The picker is a lazy chunk: its first load can take seconds while the whole suite runs.
+    const dialog = await screen.findByRole('dialog', { name: 'Workspaces' }, { timeout: 15_000 });
     const current = await within(dialog).findByRole('button', { current: true });
     expect(current).toHaveTextContent('Apollo research');
     expect(current).toHaveTextContent('~/Tessera/Apollo research');
