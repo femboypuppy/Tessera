@@ -360,6 +360,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     highlight.current();
   }, [focused]);
 
+  // Camera moves ease out like the rest of the UI: 200 ms for zooms (the app's longest duration);
+  // travelling to a node or back to the whole graph takes 300 ms so the eye can follow the move.
+  const zoom = () => ({ duration: motion.current ? 0 : 200, easing: 'cubicOut' as const });
+  const travel = () => ({ duration: motion.current ? 0 : 300, easing: 'cubicOut' as const });
   useImperativeHandle(
     ref,
     () => ({
@@ -367,18 +371,16 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         const renderer = sigma.current;
         const data = renderer?.getNodeDisplayData(id);
         if (!renderer || !data) return;
-        void renderer
-          .getCamera()
-          .animate({ x: data.x, y: data.y, ratio }, { duration: motion.current ? 0 : 600 });
+        void renderer.getCamera().animate({ x: data.x, y: data.y, ratio }, travel());
       },
       zoomIn() {
-        void sigma.current?.getCamera().animatedZoom({ duration: motion.current ? 0 : 250 });
+        void sigma.current?.getCamera().animatedZoom(zoom());
       },
       zoomOut() {
-        void sigma.current?.getCamera().animatedUnzoom({ duration: motion.current ? 0 : 250 });
+        void sigma.current?.getCamera().animatedUnzoom(zoom());
       },
       reset() {
-        void sigma.current?.getCamera().animatedReset({ duration: motion.current ? 0 : 400 });
+        void sigma.current?.getCamera().animatedReset(travel());
       },
       nodeClientPosition(id) {
         const renderer = sigma.current;

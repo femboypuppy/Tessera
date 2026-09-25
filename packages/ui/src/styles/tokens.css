@@ -96,9 +96,9 @@
     0 0 0 1px rgb(15 15 15 / 0.05), 0 5px 10px rgb(15 15 15 / 0.1), 0 15px 40px rgb(15 15 15 / 0.2);
 
   /* Motion (reduced to zero when the user prefers reduced motion) */
-  --tess-duration-fast: 120ms;
+  --tess-duration-fast: 150ms;
   --tess-duration-normal: 180ms;
-  --tess-duration-slow: 260ms;
+  --tess-duration-slow: 200ms;
   --tess-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --tess-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 

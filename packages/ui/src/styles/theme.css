@@ -86,6 +86,8 @@
 
   --ease-out: var(--tess-ease-out);
   --ease-in-out: var(--tess-ease-in-out);
+  /* Transitions without an explicit timing ease out too (Tailwind's default eases in and out). */
+  --default-transition-timing-function: var(--tess-ease-out);
 
   --animate-fade-in: tess-fade-in var(--tess-duration-fast) var(--tess-ease-out);
   --animate-fade-out: tess-fade-out var(--tess-duration-fast) var(--tess-ease-out);
@@ -99,9 +101,10 @@
 }
 
 @theme {
-  --duration-fast: 120ms;
+  --duration-fast: 150ms;
   --duration-normal: 180ms;
-  --duration-slow: 260ms;
+  --duration-slow: 200ms;
+  --default-transition-duration: 150ms;
 }
 
 @keyframes tess-fade-in {
