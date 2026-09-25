@@ -26,9 +26,17 @@ export const softwareWebGL: Fixtures<
 > = linuxCI
   ? {
       launchOptions: [
-        async ({ browserName }, use) => {
+        async ({ browserName, launchOptions }, use) => {
           await use(
-            browserName === 'firefox' ? { firefoxUserPrefs: { 'webgl.force-enabled': true } } : {},
+            browserName === 'firefox'
+              ? {
+                  ...launchOptions,
+                  firefoxUserPrefs: {
+                    ...launchOptions.firefoxUserPrefs,
+                    'webgl.force-enabled': true,
+                  },
+                }
+              : launchOptions,
           );
         },
         { scope: 'worker' },
