@@ -196,6 +196,37 @@ describe('ci.yml', () => {
   });
 });
 
+describe('desktop.yml', () => {
+  const desktop = byName('desktop.yml');
+  const job = Object.values(desktop.jobs)[0] ?? {};
+  const build = steps(job).find((step) => step.name === 'Tauri build');
+  const secrets = steps(job).find((step) => step.name === 'Signing secrets');
+
+  it('hands the Tauri build only the signing secrets that are set', () => {
+    // An unset secret is an empty string, and an empty APPLE_CERTIFICATE made the macOS builds
+    // of v0.1.0 fail importing it: the build step's env holds no secret but the token.
+    expect(Object.keys(build?.env ?? {})).toEqual(['GITHUB_TOKEN']);
+    const run = secrets?.run ?? '';
+    expect(run).toContain('if [ -n "${!name}" ]');
+    expect(run).toContain('"$GITHUB_ENV"');
+    for (const name of [
+      'APPLE_CERTIFICATE',
+      'APPLE_SIGNING_IDENTITY',
+      'TAURI_SIGNING_PRIVATE_KEY',
+    ]) {
+      expect(secrets?.env?.[name]).toBe(`\${{ secrets.${name} }}`);
+    }
+    expect(steps(job).indexOf(secrets ?? {})).toBeLessThan(steps(job).indexOf(build ?? {}));
+  });
+
+  it('ad-hoc signs the macOS app when no Apple certificate is set', () => {
+    const config = JSON.parse(
+      readFileSync(path.join(ROOT, 'apps/desktop/src-tauri/tauri.conf.json'), 'utf8'),
+    ) as { bundle?: { macOS?: { signingIdentity?: string } } };
+    expect(config.bundle?.macOS?.signingIdentity).toBe('-');
+  });
+});
+
 describe('dependabot.yml and labeler.yml', () => {
   it('updates npm weekly (grouped), actions monthly and cargo weekly', () => {
     const config = parse(readFileSync(path.join(ROOT, '.github', 'dependabot.yml'), 'utf8')) as {

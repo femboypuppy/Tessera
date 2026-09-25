@@ -106,10 +106,14 @@ jobs:
             args="$args --config '$config'"
           fi
           echo "args=$args" >> "$GITHUB_OUTPUT"
-      - name: Tauri build
-        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+      # A secret that isn't set arrives as an empty string, and the Tauri CLI takes an empty
+      # APPLE_CERTIFICATE for a certificate to import ("failed to import keychain certificate"),
+      # so only the signing secrets that are set reach the build. Without Apple's, the macOS app
+      # is ad-hoc signed (`signingIdentity: "-"` in tauri.conf.json). An updater key's password
+      # goes along even when empty, so the CLI never asks for one.
+      - name: Signing secrets
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -118,6 +122,23 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          export_secret() {
+            local delimiter="END_${RANDOM}${RANDOM}${RANDOM}${RANDOM}"
+            { echo "$1<<$delimiter"; printf '%s\n' "${!1}"; echo "$delimiter"; } >> "$GITHUB_ENV"
+            echo "$1 is set."
+          }
+          for name in TAURI_SIGNING_PRIVATE_KEY APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD \
+            APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            if [ -n "${!name}" ]; then export_secret "$name"; fi
+          done
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            export_secret TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          fi
+      - name: Tauri build
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop
           tauriScript: pnpm exec tauri
