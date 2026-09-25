@@ -351,10 +351,26 @@ Xvfb, `CI=true`) and fixed at its cause; no budget, timeout or assertion was loo
   while the palette was open (a page created a moment before), the same query ran again, and an
   Enter pressed meanwhile waited for it and then opened the *first* result, not the one chosen
   with the arrows. Enter now waits only when the list shows an older text's results.
-- **Observed once, not fixed:** journey 9 in Firefox, where `page.goto` to the invite link never
-  resolved although the page had loaded and rendered (every request answered, no "navigated"
-  event reached Playwright). It passed on retry and in every other run; nothing in the app delays
-  the load. Worth watching: if it recurs, it is Playwright's Firefox navigation tracking.
+- **Journeys 8 and 9 hung in Firefox** at `page.goto(invite)`: the page had loaded and rendered,
+  but Playwright never heard of the navigation. The Tessera server sends
+  `Cross-Origin-Opener-Policy: same-origin`, so opening it from a blank tab makes Firefox swap
+  the browsing context, and Playwright 1.63's Firefox driver can lose a message then
+  (microsoft/playwright#42731, fixed in 1.64, still an alpha). The Firefox project sets
+  `browser.tabs.remote.useCrossOriginOpenerPolicy: false` (checked in the container: without it a
+  COOP navigation clears `window.name`, with it the tab keeps its context). The app and the
+  server keep COOP. **Next:** drop the pref when upgrading to Playwright 1.64.
+- **Timed specs measured the runner.** The 10,000-row table spec scrolled at 60 fps on one run
+  and 30 fps on the next with the same code, and the 2,000-block typing p95 swung between 7 and
+  25 ms in one run. A scrolled frame of that table costs about 33 ms of CPU across Chromium's
+  threads (profiled in the container: software compositing alone takes about 12.5 ms), so two
+  browsers on a four-core runner compete for every core. The specs that time frames and
+  keystrokes are tagged `@perf` and CI runs them after the rest, one at a time ("Playwright,
+  timed specs alone"); their budgets and assertions are unchanged. Locally:
+  `pnpm test:e2e --grep @perf --workers=1`.
+- **Frozen columns stick only when the table can scroll sideways.** Each sticky cell is a
+  compositor layer, two in every row (153 layers for 33 rows); a table that fits its scroller
+  now skips them (`data-scrolls-x` on the grid, `STICKY`/`FROZEN` in `table/layout.ts`), which
+  took about 3 ms off the main thread per scrolled frame. `table.spec.ts` covers both cases.
 
 ## Known bugs and deferred work (ready-to-file issues)
 
