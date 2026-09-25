@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import SearchPage from '../search-page/search-page';
 import { b, createIndexedContext, type IndexedTestContext } from '../test-utils';
 import CommandPalette from './command-palette';
@@ -13,6 +13,7 @@ async function setup() {
 }
 afterEach(async () => {
   act(() => paletteStore.close());
+  vi.restoreAllMocks();
   for (const test of open.splice(0)) await test.dispose();
 });
 
@@ -50,6 +51,36 @@ describe('CommandPalette', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     await waitFor(() => expect(test.shell.navigations.at(-1)).toMatchObject({ pageId: europa.id }));
     expect(test.ctx.workspace.pages.getSnapshot().size).toBe(1);
+  });
+
+  it('opens the chosen result when Enter comes while the index refreshes the list', async () => {
+    const test = await setup();
+    const launch = test.ctx.workspace.createPage({ title: 'Launch checklist' });
+    test.ctx.workspace.createPage({ title: 'Booster tests' });
+    await test.write(launch.id, b.doc(b.paragraph('Fuel the booster before the window opens.')));
+    test.renderInApp(<CommandPalette />);
+    act(() => paletteStore.open());
+    const input = await screen.findByRole('combobox', { name: 'Command palette' });
+    fireEvent.change(input, { target: { value: 'booster' } });
+    const content = await screen.findByRole('group', { name: 'In pages' });
+    const hit = within(content).getByRole('option', { name: /Launch checklist/ });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    await waitFor(() => expect(hit.getAttribute('aria-selected')).toBe('true'));
+    // Another page gets indexed: the palette runs the same query again, held here in flight.
+    const query = test.search.query.bind(test.search);
+    const held: Array<() => void> = [];
+    vi.spyOn(test.search, 'query').mockImplementation(
+      (...args) => new Promise((resolve) => held.push(() => resolve(query(...args)))),
+    );
+    await act(async () => {
+      test.ctx.workspace.createPage({ title: 'Mission notes' });
+      await test.search.whenIdle();
+    });
+    await waitFor(() => expect(held.length).toBeGreaterThan(0));
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(test.shell.navigations.at(-1)).toMatchObject({ pageId: launch.id });
+    expect(paletteStore.getState().open).toBe(false);
+    act(() => held.forEach((release) => release()));
   });
 
   it('runs commands in > mode and shows recent pages when empty', async () => {

@@ -558,13 +558,9 @@ function PaletteBody({ initialQuery, open }: { initialQuery: string; open: boole
         event.preventDefault();
         const openAll = event.metaKey || event.ctrlKey;
         // Typed fast and pressed Enter before this text's results arrived: pick once they do,
-        // rather than whatever the previous keystroke's list had first.
-        if (
-          !openAll &&
-          !commandMode &&
-          text &&
-          (search.status !== 'done' || search.query !== text)
-        ) {
+        // rather than whatever the previous keystroke's list had first. When the list shows this
+        // text's results and only refreshes (the index changed), Enter opens the chosen item.
+        if (!openAll && !commandMode && text && search.query !== text) {
           pendingEnter.current = text;
           break;
         }
