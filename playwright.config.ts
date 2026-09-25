@@ -36,6 +36,31 @@ const useDevServer = process.env.E2E_DEV === '1';
 const baseURL = `http://localhost:${PORT}`;
 const viewport = { width: 1440, height: 900 };
 
+/**
+ * GitHub's Linux runners have no GPU, and the graph view needs WebGL. Chromium draws it with
+ * SwiftShader, set explicitly (Chrome no longer falls back to it on its own); pages keep Chromium's
+ * own software compositing, as on any machine without a GPU (compositing through SwiftShader
+ * halves the frame rate, which the 60 fps specs measure). Headless Firefox has no WebGL on Linux
+ * whatever its prefs, so there it runs headed on the virtual display CI starts (`xvfb-run`), where
+ * Mesa's llvmpipe draws WebGL in software.
+ */
+const linuxCI = Boolean(process.env.CI) && process.platform === 'linux';
+const chromiumGL = linuxCI
+  ? {
+      launchOptions: {
+        args: [
+          '--use-angle=swiftshader',
+          '--enable-unsafe-swiftshader',
+          '--disable-gpu-compositing',
+        ],
+      },
+    }
+  : {};
+const firefoxGL =
+  linuxCI && process.env.DISPLAY
+    ? { headless: false, launchOptions: { firefoxUserPrefs: { 'webgl.force-enabled': true } } }
+    : {};
+
 export default defineConfig({
   testDir: 'e2e',
   testMatch: '**/*.spec.ts',
@@ -63,10 +88,14 @@ export default defineConfig({
     video: 'off',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport, ...chromiumGL } },
     // Firefox runs the same steps two to three times slower on a busy machine (a plugin install
     // flow measured 60 s against Chromium's 25 s), so its budget is doubled. Assertions don't change.
-    { name: 'firefox', timeout: 90_000, use: { ...devices['Desktop Firefox'], viewport } },
+    {
+      name: 'firefox',
+      timeout: 90_000,
+      use: { ...devices['Desktop Firefox'], viewport, ...firefoxGL },
+    },
   ],
   webServer: {
     command: useDevServer
