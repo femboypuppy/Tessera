@@ -22,6 +22,12 @@ There are three ways to run Tessera. Pick one; you can connect them later.
 
 3. Install it and open Tessera. On first launch, choose a folder for your first workspace.
 
+::: info The first launch asks for your permission
+The apps aren't signed with a developer certificate yet, so your system checks with you once. On
+macOS, open Tessera, then choose **Open Anyway** in System Settings → Privacy & Security. On
+Windows, choose **More info** → **Run anyway**.
+:::
+
 The desktop app works fully offline. Each workspace is a folder on your disk holding a SQLite
 database and your attachments. See [The desktop app](./desktop) for workspaces, quick capture and
 updates.
