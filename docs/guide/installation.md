@@ -39,8 +39,9 @@ The Tessera server is one container: it syncs your workspaces and serves the web
 docker run -d --name tessera -p 8787:8787 -v tessera-data:/data ghcr.io/femboypuppy/tessera:latest
 ```
 
-Open `http://localhost:8787` and create the owner account. Your data lives in the
-`tessera-data` volume.
+The server prints a one-time setup code in its log (`docker logs tessera`). Open
+`http://localhost:8787`, choose **Join a workspace on a server**, and create the owner account
+with that code. Your data lives in the `tessera-data` volume.
 
 For anything beyond a quick try, use Docker Compose. It sets a restart policy, keeps the
 configuration in a `.env` file and can add automatic HTTPS:

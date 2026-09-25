@@ -146,7 +146,7 @@ export async function startServer(options: StartServerOptions): Promise<TesseraS
   if (setup.code) {
     logger.warn(
       { setupCode: setup.code },
-      `First run: open ${config.publicUrl ?? url}, choose "Connect to a server" and create the owner account with setup code ${setup.code} (or run "tessera-server create-owner").`,
+      `First run: open ${config.publicUrl ?? url}, choose "Join a workspace on a server" (or, in an open workspace, Settings → Sync & account → "Connect to a server") and create the owner account with setup code ${setup.code}. Or run "tessera-server create-owner".`,
     );
   }
   if (!webDir) logger.warn('The web app is not built; only the API and sync are served.');

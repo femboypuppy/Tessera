@@ -17,8 +17,9 @@ container with one volume: SQLite for documents and accounts, and a folder for a
 docker run -d --name tessera -p 8787:8787 -v tessera-data:/data ghcr.io/femboypuppy/tessera:latest
 ```
 
-Open `http://localhost:8787`. The first visit shows a setup form that creates the **owner**
-account. Prefer the command line? Run:
+The server prints a one-time setup code in its log (`docker logs tessera`). Open
+`http://localhost:8787`, choose **Join a workspace on a server**, and create the **owner** account
+with that code. Prefer the command line? Run:
 
 ```bash
 docker exec -it tessera tessera-server create-owner

@@ -186,11 +186,15 @@ you choose, with quick capture from anywhere. The server is one container with S
 
 ## Quickstart
 
-Run the server, then open `http://localhost:8787` and create the owner account:
+Run the server and read its one-time setup code:
 
 ```bash
 docker run -d --name tessera -p 8787:8787 -v tessera-data:/data ghcr.io/femboypuppy/tessera:latest
+docker logs tessera
 ```
+
+Then open `http://localhost:8787`, choose **Join a workspace on a server**, and create the owner
+account with that code.
 
 Prefer a native app? Download it for macOS, Windows or Linux from the
 [latest release](https://github.com/femboypuppy/Tessera/releases/latest).
