@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { extractPlainText, listProperties, listViews } from '@tessera/core';
 import type { TestAppContext } from '@tessera/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMarkdownImporter } from '../importers';
@@ -110,14 +111,56 @@ describe('demo workspace (examples/demo-workspace)', () => {
     }
   }, 120_000);
 
-  it('opens the welcome page after importing', async () => {
+  it('puts the pages at the top level, welcome first, and opens it', async () => {
     test = await importWorkspace();
     const { ctx, shell } = test;
     await openDemo(ctx);
-    const [root] = ctx.workspace.pages.getSnapshot().children(null);
-    expect(root?.title).toBe('Tessera demo');
-    const welcome = pageAt(ctx, root?.id ?? '', 'Welcome to Tessera');
-    expect(shell.navigations.at(-1)).toEqual({ pageId: welcome.id });
+    const snapshot = ctx.workspace.pages.getSnapshot();
+    const top = snapshot.children(null).map((page) => page.title);
+    expect(top[0]).toBe('Welcome to Tessera');
+    expect(top).toEqual(
+      expect.arrayContaining(['Knowledge garden', 'Meeting notes', 'Projects', 'Reading list']),
+    );
+    // No import page named like the workspace is left, in the tree or in the trash.
+    expect(snapshot.all().map((page) => page.title)).not.toContain('Tessera demo');
+    const welcome = snapshot.children(null)[0];
+    expect(welcome?.icon).toBe('👋');
+    expect(shell.navigations.at(-1)).toEqual({ pageId: welcome?.id });
     expect(shell.toasts).toEqual([]);
+
+    // Projects opens on a board by status, its columns in the order work moves, with meaningful
+    // colors; the imported table and a calendar follow.
+    const projects = snapshot.children(null).find((page) => page.title === 'Projects');
+    const handle = await ctx.loadDatabaseDoc(projects?.id ?? '');
+    try {
+      const views = listViews(handle.doc);
+      expect(views.map((view) => view.type)).toEqual(['board', 'table', 'calendar']);
+      const status = listProperties(handle.doc).find((property) => property.name === 'Status');
+      expect(views[0]?.group?.propertyId).toBe(status?.id);
+      const names = (views[0]?.group?.order ?? []).map(
+        (id) => status?.options?.find((option) => option.id === id)?.name,
+      );
+      expect(names).toEqual(['Not started', 'In progress', 'In review', 'Blocked', 'Done']);
+      const colors = Object.fromEntries(
+        (status?.options ?? []).map((option) => [option.name, option.color]),
+      );
+      expect(colors).toMatchObject({ Done: 'green', Blocked: 'red', 'In progress': 'blue' });
+    } finally {
+      handle.release();
+    }
+  }, 120_000);
+
+  it('never repeats a page title as its first heading', async () => {
+    test = await importWorkspace();
+    const { ctx } = test;
+    await openDemo(ctx);
+    const snapshot = ctx.workspace.pages.getSnapshot();
+    for (const page of snapshot.all().filter((entry) => entry.kind === 'page')) {
+      if (snapshot.isRow(page.id)) continue;
+      const [first] = (await docOf(ctx, page.id)).content ?? [];
+      if (first?.type !== 'heading') continue;
+      const text = extractPlainText({ type: 'doc', content: [first] });
+      expect(text, page.title).not.toBe(page.title);
+    }
   }, 120_000);
 });

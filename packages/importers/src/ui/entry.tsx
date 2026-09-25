@@ -7,7 +7,7 @@ import {
   type PageSectionProps,
   type SettingsPanelContribution,
 } from '@tessera/core';
-import { IconButton, SidebarItem, Spinner } from '@tessera/ui';
+import { IconButton, SidebarItem, Spinner, useIsCompact } from '@tessera/ui';
 import {
   ArrowDownUp,
   Download,
@@ -74,6 +74,9 @@ export function ImportSidebarItem() {
 
 /** The "Export page" button in the top bar of an open page. */
 export function ExportPageAction({ pageId }: PageSectionProps) {
+  // A phone's top bar keeps the page menu, which has "Export…", and leaves this out.
+  const compact = useIsCompact();
+  if (compact) return null;
   return (
     <IconButton
       label={t('exportPage')}
@@ -139,9 +142,19 @@ export function importExportCommands(): Command[] {
   ];
 }
 
-/** First-run buttons: the three imports and the demo workspace. */
+/** First-run buttons: the demo workspace and the three imports. */
 export function importExportOnboardingActions(): OnboardingActionContribution[] {
   return [
+    {
+      id: 'demo-workspace',
+      title: t('onboardingDemoTitle'),
+      description: t('onboardingDemoDescription'),
+      icon: Sparkles,
+      // The quickest way to see what Tessera does, so it comes first.
+      order: 1,
+      workspaceName: t('workspaceDemo'),
+      run: async (ctx) => (await import('./demo')).openDemo(ctx),
+    },
     {
       id: 'import-notion',
       title: t('onboardingNotionTitle'),
@@ -168,15 +181,6 @@ export function importExportOnboardingActions(): OnboardingActionContribution[] 
       order: 12,
       workspaceName: t('workspaceMarkdown'),
       run: () => openImportDialog(IMPORTER_IDS.markdown),
-    },
-    {
-      id: 'demo-workspace',
-      title: t('onboardingDemoTitle'),
-      description: t('onboardingDemoDescription'),
-      icon: Sparkles,
-      order: 20,
-      workspaceName: t('workspaceDemo'),
-      run: async (ctx) => (await import('./demo')).openDemo(ctx),
     },
   ];
 }

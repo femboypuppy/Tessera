@@ -23,6 +23,7 @@ import {
   type TransferIssue,
 } from '@tessera/core';
 import * as Y from 'yjs';
+import { suggestOptionColor } from './option-colors';
 import type { ImportPlan, PlanCellValue, PlanPage } from './plan/types';
 
 /** Transaction origin of everything an import writes. */
@@ -208,7 +209,12 @@ export async function applyPlan(
     for (const property of page.database?.properties ?? []) {
       const definition: AddPropertyInput = { name: property.name, type: property.type };
       if (property.number) definition.number = property.number;
-      if (property.options?.length) definition.options = property.options.map((name) => ({ name }));
+      if (property.options?.length) {
+        definition.options = property.options.map((name) => {
+          const color = suggestOptionColor(name);
+          return color ? { name, color } : { name };
+        });
+      }
       if (property.type === 'relation') {
         const target = property.relationTargetKey
           ? byKey.get(property.relationTargetKey)

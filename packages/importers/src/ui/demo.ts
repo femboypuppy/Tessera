@@ -1,10 +1,15 @@
 import {
+  addView,
   importFileFromBytes,
   importFileFromText,
+  isDocEmpty,
+  listProperties,
+  readDocJSON,
   toError,
   type AppContext,
   type ImportFile,
 } from '@tessera/core';
+import { IMPORT_ORIGIN } from '../apply';
 import { t } from '../i18n';
 import { createMarkdownImporter, IMPORTER_IDS } from '../importers';
 import { mimeTypeOf } from '../paths';
@@ -45,7 +50,88 @@ export async function loadDemoFiles(): Promise<ImportFile[]> {
   return files;
 }
 
-/** Imports the demo workspace into the (new) workspace and opens its first page. */
+const WELCOME = /^(start here|welcome|readme)\b/i;
+
+/** Board columns of the demo's Projects database, in the order work moves through them. */
+const STATUS_ORDER = ['Not started', 'In progress', 'In review', 'Blocked', 'Done'];
+
+/**
+ * CSV files hold rows, not views, so the demo's Projects database gets the views its content is
+ * made for: a board by status first (cards show priority, owner and due date), then the imported
+ * table, then a calendar by due date.
+ */
+async function addDemoViews(ctx: AppContext): Promise<void> {
+  const snapshot = ctx.workspace.pages.getSnapshot();
+  const projects = snapshot
+    .all()
+    .find((page) => page.kind === 'database' && page.title === 'Projects');
+  if (!projects) return;
+  const handle = await ctx.loadDatabaseDoc(projects.id);
+  try {
+    const properties = listProperties(handle.doc);
+    const named = (name: string) => properties.find((property) => property.name === name);
+    const status = named('Status');
+    const due = named('Due');
+    if (status?.type !== 'select') return;
+    const optionIds = STATUS_ORDER.flatMap(
+      (name) => status.options?.find((option) => option.name === name)?.id ?? [],
+    );
+    handle.doc.transact(() => {
+      addView(handle.doc, {
+        name: t('demoBoardView'),
+        type: 'board',
+        position: 'start',
+        group: {
+          propertyId: status.id,
+          order: optionIds,
+          hidden: [],
+          collapsed: [],
+          hideEmptyGroups: true,
+          dateBucket: 'month',
+        },
+        properties: ['Priority', 'Owner', 'Due'].flatMap((name) => {
+          const property = named(name);
+          return property ? [{ propertyId: property.id, visible: true }] : [];
+        }),
+      });
+      if (due?.type === 'date') {
+        addView(handle.doc, {
+          name: t('demoCalendarView'),
+          type: 'calendar',
+          calendar: { datePropertyId: due.id },
+        });
+      }
+    }, IMPORT_ORIGIN);
+  } finally {
+    handle.release();
+  }
+}
+
+/**
+ * The demo is the whole workspace, so its pages sit at the top level rather than under an import
+ * page named like the workspace, with the welcome page first. The import page goes away when
+ * nothing else is on it. Returns the page to open.
+ */
+async function flattenDemo(ctx: AppContext, rootPageId: string): Promise<string> {
+  const children = ctx.workspace.pages.getSnapshot().children(rootPageId);
+  const welcome = children.find((page) => WELCOME.test(page.title));
+  if (!welcome) return rootPageId;
+  const root = await ctx.loadPageDoc(rootPageId);
+  let rootIsEmpty: boolean;
+  try {
+    rootIsEmpty = isDocEmpty(readDocJSON(root.doc));
+  } finally {
+    root.release();
+  }
+  if (!rootIsEmpty) return welcome.id;
+  for (const page of [welcome, ...children.filter((child) => child !== welcome)]) {
+    ctx.workspace.movePage(page.id, { parentId: null });
+  }
+  await ctx.workspace.deletePagePermanently(rootPageId);
+  return welcome.id;
+}
+
+/** Imports the demo workspace into the (new) workspace and opens its welcome page. */
 export async function openDemo(ctx: AppContext): Promise<void> {
   try {
     const files = await loadDemoFiles();
@@ -58,13 +144,8 @@ export async function openDemo(ctx: AppContext): Promise<void> {
     );
     const rootPageId = report.rootPageId;
     if (!rootPageId) throw new Error(t('demoFailed'));
-    const snapshot = ctx.workspace.pages.getSnapshot();
-    // Open the welcome page, else the demo's root.
-    const start =
-      snapshot
-        .children(rootPageId)
-        .find((page) => /^(start here|welcome|readme)\b/i.test(page.title)) ?? null;
-    ctx.navigate(start?.id ?? rootPageId);
+    await addDemoViews(ctx);
+    ctx.navigate(await flattenDemo(ctx, rootPageId));
   } catch (error) {
     ctx.toast({ title: t('demoFailed'), description: toError(error).message, variant: 'error' });
   }

@@ -48,10 +48,10 @@ describe('import-export feature', () => {
         'import-export',
       ]);
       expect(importExportFeature.onboardingActions?.map((action) => action.title)).toEqual([
+        'Open the demo workspace',
         'Import from Notion',
         'Import from Obsidian',
         'Import markdown',
-        'Open the demo workspace',
       ]);
     } finally {
       await dispose();
