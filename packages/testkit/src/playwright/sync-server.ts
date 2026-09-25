@@ -24,6 +24,12 @@ export interface SyncServer {
   logs(): string;
   /** Creates the owner account with the server's `create-owner` command. */
   createOwner(account: { email: string; name: string; password: string }): Promise<void>;
+  /**
+   * Kills the process at once (SIGKILL: no shutdown, like a crash or a pulled plug) and keeps
+   * its data. `startSyncServer({ port, dataDir })` brings it back with the same data.
+   */
+  kill(): Promise<void>;
+  /** Stops the server and deletes its data (unless the caller passed `dataDir`). */
   stop(): Promise<void>;
 }
 
@@ -75,12 +81,22 @@ function externalServer(url: string, setupCode: string): SyncServer {
           `POST ${url}/api/auth/setup answered ${response.status}: ${await response.text()}`,
         );
     },
+    async kill() {
+      throw new Error('A server started outside the tests cannot be killed by them');
+    },
     async stop() {},
   };
 }
 
 export async function startSyncServer(
-  options: { port?: number; corsOrigins?: string[]; webDir?: string; timeoutMs?: number } = {},
+  options: {
+    port?: number;
+    corsOrigins?: string[];
+    webDir?: string;
+    timeoutMs?: number;
+    /** Data from an earlier server (after `kill()`); the caller deletes it. */
+    dataDir?: string;
+  } = {},
 ): Promise<SyncServer> {
   const external = externalServerUrl();
   if (external) return externalServer(external, process.env.TESSERA_E2E_SETUP_CODE ?? '');
@@ -88,7 +104,8 @@ export async function startSyncServer(
   // `localhost`, like the app under test: the same site, so the browser sends the server's
   // SameSite=Lax session cookie with the app's requests (127.0.0.1 would be another site).
   const url = `http://localhost:${port}`;
-  const dataDir = mkdtempSync(path.join(tmpdir(), 'tessera-server-'));
+  const ownsData = !options.dataDir;
+  const dataDir = options.dataDir ?? mkdtempSync(path.join(tmpdir(), 'tessera-server-'));
   const webDir = options.webDir ?? path.join(REPO, 'apps', 'web', 'dist');
   const env: NodeJS.ProcessEnv = {
     ...process.env,
@@ -150,13 +167,19 @@ export async function startSyncServer(
       });
       if (code !== 0) throw new Error(`create-owner failed (${String(code)}):\n${result}`);
     },
+    async kill() {
+      if (exited) return;
+      const gone = new Promise((resolve) => child.once('exit', resolve));
+      child.kill('SIGKILL');
+      await Promise.race([gone, new Promise((resolve) => setTimeout(resolve, 10_000))]);
+    },
     async stop() {
       if (!exited) {
         const gone = new Promise((resolve) => child.once('exit', resolve));
         child.kill();
         await Promise.race([gone, new Promise((resolve) => setTimeout(resolve, 10_000))]);
       }
-      rmSync(dataDir, { recursive: true, force: true });
+      if (ownsData) rmSync(dataDir, { recursive: true, force: true });
     },
   };
 }
