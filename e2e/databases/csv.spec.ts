@@ -78,7 +78,11 @@ test('exports the current view to CSV, matching what the table shows', async ({ 
   const csv = parseCsv(await readFile(path, 'utf8'));
 
   const [head, ...rows] = csv;
-  const headers = await grid(page).getByRole('columnheader').allInnerTexts();
+  // The property columns' headers (the last header holds "Add a property").
+  const headers = await grid(page)
+    .getByRole('columnheader')
+    .filter({ hasNot: page.getByRole('button', { name: 'Add a property' }) })
+    .allInnerTexts();
   expect(head).toEqual(headers.map((text) => text.trim()));
   expect(rows).toHaveLength(20);
 
