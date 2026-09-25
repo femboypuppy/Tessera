@@ -483,6 +483,9 @@ export default function GraphView() {
           onNodeClick={open}
           onError={() => setFailed(true)}
           labelThreshold={graph.order > 1500 ? 9 : 8}
+          // Room for the search, filters, legend and zoom controls over the canvas, and for
+          // labels right of the outermost nodes: the fitted graph stays clear of all of them.
+          padding={96}
           large={graph.order > 3000 || graph.size > 6000}
           label={`${t('graphTitle')}: ${t('graphStats', { nodes: graph.order, edges: graph.size })}`}
           describedBy={hintId}
