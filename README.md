@@ -40,9 +40,8 @@
   <a href="https://github.com/femboypuppy/Tessera/discussions"><strong>Discussions</strong></a>
 </p>
 
-<!-- PLACEHOLDER: assets/demo.gif is a "coming soon" frame until the polish phase records the demo (agents/12-polish.md). -->
 <p align="center">
-  <img src="assets/demo.gif" alt="Tessera demo: writing with the slash menu, linking pages, dragging a card on a board and exploring the graph (recording coming soon)" width="800">
+  <img src="assets/demo.gif" alt="A 20-second tour of Tessera: a new page written with a [[link]] and the slash menu, a card dragged across a project board, and the graph flying to the linked page" width="800">
 </p>
 
 - **It's yours.** Your device holds the real data. Tessera works fully offline; a server is optional.

@@ -20,6 +20,7 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium firefox",
     "screenshots": "playwright test -c playwright.screenshots.config.ts",
+    "record-demo": "tsx scripts/record-demo/record.ts",
     "typecheck": "pnpm -r --workspace-concurrency=4 typecheck && tsc --noEmit -p tsconfig.json",
     "lint": "eslint . --max-warnings 0 && prettier --check .",
     "lint:fix": "eslint . --fix && prettier --write .",

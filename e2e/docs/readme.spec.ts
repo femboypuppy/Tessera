@@ -122,7 +122,8 @@ test('README top: centered logo, tagline, badges, quick links and the demo, kept
     expect(top).toContain(`<strong>${link}</strong></a>`);
   }
   expect(top).toMatch(/<p align="center">\s*<img src="assets\/demo\.gif"[^>]*width="800"/);
-  expect(top).toContain('PLACEHOLDER');
+  // The real recording (scripts/record-demo), no placeholder left.
+  expect(top).not.toMatch(/placeholder|coming soon/i);
   // Scannable: the prose above the features stays short.
   const prose = top
     .replace(/<[^>]+>/g, '')
@@ -131,9 +132,18 @@ test('README top: centered logo, tagline, badges, quick links and the demo, kept
   expect(prose.length).toBeLessThanOrEqual(30);
 });
 
-test('the demo placeholder is a real GIF', () => {
-  const header = readFileSync(repoPath('assets/demo.gif')).subarray(0, 6).toString('ascii');
-  expect(['GIF87a', 'GIF89a']).toContain(header);
+test('the demo is an animated GIF under 8 MB, with an MP4 of it', () => {
+  const gif = readFileSync(repoPath('assets/demo.gif'));
+  expect(['GIF87a', 'GIF89a']).toContain(gif.subarray(0, 6).toString('ascii'));
+  expect(gif.length).toBeLessThanOrEqual(8 * 1024 * 1024);
+  // Each frame starts with a graphic control extension (0x21 0xF9 0x04).
+  let frames = 0;
+  for (let index = gif.indexOf(0x21); index >= 0; index = gif.indexOf(0x21, index + 1)) {
+    if (gif[index + 1] === 0xf9 && gif[index + 2] === 0x04) frames += 1;
+  }
+  expect(frames).toBeGreaterThan(100);
+  const mp4 = readFileSync(repoPath('assets/demo.mp4'));
+  expect(mp4.subarray(4, 8).toString('ascii')).toBe('ftyp');
 });
 
 test('README: table of contents and back-to-top links', () => {
