@@ -76,15 +76,15 @@
   <tr>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/editor/rich-page-dark.png">
-        <img src="assets/screenshots/editor/rich-page-light.png" alt="A page with headings, a callout, a code block, a table, a toggle and a task list" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/write-dark.png">
+        <img src="assets/screenshots/showcase/write-light.png" alt="A note about Apollo 11 with a table, links to other pages and a list" width="420">
       </picture>
       <p align="center"><strong>Write in blocks</strong><br><sub>Slash menu, markdown shortcuts, tables, callouts, toggles, code and embeds.</sub></p>
     </td>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/databases/board-dark.png">
-        <img src="assets/screenshots/databases/board-light.png" alt="A project board grouped by status" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/board-dark.png">
+        <img src="assets/screenshots/showcase/board-light.png" alt="The demo's project board, grouped by status" width="420">
       </picture>
       <p align="center"><strong>Databases with real views</strong><br><sub>Table, board, calendar, gallery and list views over typed properties.</sub></p>
     </td>
@@ -92,15 +92,15 @@
   <tr>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/graph-dark.png">
-        <img src="assets/screenshots/search/graph-light.png" alt="The graph view of a few hundred linked pages, colored by tag" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/graph-dark.png">
+        <img src="assets/screenshots/showcase/graph-light.png" alt="The graph of the demo workspace, colored by tag" width="420">
       </picture>
       <p align="center"><strong>Links and a graph</strong><br><sub>Backlinks, unlinked mentions and a graph of everything you know.</sub></p>
     </td>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/search/palette-dark.png">
-        <img src="assets/screenshots/search/palette-light.png" alt="The command palette searching pages and commands" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/palette-dark.png">
+        <img src="assets/screenshots/showcase/palette-light.png" alt="The command palette searching for “apollo”, with a preview of the result" width="420">
       </picture>
       <p align="center"><strong>Find anything</strong><br><sub>One palette for pages, full-text results, tags and commands.</sub></p>
     </td>
@@ -108,15 +108,15 @@
   <tr>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/sync/presence-dark.png">
-        <img src="assets/screenshots/sync/presence-light.png" alt="Two people editing the same page" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/collaboration-dark.png">
+        <img src="assets/screenshots/showcase/collaboration-light.png" alt="A page with another person's live caret, labeled with their name" width="420">
       </picture>
       <p align="center"><strong>Real-time collaboration</strong><br><sub>Live cursors and presence on your own server, and it all works offline.</sub></p>
     </td>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/plugins/mermaid-block-dark.png">
-        <img src="assets/screenshots/plugins/mermaid-block-light.png" alt="A Mermaid diagram block rendered by a plugin" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/plugins-dark.png">
+        <img src="assets/screenshots/showcase/plugins-light.png" alt="A Mermaid diagram block rendered by a plugin" width="420">
       </picture>
       <p align="center"><strong>Sandboxed plugins</strong><br><sub>Commands, panels and custom blocks with permissions you approve.</sub></p>
     </td>
@@ -124,8 +124,8 @@
   <tr>
     <td width="50%" valign="top">
       <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/importers/import-report-dark.png">
-        <img src="assets/screenshots/importers/import-report-light.png" alt="The import report after importing an Obsidian vault" width="420">
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/showcase/import-dark.png">
+        <img src="assets/screenshots/showcase/import-light.png" alt="The report after importing an Obsidian vault" width="420">
       </picture>
       <p align="center"><strong>Move in, move out</strong><br><sub>Import Notion and Obsidian; export markdown, HTML, PDF or a backup.</sub></p>
     </td>
