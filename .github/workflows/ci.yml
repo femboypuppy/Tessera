@@ -244,9 +244,17 @@ jobs:
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - name: Playwright
         # A virtual display: the graph specs run Firefox headed there to get WebGL (e2e/support/webgl.ts).
-        run: xvfb-run -a pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2 --reporter=github,blob
+        run: xvfb-run -a pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2 --grep-invert @perf --reporter=github,blob
         env:
           PLAYWRIGHT_BLOB_OUTPUT_FILE: blob-report/${{ matrix.browser }}-${{ matrix.shard }}.zip
+      - name: Playwright, timed specs alone
+        # The @perf specs time frames and keystrokes against fixed budgets. Next to a second browser
+        # on the runner's four cores they measured the runner (the same table scrolled at 60 fps or
+        # 30 fps from run to run), so they run after the rest, one at a time.
+        if: ${{ success() || failure() }}
+        run: xvfb-run -a pnpm test:e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/2 --grep @perf --workers=1 --pass-with-no-tests --reporter=github,blob
+        env:
+          PLAYWRIGHT_BLOB_OUTPUT_FILE: blob-report/${{ matrix.browser }}-${{ matrix.shard }}-perf.zip
       - name: Upload the blob report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

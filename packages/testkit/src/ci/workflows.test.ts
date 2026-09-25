@@ -166,6 +166,19 @@ describe('ci.yml', () => {
     expect(run).toContain('--shard=${{ matrix.shard }}/2');
   });
 
+  it('times the @perf specs alone, after the others', () => {
+    const e2e = steps(ci.jobs.e2e ?? {});
+    const main = e2e.find((step) => step.name === 'Playwright')?.run ?? '';
+    const timed = e2e.find((step) => step.name === 'Playwright, timed specs alone')?.run ?? '';
+    expect(main).toContain('--grep-invert @perf');
+    expect(timed).toContain('--grep @perf');
+    expect(timed).toContain('--workers=1');
+    expect(timed).toContain('--project=${{ matrix.browser }}');
+    expect(e2e.findIndex((step) => step.run === timed)).toBeGreaterThan(
+      e2e.findIndex((step) => step.run === main),
+    );
+  });
+
   it('calls the same root scripts contributors run', () => {
     const runs = Object.values(ci.jobs).flatMap((job) => steps(job).map((step) => step.run ?? ''));
     for (const command of [

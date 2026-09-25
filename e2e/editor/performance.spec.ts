@@ -358,7 +358,7 @@ async function openLongPage(page: Page): Promise<void> {
   await expect.poll(async () => (await outline(page)).length, { timeout: 30_000 }).toBe(BLOCKS);
 }
 
-test.describe('2,000-block page', () => {
+test.describe('2,000-block page', { tag: '@perf' }, () => {
   test.describe.configure({ timeout: 120_000 });
 
   test.beforeEach(async ({ page }) => {

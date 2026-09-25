@@ -62,6 +62,7 @@ Every agent also owns `HANDOFF/<area>.md`, `assets/screenshots/<area>/` and `e2e
 - `pnpm dev` runs the web app (http://localhost:5173) and the server (port 8787, data in `apps/server/data`) together; the app reaches the server through Vite's `/api` and `/sync` proxy, so "Connect to a server" finds it on the app's own origin. `pnpm --filter @tessera/web dev` runs the app alone.
 - Run one package: `pnpm --filter @tessera/<name> <script>` (`test`, `typecheck`, `lint`, `build`). The plugin scaffolder's name is `create-tessera-plugin`.
 - Run only your e2e specs: `pnpm test:e2e e2e/<area>`. First time on a machine: `pnpm test:e2e:install`. `E2E_DEV=1` tests against the dev server instead of a production build.
+- Specs that time frames or keystrokes are tagged `@perf` (`{ tag: '@perf' }`) and run alone: `pnpm test:e2e --grep @perf --workers=1` (CI runs them after the rest, one at a time).
 - Screenshots: `pnpm screenshots e2e/<area>` runs your `e2e/<area>/*.screenshots.ts` files (SPEC.md, section 9.2).
 - `pnpm lint:fix` applies ESLint and Prettier fixes.
 

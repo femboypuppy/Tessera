@@ -58,7 +58,7 @@ function percentile(values: readonly number[], p: number): number {
   return sorted[Math.min(sorted.length - 1, Math.floor((sorted.length * p) / 100))] ?? 0;
 }
 
-test.describe('10,000-row table', () => {
+test.describe('10,000-row table', { tag: '@perf' }, () => {
   test.skip(
     ({ browserName }) => browserName !== 'chromium',
     'Frame timing is measured in Chromium only',
