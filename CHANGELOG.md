@@ -85,6 +85,9 @@ Everything works offline; the server only syncs.
 
 ### Bug fixes
 
+- **docs:** vitepress dev renders again (pre-bundle mermaid) ([`0ef3004`](https://github.com/femboypuppy/Tessera/commit/0ef3004af4ad1df47d02772ba4e391b07ccd4a08))
+- **docs:** move the docs site to Vite 6.4.3 and esbuild 0.25 ([`11aeb7a`](https://github.com/femboypuppy/Tessera/commit/11aeb7a9bd9f2a329cfadce04f308ae6b91da59f))
+- **release:** the notes put @-words in code instead of mentioning users ([`1ed1f04`](https://github.com/femboypuppy/Tessera/commit/1ed1f04a6aaee8cf99d3ba80a9ea4abc7bc162a6))
 - **web:** answer /robots.txt with rules instead of the app's page ([`f86990b`](https://github.com/femboypuppy/Tessera/commit/f86990b8e0cebf52cce84c671443f44be556c7f3))
 - **ui:** reduced motion turns transitions off instead of shortening them ([`ced5e6a`](https://github.com/femboypuppy/Tessera/commit/ced5e6a86d9f04ae2a2c86ac8f5407992d59b9aa))
 - **search:** graph labels never run into each other ([`7326e9b`](https://github.com/femboypuppy/Tessera/commit/7326e9bb21529fa0210f19206aec2c2a085635a9))
@@ -136,6 +139,10 @@ Everything works offline; the server only syncs.
 
 ### Documentation
 
+- how to allow the unsigned desktop apps on their first launch ([`e0c5737`](https://github.com/femboypuppy/Tessera/commit/e0c57374a40d8e5d22e07d55a5818d588b523923))
+- the issues are filed (#1–#55), so ISSUES_TO_FILE.md goes ([`1ce757f`](https://github.com/femboypuppy/Tessera/commit/1ce757f4d3d536b8db2bce1218c6cf86bfab0bea))
+- **polish:** handoff with the first-run audit, checks, release checklist and notes ([`c0d1fc0`](https://github.com/femboypuppy/Tessera/commit/c0d1fc0927e115728e478693b495aa3e2875752a))
+- the changelog for 0.1.0, highlights first ([`8f9ef47`](https://github.com/femboypuppy/Tessera/commit/8f9ef4743bce890a0990c732fc914ccdf5a32245))
 - **demo:** record the README demo again with the final graph ([`edec8ef`](https://github.com/femboypuppy/Tessera/commit/edec8ef77fa95a5cd43fed16040c4c295c3bab6d))
 - name the demo button as the app does, and retake the docs site shots ([`5fc5feb`](https://github.com/femboypuppy/Tessera/commit/5fc5febcf7e7cc4f4241106f591ef191adb1f239))
 - **screenshots:** retake every screenshot, and the first-run audit ([`49fe4a5`](https://github.com/femboypuppy/Tessera/commit/49fe4a5a97997bdea87c9d1fbb1a5f09aa7245f0))
@@ -184,8 +191,9 @@ Everything works offline; the server only syncs.
 - SPEC, handoff notes for every agent, and accurate commands ([`ff8a7bf`](https://github.com/femboypuppy/Tessera/commit/ff8a7bf224af15a5286b54000620711840640b0e))
 
 <details>
-<summary><strong>Maintenance</strong> (48)</summary>
+<summary><strong>Maintenance</strong> (49)</summary>
 
+- **desktop:** pass only the signing secrets that are set, and ad-hoc sign macOS ([`b14add9`](https://github.com/femboypuppy/Tessera/commit/b14add9123757778a7d72d3a93561cbddbb54e71))
 - **desktop:** wait for the picker's lazy chunk under a full test run ([`e3f2475`](https://github.com/femboypuppy/Tessera/commit/e3f2475271f532b31a29bf2641c9aa5012b6dff8))
 - **polish:** type after a link the way people do, and no hover in the last shot ([`11e0c6f`](https://github.com/femboypuppy/Tessera/commit/11e0c6f4b6b3fd432e2f057b1ad837a599bf9d5f))
 - **importers:** give the demo import a minute in the screenshots ([`842965b`](https://github.com/femboypuppy/Tessera/commit/842965b8e738f0ec39a560bbacff129de793fb6f))
@@ -198,7 +206,7 @@ Everything works offline; the server only syncs.
 - **testkit:** kill the test server and bring it back with its data ([`446492e`](https://github.com/femboypuppy/Tessera/commit/446492ebfac2964fd0f9c5ccbcd6afca8e6f3206))
 - **ui:** motion takes 150 to 200 ms and eases out ([`06e428f`](https://github.com/femboypuppy/Tessera/commit/06e428fad8cd404e4c79bae5e3b885da80641726))
 - **e2e:** keep Firefox from swapping browsing contexts for COOP ([`d5346c0`](https://github.com/femboypuppy/Tessera/commit/d5346c0a517f3db3df2d874773f31741a2bdb56d))
-- **e2e:** time the @perf specs alone, after the rest ([`888e253`](https://github.com/femboypuppy/Tessera/commit/888e253b7bfe0668c83bbd8cae613f101841d1d0))
+- **e2e:** time the `@perf` specs alone, after the rest ([`888e253`](https://github.com/femboypuppy/Tessera/commit/888e253b7bfe0668c83bbd8cae613f101841d1d0))
 - **e2e:** let Chromium fall back to SwiftShader on its own ([`6957c1d`](https://github.com/femboypuppy/Tessera/commit/6957c1daaad9f2e7e1aae63ff9200692f2a0fdb9))
 - **e2e:** software WebGL only for the specs that draw the graph ([`621c183`](https://github.com/femboypuppy/Tessera/commit/621c1835ed97b9f58cd8f3fe228cd4ec69522869))
 - **e2e:** draw WebGL in software on the Linux runners ([`7c4c2d9`](https://github.com/femboypuppy/Tessera/commit/7c4c2d907dc586e88e4275f5127b09022ffb3eac))

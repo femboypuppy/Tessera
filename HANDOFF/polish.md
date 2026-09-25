@@ -253,7 +253,12 @@ band it held from minute 4; DOM nodes 780 → 705 and listeners 666 → 654. No 
      them the release has no update bundles, and the apps don't auto-update.
   7. [x] Create the labels (the `area:` labels of `.github/labeler.yml` and the topic labels).
   8. [ ] `git tag v0.1.0 && git push origin v0.1.0`, watch the Release workflow, check the draft's
-     files, and let it publish.
+     files, and let it publish. The first tag (at `c0d1fc0`) built Linux, Windows and the Docker
+     image (amd64 and arm64: `0.1.0`, `0.1`, `latest`), but both macOS builds failed: unset
+     secrets arrive as empty strings, and the Tauri CLI took the empty `APPLE_CERTIFICATE` for a
+     certificate to import. Fixed in `b14add9` (only set secrets reach the build; macOS is
+     ad-hoc signed); a manual `desktop.yml` run then built all four targets. Delete the draft and
+     the tag, then tag again.
   9. [x] File the issues (#1–#55); `ISSUES_TO_FILE.md` is deleted.
 
 ### GitHub Release notes (draft)
@@ -363,6 +368,14 @@ Nothing new plugs in: the fixes live in the packages and the shell they belong t
   a newcomer sees the same space-museum team throughout the README and the GIF.
 - **`robots.txt` allows crawling**, as the missing file effectively did; a self-hoster who wants
   the start screen out of search results changes one line (the file says how).
+- **The docs site runs on Vite 6.4.3 through a pnpm override** (`docs/pnpm-workspace.yaml`):
+  VitePress 1.6.4, the latest stable, asks for Vite 5, whose dev-server advisories are fixed only
+  in Vite 6.4.3 and esbuild 0.25. VitePress 2 is still an alpha (on Vite 8); drop the override
+  for it once it's stable.
+- **The `glib` 0.18 alert is dismissed as "vulnerable code not used"**: every crate of Tauri's
+  Linux webview stack, up to the latest releases (webkit2gtk 2.0.2, wry 0.57, tao 0.37,
+  tauri-runtime-wry 2.11.4), requires `glib ^0.18`, and nothing in the tree calls
+  `VariantStrIter`, the unsound API. Revisit when webkit2gtk moves to a newer gtk-rs.
 - **Lighthouse on Windows**: chrome-launcher can't delete its profile folder while Chrome holds it
   (EPERM), so the local run collects from a Chromium started with `--remote-debugging-port=9222`
   (`--collect.settings.port=9222`, `CHROME_PATH` set to Playwright's Chromium). CI (Linux) runs
