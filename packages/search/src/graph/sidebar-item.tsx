@@ -3,7 +3,7 @@ import { useAppContext, useEvent } from '@tessera/core/react';
 import { SidebarItem } from '@tessera/ui';
 import { Network } from 'lucide-react';
 import { useState } from 'react';
-import { t } from '../i18n';
+import { t } from '../i18n/registration';
 import { GRAPH_PATH, openGraph } from './location';
 
 /** "Graph view" in the sidebar (a `sidebarSections` entry; light, part of the startup bundle). */

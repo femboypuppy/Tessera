@@ -5,7 +5,7 @@ import {
   LocalGraphPanel,
   openGraph,
 } from '@tessera/search/graph';
-import { t } from '@tessera/search/i18n';
+import { t } from '@tessera/search/i18n/registration';
 import { Network, Waypoints } from 'lucide-react';
 
 /**

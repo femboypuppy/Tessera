@@ -1,6 +1,6 @@
 import { defineFeature } from '@tessera/core';
 import { activatePlugins, PluginBlockEntry, PluginsSettingsEntry } from '@tessera/plugins/entry';
-import { t } from '@tessera/plugins/i18n';
+import { t } from '@tessera/plugins/i18n/registration';
 import { Puzzle } from 'lucide-react';
 
 /**

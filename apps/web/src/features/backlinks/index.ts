@@ -4,7 +4,7 @@ import {
   BacklinksPanel,
   BacklinksSettingsHost,
 } from '@tessera/search/backlinks';
-import { t } from '@tessera/search/i18n';
+import { t } from '@tessera/search/i18n/registration';
 import { Link2 } from 'lucide-react';
 
 /**

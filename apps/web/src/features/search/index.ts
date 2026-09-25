@@ -1,5 +1,5 @@
 import { COMMANDS, defineFeature, defineService, SERVICE_PRIORITY } from '@tessera/core';
-import { t } from '@tessera/search/i18n';
+import { t } from '@tessera/search/i18n/registration';
 import { openSearch, PaletteHost, paletteStore, pushRecent } from '@tessera/search/palette-host';
 import { RefreshCw, Search, TextSearch } from 'lucide-react';
 import { lazy } from 'react';

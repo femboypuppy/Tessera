@@ -15,6 +15,7 @@
     "./web-embed": "./src/embeds/WebEmbed.tsx",
     "./commands": "./src/commands.ts",
     "./i18n": "./src/i18n/index.ts",
+    "./i18n/registration": "./src/i18n/registration.ts",
     "./styles.css": "./src/styles/editor.css"
   },
   "scripts": {

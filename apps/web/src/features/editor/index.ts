@@ -1,5 +1,5 @@
 import { defineFeature, type AppContext, type Command } from '@tessera/core';
-import { t } from '@tessera/editor/i18n';
+import { t } from '@tessera/editor/i18n/registration';
 import { Clipboard, Hash, Maximize2, Type } from 'lucide-react';
 import { lazy } from 'react';
 

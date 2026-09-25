@@ -29,6 +29,11 @@ export {
 export * from './components/overlays';
 export * from './components/menus';
 export * from './components/forms';
+export * from './components/radio';
+export * from './components/scroll-area';
+export * from './components/select';
+export * from './components/tabs';
+export * from './components/toggles';
 export * from './components/notify';
 export * from './components/error-boundary';
 export * from './components/layout';

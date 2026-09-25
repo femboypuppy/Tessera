@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./entry": "./src/entry.tsx",
     "./i18n": "./src/i18n/index.ts",
+    "./i18n/registration": "./src/i18n/registration.ts",
     "./host": "./src/host/index.ts"
   },
   "scripts": {

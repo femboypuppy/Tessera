@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./i18n": "./src/i18n/index.ts",
+    "./i18n/registration": "./src/i18n/registration.ts",
     "./services": "./src/services/index.ts",
     "./palette-host": "./src/palette/index.ts",
     "./search-page": "./src/search-page/search-page.tsx",
