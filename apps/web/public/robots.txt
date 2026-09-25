@@ -1,0 +1,5 @@
+# Without this file the app answered /robots.txt with its own HTML page. Pages live on each
+# device and behind sign-in on a sync server, so crawlers only ever see the start screen. To keep
+# a self-hosted server out of search results altogether, change the rule to "Disallow: /".
+User-agent: *
+Allow: /
