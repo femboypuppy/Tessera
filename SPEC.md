@@ -794,8 +794,11 @@ await dispose();
   accent, danger, success, warning, info, ten tag colors, radii, shadows, type scale, motion
   durations and easing, layout sizes (`--tess-sidebar-width`, `--tess-topbar-height`,
   `--tess-panel-width`, `--tess-page-width`, `--tess-page-padding`) and z-indexes. Motion uses
-  ease-out at 120, 180 or 260 ms (`duration-fast`, `-normal`, `-slow`) and turns off under
-  `prefers-reduced-motion`.
+  ease-out at 150, 180 or 200 ms (`duration-fast`, `-normal`, `-slow`); a bare `transition-*`
+  utility defaults to 150 ms ease-out, and all of it turns off under `prefers-reduced-motion`.
+  Text meets WCAG AA (4.5:1) on every surface in both themes, including selected and highlighted
+  rows and inline code (`--tess-code-fg`); `e2e/polish/design.spec.ts` checks every screen with
+  axe.
 - **Tailwind v4.** `@tessera/ui/styles.css` maps tokens to utilities: `bg-bg`, `bg-bg-subtle`,
   `bg-surface`, `bg-surface-raised`, `bg-hover`, `bg-active`, `text-fg`, `text-fg-muted`,
   `text-fg-subtle`, `border-border`, `bg-accent`, `text-accent-text`, `bg-danger`,
