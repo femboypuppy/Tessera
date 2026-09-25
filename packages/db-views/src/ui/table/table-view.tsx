@@ -25,6 +25,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -67,6 +68,7 @@ import {
   GUTTER_WIDTH,
   HEADER_HEIGHT,
   ROW_HEIGHT,
+  STICKY,
   defaultColumnWidth,
 } from './layout';
 import {
@@ -190,6 +192,19 @@ export function TableView({
     () => new Map(columns.map((column, index) => [column.property.id, index])),
     [columns],
   );
+  // Whether the table is wider than its scroller: only then do frozen columns stick (`STICKY`).
+  const [scrollsX, setScrollsX] = useState(true);
+  useLayoutEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return undefined;
+    const measure = () =>
+      setScrollsX(element.clientWidth === 0 || totalWidth > element.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [totalWidth]);
 
   // Rows and groups -----------------------------------------------------------------------------
   const groupProperty = result.groups
@@ -857,6 +872,7 @@ export function TableView({
           aria-readonly={readOnly || undefined}
           aria-activedescendant={activeDescendant}
           aria-describedby={`${gridId}-hint`}
+          data-scrolls-x={scrollsX || undefined}
           onKeyDown={onKeyDown}
           onCopy={onCopy}
           onCut={onCut}
@@ -882,7 +898,7 @@ export function TableView({
               style={{ width: totalWidth, height: HEADER_HEIGHT }}
             >
               <div
-                className="sticky left-0 z-[4] shrink-0 border-b border-border bg-bg"
+                className={cn('left-0 z-[4] shrink-0 border-b border-border bg-bg', STICKY)}
                 style={{ width: GUTTER_WIDTH }}
               />
               <SortableContext
@@ -1002,7 +1018,10 @@ export function TableView({
                 <button
                   type="button"
                   onClick={() => void createRow({ after: navRows[rowCount - 1]?.row.id ?? null })}
-                  className="sticky left-0 flex h-full items-center gap-1.5 pr-3 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
+                  className={cn(
+                    'left-0 flex h-full items-center gap-1.5 pr-3 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
+                    STICKY,
+                  )}
                   style={{ paddingLeft: GUTTER_WIDTH + 8 }}
                 >
                   <Plus aria-hidden="true" className="size-4" />

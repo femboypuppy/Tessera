@@ -24,7 +24,7 @@ import { formatDateValue, formatNumber } from '../../query/format';
 import { SUMMARY_KINDS_BY_TYPE, computeSummary, type SummaryResult } from '../../query/summary';
 import type { QueryContext } from '../../query/types';
 import { runAction } from '../hooks';
-import { FOOTER_HEIGHT, GUTTER_WIDTH } from './layout';
+import { FOOTER_HEIGHT, FROZEN, GUTTER_WIDTH, STICKY, frozenStyle } from './layout';
 import type { TableColumn } from './table-row';
 
 /** A duration in days, weeks, months or years, whichever reads best. */
@@ -121,7 +121,7 @@ export function SummaryRow({
       className="sticky bottom-0 z-[4] flex border-t border-border bg-bg"
       style={{ width: totalWidth, height: FOOTER_HEIGHT }}
     >
-      <div className="sticky left-0 z-[2] shrink-0 bg-bg" style={{ width: GUTTER_WIDTH }} />
+      <div className={cn('left-0 z-[2] shrink-0 bg-bg', STICKY)} style={{ width: GUTTER_WIDTH }} />
       {columns.map((column, col) => {
         const kind = summaries[column.property.id] ?? 'none';
         const value = values[col] ?? '';
@@ -135,14 +135,13 @@ export function SummaryRow({
             data-active={activeCol === col || undefined}
             className={cn(
               'group/summary flex shrink-0 items-center justify-end bg-bg',
+              column.stickyLeft !== null && FROZEN,
               activeCol === col &&
                 'outline-2 -outline-offset-2 outline-transparent group-focus-within/grid:outline-accent',
             )}
             style={{
               width: column.width,
-              ...(column.stickyLeft !== null
-                ? { position: 'sticky', left: column.stickyLeft, zIndex: 1 }
-                : {}),
+              ...frozenStyle(column.stickyLeft, 1),
             }}
           >
             <DropdownMenu

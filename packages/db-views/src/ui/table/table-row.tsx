@@ -16,7 +16,7 @@ import {
   type CellEditorProps,
   type EditMove,
 } from '../cells/editors';
-import { GUTTER_WIDTH } from './layout';
+import { FROZEN, GUTTER_WIDTH, STICKY, frozenStyle } from './layout';
 
 /** A visible column with its geometry. */
 export interface TableColumn {
@@ -134,7 +134,7 @@ export const TableRow = memo(function TableRow({
       }}
     >
       <div
-        className="sticky left-0 z-[2] flex shrink-0 items-center justify-center bg-bg"
+        className={cn('left-0 z-[2] flex shrink-0 items-center justify-center bg-bg', STICKY)}
         style={{ width: GUTTER_WIDTH }}
       >
         {!readOnly && hovered ? (
@@ -200,12 +200,11 @@ export const TableRow = memo(function TableRow({
             onDoubleClick={() => events.onCellDoubleClick(rowIndex, col)}
             style={{
               width: column.width,
-              ...(column.stickyLeft !== null
-                ? { position: 'sticky', left: column.stickyLeft, zIndex: 1 }
-                : {}),
+              ...frozenStyle(column.stickyLeft, 1),
             }}
             className={cn(
               'relative flex shrink-0 cursor-default items-start border-r border-border bg-bg py-1.5 select-none',
+              column.stickyLeft !== null && FROZEN,
               !wrap && 'items-center py-0',
               inRange && 'bg-selected',
               active &&

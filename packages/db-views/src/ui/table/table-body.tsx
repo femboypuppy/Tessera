@@ -16,7 +16,14 @@ import type { DatabaseRef } from '../../model/operations';
 import type { RowGroup } from '../../query/group';
 import type { QueryContext } from '../../query/types';
 import { GroupLabel, groupName } from '../group-label';
-import { FOOTER_HEIGHT, GROUP_HEIGHT, GUTTER_WIDTH, HEADER_HEIGHT, ROW_HEIGHT } from './layout';
+import {
+  FOOTER_HEIGHT,
+  GROUP_HEIGHT,
+  GUTTER_WIDTH,
+  HEADER_HEIGHT,
+  ROW_HEIGHT,
+  STICKY,
+} from './layout';
 import type { GridSelection } from './navigation';
 import { TableRow, type CellEvents, type TableColumn } from './table-row';
 
@@ -170,7 +177,10 @@ export function TableBody({
               <button
                 type="button"
                 onClick={() => onAddInGroup(item.group)}
-                className="sticky left-0 flex h-full items-center gap-1.5 px-2 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none"
+                className={cn(
+                  'left-0 flex h-full items-center gap-1.5 px-2 text-ui text-fg-subtle hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-focus focus-visible:outline-none',
+                  STICKY,
+                )}
                 style={{ paddingLeft: GUTTER_WIDTH }}
               >
                 <Plus aria-hidden="true" className="size-4" />
@@ -245,7 +255,7 @@ const GroupHeader = memo(function GroupHeader({
       className="absolute top-0 left-0 flex items-end border-b border-border bg-bg"
       style={{ width, height: GROUP_HEIGHT, transform: `translateY(${top}px)` }}
     >
-      <div className="sticky left-0 flex h-9 items-center gap-1.5 px-2">
+      <div className={cn('left-0 flex h-9 items-center gap-1.5 px-2', STICKY)}>
         <button
           type="button"
           aria-expanded={!collapsed}

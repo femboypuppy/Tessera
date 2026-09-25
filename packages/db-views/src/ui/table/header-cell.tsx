@@ -10,7 +10,7 @@ import type { QueryContext } from '../../query/types';
 import { PropertyIcon } from '../common';
 import { runAction } from '../hooks';
 import { PropertyMenuItems, type PropertyMenuActions } from '../property-menu';
-import { HEADER_HEIGHT } from './layout';
+import { FROZEN, HEADER_HEIGHT, frozenStyle } from './layout';
 
 export interface HeaderCellProps {
   id: string;
@@ -92,7 +92,7 @@ export function HeaderCell({
     height: HEADER_HEIGHT,
     transform: CSS.Translate.toString(transform),
     transition,
-    ...(stickyLeft !== null ? { position: 'sticky', left: stickyLeft, zIndex: 3 } : {}),
+    ...frozenStyle(stickyLeft, 3),
   };
   const name = property.name || t('untitled');
   return (
@@ -107,6 +107,7 @@ export function HeaderCell({
       data-property-type={property.type}
       className={cn(
         'group/header relative flex shrink-0 items-center border-r border-b border-border bg-bg',
+        stickyLeft !== null && FROZEN,
         active &&
           'outline-2 -outline-offset-2 outline-transparent group-focus-within/grid:outline-accent',
         isDragging && 'z-20 opacity-80 shadow-popover',

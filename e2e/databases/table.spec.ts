@@ -163,3 +163,47 @@ test('edits cells with the keyboard and deletes a row with undo', async ({ page 
   await expect(rowByTitle(page, 'Review the draft')).toBeVisible();
   await expect(grid(page)).toBeVisible();
 });
+
+test('freezes the title column while the table scrolls sideways, and only when it can', async ({
+  page,
+}) => {
+  await openWorkspace(page);
+  await page.getByRole('button', { name: 'Import CSV as database' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Import a CSV file' });
+  await dialog.getByLabel('Choose a CSV file').setInputFiles({
+    name: 'Books.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(
+      [
+        'Title,Author,Pages,Status,Started,Link,Contact,Publisher,Country,Language,Format',
+        'Middlemarch,George Eliot,880,To read,2026-03-01,https://example.org/middlemarch,george@example.org,Blackwood,England,English,Paperback',
+        'Circe,Madeline Miller,393,Reading,2026-03-15,https://example.org/circe,madeline@example.org,Little Brown,United States,English,Hardcover',
+      ].join('\n'),
+    ),
+  });
+  await dialog.getByRole('button', { name: 'Import 2 rows' }).click();
+  const table = grid(page);
+  const cells = rowByTitle(page, 'Middlemarch').getByRole('gridcell');
+  const title = cells.first();
+  const author = cells.nth(1);
+  await expect(title).toHaveText('Middlemarch');
+
+  // Eleven columns are wider than the page: the title column stays put while the rest scrolls.
+  await expect(table).toHaveAttribute('data-scrolls-x', 'true');
+  const before = { title: await title.boundingBox(), author: await author.boundingBox() };
+  await table.evaluate((element) => {
+    element.scrollLeft = 240;
+  });
+  await expect
+    .poll(async () => Math.round((await author.boundingBox())?.x ?? 0))
+    .toBe(Math.round((before.author?.x ?? 0) - 240));
+  expect(Math.round((await title.boundingBox())?.x ?? 0)).toBe(Math.round(before.title?.x ?? 0));
+
+  // Where the whole table fits, nothing can scroll sideways, so nothing sticks.
+  await page.setViewportSize({ width: 2560, height: 900 });
+  await expect(table).not.toHaveAttribute('data-scrolls-x');
+  expect(await title.evaluate((element) => getComputedStyle(element).position)).toBe('relative');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(table).toHaveAttribute('data-scrolls-x', 'true');
+  expect(await title.evaluate((element) => getComputedStyle(element).position)).toBe('sticky');
+});
