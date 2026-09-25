@@ -19,6 +19,34 @@ export interface VersionMeta {
   label: string | null;
   kind: VersionKind;
   size: number;
+  /**
+   * Save order on this device, which orders versions saved in the same millisecond (see
+   * {@link newestFirst}). Absent on versions from another device.
+   */
+  seq?: number;
+}
+
+/**
+ * Newest first. Versions saved in the same millisecond keep their save order, and the ID settles
+ * the rest, so a list never reorders between reads.
+ */
+export function newestFirst(
+  a: Pick<VersionMeta, 'createdAt' | 'seq' | 'id'>,
+  b: Pick<VersionMeta, 'createdAt' | 'seq' | 'id'>,
+): number {
+  return (
+    b.createdAt - a.createdAt ||
+    (b.seq ?? 0) - (a.seq ?? 0) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
+}
+
+let lastSeq = 0;
+
+/** The next save order on this device. */
+export function nextVersionSeq(): number {
+  lastSeq += 1;
+  return lastSeq;
 }
 
 /** A version stored on this device: metadata plus the page doc's Yjs state. */
@@ -46,6 +74,7 @@ function toRecord(value: unknown): VersionRecord | null {
     label: typeof record.label === 'string' ? record.label : null,
     kind: record.kind,
     size: state.byteLength,
+    ...(typeof record.seq === 'number' ? { seq: record.seq } : {}),
     state,
     uploaded: record.uploaded === true,
   };
@@ -91,7 +120,7 @@ export class LocalVersionStore {
         const autos = request.result
           .map(toRecord)
           .filter((item): item is VersionRecord => item?.kind === 'auto')
-          .sort((a, b) => b.createdAt - a.createdAt);
+          .sort(newestFirst);
         for (const old of autos.slice(MAX_LOCAL_AUTO_VERSIONS)) store.delete(old.id);
       };
     }
@@ -162,7 +191,7 @@ export class LocalVersionStore {
     return values
       .map(toRecord)
       .filter((record): record is VersionRecord => record !== null)
-      .sort((a, b) => b.createdAt - a.createdAt);
+      .sort(newestFirst);
   }
 
   private requireDb(): IDBDatabase {

@@ -49,7 +49,8 @@ export class VersionService {
     const rows = this.db
       .prepare(
         `SELECT id, workspace_id, doc_name, created_at, created_by, author_name, label, kind, size
-         FROM versions WHERE workspace_id = ? AND doc_name = ? ORDER BY created_at DESC`,
+         FROM versions WHERE workspace_id = ? AND doc_name = ?
+         ORDER BY created_at DESC, rowid DESC`,
       )
       .all(workspaceId, docName) as VersionRow[];
     return rows.map(toMeta);
@@ -122,7 +123,7 @@ export class VersionService {
         .prepare(
           `DELETE FROM versions WHERE id IN (
              SELECT id FROM versions WHERE workspace_id = ? AND doc_name = ? AND kind = 'auto'
-             ORDER BY created_at DESC LIMIT -1 OFFSET ?)`,
+             ORDER BY created_at DESC, rowid DESC LIMIT -1 OFFSET ?)`,
         )
         .run(workspaceId, meta.docName, MAX_AUTO_VERSIONS);
     })();

@@ -23,10 +23,13 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-async function setup(options: { autoDelayMs?: number } = {}) {
+async function setup(options: { autoDelayMs?: number; now?: () => number } = {}) {
   const app = await createTestAppContext();
   const store = await LocalVersionStore.open(app.workspace.id, { indexedDB: factory });
-  const history = new HistoryService(app.ctx, store, { autoDelayMs: options.autoDelayMs ?? 50 });
+  const history = new HistoryService(app.ctx, store, {
+    autoDelayMs: options.autoDelayMs ?? 50,
+    ...(options.now ? { now: options.now } : {}),
+  });
   history.start();
   const page = app.ctx.workspace.createPage({ title: 'Mission plan' });
   const write = async (...paragraphs: string[]) => {
@@ -84,6 +87,18 @@ describe('HistoryService', () => {
     await t.history.saveVersion(t.page.id, { kind: 'manual' });
     const { versions } = await t.history.list(t.page.id);
     expect(versions.map((version) => version.label)).toEqual([null, 'Before review']);
+    await t.close();
+  });
+
+  it('keeps versions saved in the same millisecond in save order', async () => {
+    const t = await setup({ autoDelayMs: 60_000, now: () => Date.UTC(2026, 8, 1, 9, 30) });
+    await t.write('Draft');
+    for (const label of ['First', 'Second', 'Third'])
+      await t.history.saveVersion(t.page.id, { kind: 'manual', label });
+    const { versions } = await t.history.list(t.page.id);
+    expect(versions.map((version) => version.label)).toEqual(['Third', 'Second', 'First']);
+    // The same order on every read.
+    expect((await t.history.list(t.page.id)).versions).toEqual(versions);
     await t.close();
   });
 

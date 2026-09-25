@@ -5,7 +5,14 @@ import { ServerApiError } from '../client/errors';
 import { signalOutbox } from '../provider/shared';
 import type { SyncStateStore } from '../stores/sync-state';
 import { contentOf, currentContent, restoreInto, sameContent } from './snapshots';
-import type { LocalVersionStore, VersionKind, VersionMeta, VersionRecord } from './version-store';
+import {
+  newestFirst,
+  nextVersionSeq,
+  type LocalVersionStore,
+  type VersionKind,
+  type VersionMeta,
+  type VersionRecord,
+} from './version-store';
 
 /** A version in the history list, and where it is available. */
 export interface ListedVersion extends VersionMeta {
@@ -122,7 +129,7 @@ export class HistoryService {
       }
     }
     return {
-      versions: [...byId.values()].sort((a, b) => b.createdAt - a.createdAt),
+      versions: [...byId.values()].sort(newestFirst),
       serverAvailable,
     };
   }
@@ -211,6 +218,7 @@ export class HistoryService {
       label: label?.trim() ? label.trim().slice(0, 200) : null,
       kind,
       size: state.byteLength,
+      seq: nextVersionSeq(),
       state,
       uploaded: !this.options.server,
     };
