@@ -1,13 +1,15 @@
 /**
  * Writes release notes from the Conventional Commits between the previous `v*` tag and `--to`.
  *
- *   node scripts/release/changelog.ts --to v0.2.0 --repo owner/name [--from v0.1.0] [--heading] [--output notes.md]
+ *   node scripts/release/changelog.ts --to v0.2.0 --repo owner/name [--from v0.1.0] [--heading]
+ *     [--intro .github/releases/v0.2.0.md] [--output notes.md]
  *
  * Without `--from`, the previous tag reachable from `--to` is used (or the first commit).
- * `--heading` adds a "## v0.2.0 (date)" line, for CHANGELOG.md.
+ * `--heading` adds a "## v0.2.0 (date)" line, for CHANGELOG.md. `--intro` puts a hand-written
+ * introduction (the highlights) above the generated list, when that file exists.
  */
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { isIgnoredCommit, parseCommit } from '../lib/conventional-commits.ts';
 
@@ -75,6 +77,8 @@ export interface ChangelogInput {
   to: string;
   /** Adds a "## <to> (<date>)" heading. */
   heading?: { date: string };
+  /** Hand-written markdown (the highlights) above the generated sections. */
+  intro?: string;
   serverUrl?: string;
 }
 
@@ -110,6 +114,9 @@ export function renderChangelog(input: ChangelogInput): string {
 
   const lines: string[] = [];
   if (input.heading) lines.push(`## ${input.to} (${input.heading.date})`, '');
+  const intro = input.intro?.trim();
+  if (intro) lines.push(intro, '');
+  const start = lines.length;
   if (breaking.length) lines.push('### ⚠ Breaking changes', '', ...breaking, '');
   for (const section of SECTIONS) {
     const list = bySection.get(section.title);
@@ -129,7 +136,7 @@ export function renderChangelog(input: ChangelogInput): string {
     }
   }
   if (other.length) lines.push('### Other changes', '', ...other, '');
-  if (lines.length === (input.heading ? 2 : 0)) lines.push('No changes.', '');
+  if (lines.length === start) lines.push('No changes.', '');
   lines.push(
     input.from
       ? `**Full changelog:** ${server}/${input.repo}/compare/${input.from}...${input.to}`
@@ -146,6 +153,7 @@ if (import.meta.main) {
       repo: { type: 'string', default: process.env.GITHUB_REPOSITORY ?? 'owner/repo' },
       output: { type: 'string' },
       heading: { type: 'boolean', default: false },
+      intro: { type: 'string' },
     },
   });
   const to = values.to ?? 'HEAD';
@@ -156,6 +164,8 @@ if (import.meta.main) {
     from,
     to,
     heading: values.heading ? { date: new Date().toISOString().slice(0, 10) } : undefined,
+    intro:
+      values.intro && existsSync(values.intro) ? readFileSync(values.intro, 'utf8') : undefined,
     serverUrl: process.env.GITHUB_SERVER_URL,
   });
   if (values.output) writeFileSync(values.output, markdown);

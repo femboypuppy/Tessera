@@ -1,7 +1,8 @@
 # Releases, for every `v*` tag (`git tag v0.1.0 && git push origin v0.1.0`):
 #
 # 1. prepare: checks the tag against the app version, writes the changelog from Conventional
-#    Commits since the previous tag, and creates a draft GitHub Release with it.
+#    Commits since the previous tag (under the highlights in `.github/releases/<tag>.md`, when
+#    that file exists), and creates a draft GitHub Release with it.
 # 2. desktop: `desktop.yml` builds macOS, Windows and Linux bundles into the draft.
 # 3. docker: `docker.yml` pushes the multi-arch image to GHCR with the version tags.
 # 4. checksums: adds SHA256SUMS.txt for every asset.
@@ -44,7 +45,9 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
           REPOSITORY: ${{ github.repository }}
-        run: node scripts/release/changelog.ts --to "$TAG" --repo "$REPOSITORY" --output release-notes.md
+        run: >-
+          node scripts/release/changelog.ts --to "$TAG" --repo "$REPOSITORY"
+          --intro ".github/releases/$TAG.md" --output release-notes.md
       - name: Draft release
         id: draft
         env:
