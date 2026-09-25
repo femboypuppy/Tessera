@@ -32,6 +32,13 @@ export const paletteStore = {
   close(): void {
     if (state.open) set({ ...state, open: false });
   },
+  /**
+   * Edits the text the palette starts with, while it is open but not on screen yet (its code is
+   * still loading), so keys typed right after Mod+K land in the palette.
+   */
+  editInitialQuery(edit: (query: string) => string): void {
+    if (state.open) set({ ...state, initialQuery: edit(state.initialQuery) });
+  },
   /** Mod+K toggles: a second press closes the palette. */
   toggle(initialQuery = ''): void {
     if (state.open) paletteStore.close();
