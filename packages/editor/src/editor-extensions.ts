@@ -6,6 +6,7 @@ import { BlockIds } from './extensions/block-ids';
 import { DeferredScroll } from './extensions/deferred-scroll';
 import { HistoryGuard, HistoryKeys } from './extensions/history-guard';
 import { LiveSelection } from './extensions/live-selection';
+import { RemoteEditCaret } from './extensions/remote-edit-caret';
 import { Placeholder } from './extensions/placeholder';
 import { TitleNavigation } from './extensions/title-navigation';
 import { schemaExtensions } from './schema';
@@ -54,6 +55,7 @@ export function editorExtensions(options: EditorExtensionsOptions = {}): AnyExte
   if (options.fragment)
     extensions.push(
       Collaboration.configure({ fragment: options.fragment }),
+      RemoteEditCaret.configure({ fragment: options.fragment }),
       HistoryKeys,
       HistoryGuard,
     );

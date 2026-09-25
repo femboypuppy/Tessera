@@ -119,6 +119,47 @@ describe('editor bound to the page doc', () => {
     expect(blockTexts(first.editor)).toEqual(['paragraph:From A and B']);
     expect(docJSONEqual(readDocJSON(a), readDocJSON(bDoc))).toBe(true);
   });
+
+  it('two people typing at the same spot keep their words whole', () => {
+    const a = new Y.Doc();
+    const bDoc = new Y.Doc();
+    writeDocJSON(a, b.doc(b.paragraph('Notes: '), b.paragraph('Below')));
+    cleanups.push(linkDocs(a, bDoc));
+    const first = setup({ doc: a });
+    const second = setup({ doc: bDoc });
+    // Both carets after "Notes: "; the keys alternate between the two people. (Their first
+    // characters differ: two identical characters typed at the same spot at once can't be told
+    // apart by y-prosemirror's text diff, which may keep the other one.)
+    first.editor.commands.setTextSelection(8);
+    second.editor.commands.setTextSelection(8);
+    const mine = 'engine room';
+    const theirs = 'the mill';
+    for (let index = 0; index < Math.max(mine.length, theirs.length); index += 1) {
+      if (index < mine.length) typeText(first.editor, mine.charAt(index));
+      if (index < theirs.length) typeText(second.editor, theirs.charAt(index));
+    }
+    const [line] = blockTexts(first.editor);
+    expect(blockTexts(second.editor)).toEqual(blockTexts(first.editor));
+    // Each caret stays after its own last character, so neither run is split or reordered.
+    expect([`paragraph:Notes: ${mine}${theirs}`, `paragraph:Notes: ${theirs}${mine}`]).toContain(
+      line,
+    );
+  });
+
+  it('a caret follows text someone else types before it in the same block', () => {
+    const a = new Y.Doc();
+    const bDoc = new Y.Doc();
+    writeDocJSON(a, b.doc(b.paragraph('Launch at noon')));
+    cleanups.push(linkDocs(a, bDoc));
+    const first = setup({ doc: a });
+    const second = setup({ doc: bDoc });
+    first.editor.commands.setTextSelection(15);
+    second.editor.commands.setTextSelection(1);
+    typeText(second.editor, 'Update: ');
+    typeText(first.editor, ' sharp');
+    expect(blockTexts(first.editor)).toEqual(['paragraph:Update: Launch at noon sharp']);
+    expect(blockTexts(second.editor)).toEqual(['paragraph:Update: Launch at noon sharp']);
+  });
 });
 
 describe('undo and redo across structural changes', () => {
