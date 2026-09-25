@@ -69,6 +69,14 @@ async function typeLikeAPerson(page: Page, text: string): Promise<void> {
   }
 }
 
+/** Waits until keyboard focus is in the element with this accessible name. */
+async function focusIn(page: Page, label: string): Promise<void> {
+  await page.waitForFunction(
+    (name) => document.activeElement?.closest(`[aria-label="${name}"]`) !== null,
+    label,
+  );
+}
+
 /** Glides the pointer to the middle of an element, then clicks it. */
 async function glideAndClick(page: Page, target: Locator): Promise<void> {
   const box = await target.boundingBox();
@@ -124,9 +132,11 @@ async function record(appUrl: string): Promise<{ video: string; start: number; e
 
   // A new page, with a title and a first line.
   await glideAndClick(page, sidebar.getByRole('button', { name: 'New page', exact: true }).first());
+  await focusIn(page, 'Page title');
   await sleep(250);
   await typeLikeAPerson(page, 'Opening night');
   await page.keyboard.press('Enter');
+  await focusIn(page, 'Page content');
   await sleep(200);
   await typeLikeAPerson(page, 'Doors open at seven. Start at the ');
 
