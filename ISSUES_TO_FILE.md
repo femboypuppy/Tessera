@@ -165,6 +165,22 @@ waits for it. Nobody has measured first-open indexing on a real IndexedDB worksp
 **Next:** seed a real workspace (import 5,000 notes), reload, and record long tasks during the
 first minute.
 
+### Every page change re-renders every `usePages()` subscriber
+Labels: `performance`, `area: core`, `area: shell`
+
+`usePages()` (`packages/core/src/react/index.ts`) returns the whole pages snapshot, so any page
+created, renamed or moved re-renders every component that uses it, synchronously
+(`useSyncExternalStore`): the sidebar tree, favorites, the top bar, and every relation cell of
+an open database. Importing 2,000 files into a 2,000-page workspace does this after every batch.
+Batches of 25 and a separate task for the import's root page brought the import benchmark's
+long tasks from 7–20 down to 1–4, but the longest still measures 76–102 ms across runs (SPEC.md
+§10: no task over 100 ms).
+
+**Next:** a selector hook (`usePagesSelector(select, isEqual)` on
+`useSyncExternalStoreWithSelector`) for components that need a few pages (relation chips, tree
+rows, breadcrumbs), and `pnpm exec tsx scripts/bench/run.ts --only import --runs 5` before and
+after.
+
 ### The Mermaid plugin loads 5.2 MB per block frame
 Labels: `performance`, `area: plugins`
 

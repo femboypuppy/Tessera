@@ -34,9 +34,10 @@ const SLICE_MS = 12;
 
 /**
  * Pages created per `createPages` call. Each call indexes the workspace once (O(pages so far)), so
- * batches keep the whole import linear while each one stays short enough to keep the UI rendering.
+ * batches keep the whole import linear while each one, with the render it causes, stays well
+ * under 100 ms (50 left a batch and its render at 60–110 ms on 4,000 pages).
  */
-const PAGE_BATCH = 50;
+const PAGE_BATCH = 25;
 
 /**
  * Lets the browser render and handle input before the next slice of work. A message queues behind
@@ -238,6 +239,9 @@ export async function applyPlan(
 
   const total = plan.pages.length;
   try {
+    // The root page renders (every page subscriber re-renders at once) in a task of its own, not
+    // in the same one as the first batch.
+    await yieldToEventLoop();
     // 1. The page tree, parents first: databases one at a time, other pages in batches.
     let index = 0;
     while (index < total) {
