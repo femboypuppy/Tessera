@@ -8,7 +8,7 @@ Ten minutes from an empty screen to a small, linked workspace. Shortcuts use <kb
 The first time you open Tessera, you choose how to start:
 
 - **Create an empty workspace**, to start fresh.
-- **Open demo workspace**, a guided tour with about 40 pages, two databases and a small
+- **Open the demo workspace**, a guided tour with about 40 pages, two databases and a small
   knowledge garden about space exploration. It's the quickest way to see everything.
 - **Import from Notion**, **Import from Obsidian** or **Import markdown**, to bring your notes
   along. See [Import and export](./import-export).

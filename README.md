@@ -178,7 +178,7 @@ you choose, with quick capture from anywhere. The server is one container with S
 </details>
 
 > [!TIP]
-> The fastest way to look around: choose **Open demo workspace** on the first screen. It has a
+> The fastest way to look around: choose **Open the demo workspace** on the first screen. It has a
 > project board, a reading list, meeting notes and a small knowledge garden about the history of
 > space exploration, so the graph has something to show.
 
