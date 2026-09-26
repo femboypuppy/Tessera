@@ -4,6 +4,43 @@ Every release of Tessera, newest first. Each one opens with what matters to peop
 followed by every change, generated from the commit history
 ([Conventional Commits](https://www.conventionalcommits.org/)).
 
+## 0.1.1 (2026-09-26)
+
+**Tessera 0.1.1 fixes the problems a code scan found in 0.1.0.** A few checks that read text
+worked harder the longer the text got, so a single crafted cell, title or query of a few tens of
+thousands of characters could keep Tessera busy for seconds or even minutes. Everything else is
+unchanged, including your data and settings. Upgrading is recommended.
+
+### Fixes
+
+- **Long, crafted text no longer freezes the app.** These now take milliseconds, with the same
+  results as before:
+  - number, date, URL and email cells when you import a CSV file or filter a database;
+  - a very long query pasted into search;
+  - exporting a page whose title is a long run of dots and spaces;
+  - reading HTML and markdown when the full markdown engine isn't available.
+- **Server setup codes** are drawn with `crypto.randomInt`, which keeps every character equally
+  likely whatever characters the code uses. (0.1.0's codes were already uniform; this keeps them
+  so.)
+
+### Bug fixes
+
+- **search:** tokenize queries with a forward scan instead of one regex ([`0342bf5`](https://github.com/femboypuppy/Tessera/commit/0342bf58ab189899c9f82d585e7052e961526942))
+- **server:** draw setup code characters with crypto.randomInt ([`08fa1ee`](https://github.com/femboypuppy/Tessera/commit/08fa1eec83b0b724ab5e6202b1938216073c5bd5))
+- **core:** file names and the fallback markdown codec in linear time ([`ac1fc7d`](https://github.com/femboypuppy/Tessera/commit/ac1fc7dd5f276e7cce79736d0716efdd23697cff))
+- **search:** tokenize pasted queries in linear time ([`3c18a3d`](https://github.com/femboypuppy/Tessera/commit/3c18a3dc719cbc86063797875dc685e468b45e63))
+- **importers:** reject a long, hostile CSV number cell in linear time ([`d40059b`](https://github.com/femboypuppy/Tessera/commit/d40059b06dfd1f6a00dda6f54e364b046c36b033))
+- **db-views:** read numbers, dates, emails and URLs in cells in linear time ([`4a427db`](https://github.com/femboypuppy/Tessera/commit/4a427db56e375e1cfda579f8d181e0c6c1ce3d60))
+
+<details>
+<summary><strong>Maintenance</strong> (1)</summary>
+
+- **release:** the tag must match every version the app reports ([`ae8cda1`](https://github.com/femboypuppy/Tessera/commit/ae8cda1d4feff882de543b809648d62c525d8d55))
+
+</details>
+
+**Full changelog:** https://github.com/femboypuppy/Tessera/compare/v0.1.0...v0.1.1
+
 ## 0.1.0 (2026-09-25)
 
 **Tessera 0.1.0 is the first release.** Tessera is an open-source, local-first knowledge app:

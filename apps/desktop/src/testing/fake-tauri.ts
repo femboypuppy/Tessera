@@ -354,7 +354,7 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
     },
     'plugin:window|start_dragging': () => null,
     app_info: () => ({
-      version: '0.1.0',
+      version: '0.1.1',
       windowLabel: label,
       os,
       arch: 'x86_64',
@@ -675,7 +675,7 @@ export function installFakeTauri(options: FakeTauriOptions = {}): void {
       return {
         configured: update?.configured ?? false,
         available: Boolean(update?.configured && update.version),
-        currentVersion: '0.1.0',
+        currentVersion: '0.1.1',
         version: update?.version ?? null,
         notes: update?.notes ?? null,
         date: null,

@@ -9,7 +9,7 @@ import { workspaceRoutes } from './routes/workspaces';
 import { serveWebApp } from './static';
 
 /** Server version reported by the health endpoint. */
-export const SERVER_VERSION = '0.1.0';
+export const SERVER_VERSION = '0.1.1';
 
 /**
  * The HTTP app: the JSON API under `/api` and, when a web build is available, the web app.
