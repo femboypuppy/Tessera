@@ -1,101 +1,109 @@
-# Tessera — shared rules for every agent
+# Tessera — working in this repo
 
-Claude Code loads this file automatically in every session in this repo. Your own assignment is in `agents/NN-<area>.md`.
+Claude Code loads this file in every session in this repo.
 
-Read, in order: this file, `SPEC.md`, `HANDOFF/architect.md`, the code in `packages/core`, then your assignment. (The Architect creates `SPEC.md` and `HANDOFF/architect.md`. If you are the Architect, go straight to `agents/01-architect.md`.)
+**Tessera** is an open-source (MIT), local-first, self-hostable knowledge app: Notion-style blocks
+and databases, Obsidian-style `[[wikilinks]]`, backlinks and a graph view, real-time
+collaboration, a sandboxed plugin system, desktop apps and one-command self-hosting. It works fully
+offline, imports from Notion and Obsidian, and exports to plain markdown at any time.
 
-## What we're building
+The bar: fast, calm and polished, and it never loses data.
 
-**Tessera** is an open-source (MIT), local-first, self-hostable knowledge app: Notion-style blocks and databases, Obsidian-style `[[wikilinks]]`, backlinks and graph view, real-time collaboration, a sandboxed plugin system, desktop apps, and one-command self-hosting. It works fully offline, imports from Notion and Obsidian in one click, and exports to plain markdown at any time. No lock-in.
+## Where things are
 
-The bar: someone who tries it for five minutes should want to star it. It has to be fast, calm and polished, and it must never lose data.
+| Path | What |
+| --- | --- |
+| `packages/core` | Contracts: types, the document schema, `FeatureModule` and extension points, the runtime, stub services |
+| `packages/ui` | Components, design tokens, `t()` |
+| `packages/editor` | The block editor (TipTap on Yjs) |
+| `packages/sync`, `apps/server` | Storage, sync, collaboration, the server (Hocuspocus, SQLite) |
+| `packages/db-views` | Databases: query engine, views, formulas, CSV |
+| `packages/search` | Search index, palette, backlinks, graph |
+| `packages/plugins`, `packages/plugin-api`, `packages/create-tessera-plugin` | Plugin host, SDK, scaffolder (`examples/plugins`, `examples/plugin-template`) |
+| `packages/markdown`, `packages/importers` | Markdown codec, importers and exporters |
+| `packages/testkit` | Seeded workspaces, the benchmark harness, Playwright fixtures, CI policy tests |
+| `apps/web` | The app shell; `src/features/<area>/index.ts` registers each feature |
+| `apps/desktop` | The Tauri desktop app |
+| `docs/` | The VitePress site (its own pnpm project and lockfile) |
+| `e2e/<area>`, `scripts/`, `.github/` | End-to-end specs, tooling (see `scripts/README.md`), CI and releases |
 
-## The team
+Read `SPEC.md` for the architecture, contracts and performance budgets.
 
-Agent 01 (Architect) works first, alone, on `main`. Then agents 02–10 work **in parallel, each in its own git worktree and branch, with no way to talk to each other**. The contracts in `packages/core` and the `HANDOFF/` files are how you coordinate. Afterwards the Architect merges everything (`agents/11-merge.md`) and a final pass polishes it (`agents/12-polish.md`).
+- `HANDOFF/<area>.md` records how each area was built and why.
+- `HANDOFF/integration.md` and `HANDOFF/polish.md` record the merge, the launch checks and the known gaps.
+- `agents/` holds the prompts of the parallel build, as history.
+- The backlog lives in GitHub issues, labeled by area (`area: editor`, …).
 
-| # | Agent | Branch | Owns (may create and edit) |
-|---|---|---|---|
-| 01 | Architect | `main` | root config files, `.claude/`, `packages/core`, `packages/ui`, `apps/web` except the contents of `src/features/*` (the Architect creates those as stubs, then each belongs to its agent), `SPEC.md`, `CLAUDE.md`, `HANDOFF/README.md` |
-| 02 | Editor | `feat/editor` | `packages/editor`, `apps/web/src/features/editor` |
-| 03 | Storage & sync | `feat/sync` | `packages/sync`, `apps/server`, `apps/web/src/features/sync` |
-| 04 | Databases | `feat/databases` | `packages/db-views`, `apps/web/src/features/databases` |
-| 05 | Search & graph | `feat/search` | `packages/search`, `apps/web/src/features/search`, `apps/web/src/features/graph`, `apps/web/src/features/backlinks` |
-| 06 | Plugins | `feat/plugins` | `packages/plugins`, `packages/plugin-api`, `packages/create-tessera-plugin`, `apps/web/src/features/plugins`, `examples/plugins`, `examples/plugin-template`, `docs/plugins` |
-| 07 | Desktop & self-host | `feat/desktop` | `apps/desktop`, `apps/web/src/features/desktop`, `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `deploy/` |
-| 08 | Markdown, import & export | `feat/importers` | `packages/markdown`, `packages/importers`, `apps/web/src/features/import-export` |
-| 09 | CI & quality | `feat/ci` | `.github/workflows`, `.github/dependabot.yml`, `.github/CODEOWNERS`, `.github/labeler.yml`, `packages/testkit`, `scripts/`, `e2e/journeys`, `e2e/support`, `SECURITY.md` |
-| 10 | Docs & launch | `feat/docs` | `README.md`, `docs/` except `docs/plugins`, `assets/` except `assets/screenshots`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `LICENSE`, `.github/ISSUE_TEMPLATE`, `.github/PULL_REQUEST_TEMPLATE.md`, `examples/demo-workspace`, `LAUNCH.md`, `BUILT_WITH_AGENTS.md` |
+## Architecture rules
 
-Every agent also owns `HANDOFF/<area>.md`, `assets/screenshots/<area>/` and `e2e/<area>/`, where `<area>` is one of: `architect`, `editor`, `sync`, `databases`, `search`, `plugins`, `desktop`, `importers`, `ci`, `docs`.
-
-## Hard rules
-
-1. **Stay in your lane.** Create or edit files only where you own them (table above). Reading anything is fine.
-2. **`packages/core` is the contract.** Its types, interfaces, document schema and extension points belong to the Architect. Never edit them. If you need a change, keep going with a local workaround and write a *Contract change request* (with the exact proposed diff) in your HANDOFF file. It gets applied at merge time.
-3. **Plug in, don't patch.** The app shell loads each feature through the `FeatureModule` exported from `apps/web/src/features/<area>/index.ts`. Register routes, commands, panels, page bodies, block renderers, services and settings there. Never edit the shell or another agent's feature to hook yourself in.
-4. **Keep feature folders thin.** `apps/web/src/features/<area>/` holds only the registration. Components and logic live in your package, so your dependencies live in your own `package.json`.
-5. **Never block on another agent.** If you need something another agent is building, code against its interface in `packages/core` and use the in-memory or stub implementation the Architect provided. The real one replaces it at merge time.
-6. **Don't ask the human questions.** Make the best reasonable decision, record it under *Decisions* in your HANDOFF file, and keep going.
-7. **Root files belong to the Architect** (`package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, ESLint, Prettier, Vitest and Playwright configs). The build uses globs, so a new package or e2e folder never needs a root edit. Need a root-level script? Add it to your own package and mention it in HANDOFF.
-8. **Dependencies:** prefer what's already installed. If you add one, add it only to a `package.json` you own, pin the exact version, prefer small, maintained, MIT/Apache-2.0/BSD/ISC-licensed libraries, and justify it in HANDOFF. Lockfile conflicts get resolved at merge by regenerating the lockfile, so don't worry about them.
-9. **Git:** work only on your branch. Commit small and often with Conventional Commits (`feat(editor): add slash menu`). Never force-push, rewrite history, or touch `main`.
-10. **Memory:** don't save role- or task-specific notes to Claude Code's auto memory. All worktrees of this repo share it, so another agent would read your notes as its own. Your HANDOFF file is your notebook.
+- **Plug in, don't patch.** The shell loads each feature through the `FeatureModule` exported from
+  `apps/web/src/features/<area>/index.ts`. Routes, commands, panels, page bodies, block renderers,
+  services and settings are registered there, not wired into the shell or another feature.
+- **Keep feature folders thin.** `apps/web/src/features/<area>/` holds only the registration.
+  Components and logic live in the area's package, with its dependencies in that package's
+  `package.json`.
+- **`packages/core` is the contract.** Change it deliberately: update `SPEC.md` in the same
+  change, keep the stub implementations working, and update every implementation that the change
+  affects.
+- **Globs, not lists.** The build, tests and e2e pick up new packages and `e2e/<area>` folders by
+  themselves; root configs rarely need an edit.
+- **Dependencies:** prefer what's installed. A new one is small, maintained, MIT/Apache-2.0/BSD/ISC,
+  pinned to an exact version, and added to the package that uses it. Say why in the commit.
 
 ## Engineering standards
 
 - TypeScript `strict`. No `any` (use `unknown` and narrow). No `@ts-ignore` or `eslint-disable` without a comment explaining why.
-- Tests test real behavior: Vitest for units, Playwright for user flows. Never skip, weaken or delete a test to make it pass.
-- Nothing you mark as done contains placeholder code. Unfinished work is listed in HANDOFF, not hidden behind a `TODO`.
+- Tests test real behavior: Vitest for units, Playwright for user flows. Never skip, weaken or delete a test to make it pass. A bug fix comes with a test that failed before it.
+- No placeholder code in finished work. Unfinished work goes in a GitHub issue, not behind a `TODO`.
 - UI uses components and design tokens from `packages/ui`, works in light and dark themes, is fully keyboard-accessible (visible focus, correct ARIA via Radix primitives), respects `prefers-reduced-motion`, and works at phone width.
 - All user-facing strings go through `t()` from `packages/ui`.
 - Every async UI has loading, empty and error states. Destructive actions are undoable or confirmed.
-- Security: sanitize any external HTML with DOMPurify, never render unsanitized HTML, never use `eval` or `new Function`, and validate data at trust boundaries with zod.
-- Performance: lazy-load heavy features with dynamic `import()` and respect the budgets in `SPEC.md`.
+- Security: sanitize any external HTML with DOMPurify, never render unsanitized HTML, never use `eval` or `new Function`, and validate data at trust boundaries with zod. Text from files, the clipboard, other users or the network is untrusted: no regex whose running time grows faster than its input (CodeQL checks for it).
+- Performance: lazy-load heavy features with dynamic `import()` and respect the budgets in `SPEC.md` §10.
 - Document state lives in Yjs. Never mirror document content into React state.
 
 ## Commands
 
 `pnpm dev` · `pnpm build` · `pnpm test` · `pnpm test:e2e` · `pnpm typecheck` · `pnpm lint` · `pnpm format`
 
+- `pnpm dev` runs the web app (http://localhost:5173) and the server (port 8787, data in `apps/server/data`) together; the app reaches the server through Vite's `/api` and `/sync` proxy. `pnpm --filter @tessera/web dev` runs the app alone.
 - `pnpm build` builds every package, the web app, the server and, when Rust is installed, the desktop app (`tauri build --no-bundle`; `TESSERA_SKIP_DESKTOP=1` skips it; installers: `pnpm --filter @tessera/desktop build:app`).
-- `pnpm dev` runs the web app (http://localhost:5173) and the server (port 8787, data in `apps/server/data`) together; the app reaches the server through Vite's `/api` and `/sync` proxy, so "Connect to a server" finds it on the app's own origin. `pnpm --filter @tessera/web dev` runs the app alone.
-- Run one package: `pnpm --filter @tessera/<name> <script>` (`test`, `typecheck`, `lint`, `build`). The plugin scaffolder's name is `create-tessera-plugin`.
-- Run only your e2e specs: `pnpm test:e2e e2e/<area>`. First time on a machine: `pnpm test:e2e:install`. `E2E_DEV=1` tests against the dev server instead of a production build.
-- Specs that time frames or keystrokes are tagged `@perf` (`{ tag: '@perf' }`) and run alone: `pnpm test:e2e --grep @perf --workers=1` (CI runs them after the rest, one at a time).
-- Screenshots: `pnpm screenshots e2e/<area>` runs your `e2e/<area>/*.screenshots.ts` files (SPEC.md, section 9.2).
+- One package: `pnpm --filter @tessera/<name> <script>` (`test`, `typecheck`, `lint`, `build`). The plugin scaffolder's name is `create-tessera-plugin`.
+- E2E: `pnpm test:e2e e2e/<area>` (add `--project=chromium` or `--project=firefox`). First time on a machine: `pnpm test:e2e:install`. `E2E_DEV=1` tests against the dev server instead of a production build.
+- Specs that time frames or keystrokes are tagged `@perf` and run alone: `pnpm test:e2e --grep @perf --workers=1`. CI runs them after the rest.
+- Screenshots: `pnpm screenshots e2e/<area>` writes `assets/screenshots/<area>/<name>-{light,dark}.png` at 1440×900 (SPEC.md §9.2); the README and docs use these files.
+- Docs site: `pnpm --dir docs dev`, `pnpm --dir docs build` (runs its tests first).
+- Budgets: `pnpm exec tsx scripts/bench/run.ts`, `node scripts/bundle/report.ts` (after a build), `pnpm exec tsx scripts/memory/soak.ts`; `scripts/README.md` lists the rest.
 - `pnpm lint:fix` applies ESLint and Prettier fixes.
+- On Windows, a full `pnpm test` sometimes loses the server project's worker (exit code 0xC0000409, issue #5). Rerun it, or run `pnpm --filter @tessera/server test`.
 
-(Architect: keep this section accurate.)
+Keep this section accurate when scripts change.
 
-## How to work
+## Git
 
-1. Read everything listed at the top. Then write your plan at the top of `HANDOFF/<area>.md` and keep that file updated as you go.
-2. Build in the milestone order of your agent file. Each milestone ends in a working, tested, committed state, so whatever exists always works.
-3. After each milestone: run `pnpm typecheck && pnpm lint && pnpm test` and your e2e specs, run the app, take Playwright screenshots, **look at them critically**, fix what looks wrong, and commit.
-4. Keep going until everything is done. Don't stop to report progress. If something is truly impossible in this environment (missing toolchain, no network), write the code and config anyway, document exactly what you couldn't verify, and move on.
+- Conventional Commits (`fix(editor): keep the caret after undo`), small and focused. The git hooks check the message and run ESLint and Prettier on staged files.
+- Never force-push or rewrite pushed history. Push `main` only after `pnpm typecheck`, `pnpm lint` and `pnpm test` pass, then check that CI and CodeQL pass on GitHub.
+- Contributors work on branches with pull requests (`CONTRIBUTING.md`).
+
+## Releases
+
+1. Bump the version to `X.Y.Z` in:
+   - the app's `package.json` files;
+   - `apps/desktop/src-tauri/tauri.conf.json`, `Cargo.toml` and the `tessera-desktop` entry of `Cargo.lock`;
+   - `SERVER_VERSION` in `apps/server/src/http/app.ts`;
+   - `APP_VERSION` in `packages/plugins/src/constants.ts`;
+   - the pinned image tags in `deploy/` and `docs/self-hosting/upgrading.md`.
+
+   Leave `plugin-api` and `create-tessera-plugin` alone unless the plugin API changed.
+2. Write the highlights in `.github/releases/vX.Y.Z.md`. Add a section to `CHANGELOG.md`: the highlights, then `node scripts/release/changelog.ts --to HEAD --repo femboypuppy/Tessera`, with the compare link pointing at `vX.Y.Z`.
+3. `node scripts/release/github-release.ts verify-version --tag vX.Y.Z` must pass. Commit, push, and wait for CI to pass.
+4. `git tag vX.Y.Z && git push origin vX.Y.Z`. The Release workflow builds the desktop apps and the Docker image, adds `SHA256SUMS.txt` and publishes the release.
 
 ## Definition of done
 
-- [ ] `pnpm typecheck`, `pnpm lint` and `pnpm test` pass, and your e2e specs pass.
-- [ ] Every acceptance criterion in your agent file is met, or listed as not done in HANDOFF with the reason.
-- [ ] Your features are reachable in the running app, not just library code.
-- [ ] Screenshots are saved as `assets/screenshots/<area>/<name>-light.png` and `<name>-dark.png`, using the names listed in your agent file, at 1440×900 with realistic content (never lorem ipsum). The docs agent references these exact paths.
-- [ ] `HANDOFF/<area>.md` is complete (template below).
-- [ ] Everything is committed on your branch.
-
-When you believe you're done, post a final message titled **Completion audit**: every acceptance criterion from your agent file with ✅ or ❌ plus evidence (test names, file paths), followed by the summary lines of `pnpm typecheck`, `pnpm lint` and `pnpm test`. If anything is ❌ and still achievable, keep working instead of posting it.
-
-## HANDOFF template
-
-```markdown
-# <Area> handoff
-## Plan
-## Built (what exists and where)
-## How it plugs in (FeatureModule entries, services, extension points used)
-## Decisions (and why)
-## Contract change requests (exact proposed diff to packages/core, and why)
-## Known gaps and bugs
-## Follow-ups for the merge (cross-agent wiring you couldn't finish alone)
-## Screenshots (list of files)
-```
+- [ ] `pnpm typecheck`, `pnpm lint` and `pnpm test` pass, and so do the e2e specs of the areas you touched (the `@perf` ones too if timing could change).
+- [ ] The change is tested at the right level, and a bug fix has a test that failed before it.
+- [ ] The feature is reachable in the running app, not just library code. UI changes were checked in both themes, at phone width and with the keyboard alone.
+- [ ] When the UI changed visibly, its screenshots are retaken with realistic content (never lorem ipsum).
+- [ ] Docs match the behavior: `docs/` for users, `SPEC.md` for contracts and budgets.
+- [ ] Everything is committed, and CI and CodeQL pass after the push.
