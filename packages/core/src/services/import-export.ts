@@ -83,6 +83,16 @@ export function importFileFromText(path: string, text: string): ImportFile {
 const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
 
 /**
+ * Drops trailing dots and spaces (Windows strips them from file names). A loop from the end: the
+ * regex `[. ]+$` restarted at every dot or space of a title like `. . . …x`, which took seconds.
+ */
+function withoutTrailingDotsAndSpaces(value: string): string {
+  let end = value.length;
+  while (end > 0 && (value[end - 1] === '.' || value[end - 1] === ' ')) end -= 1;
+  return value.slice(0, end);
+}
+
+/**
  * Makes a page title safe as a file or folder name on every OS: no `/ \ : * ? " < > |` or control
  * characters, no trailing dots or spaces, not a reserved Windows name, at most 120 characters.
  *
@@ -90,12 +100,13 @@ const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
  * sanitizeFileName('Q3: plan / notes?'); // 'Q3- plan - notes-'
  */
 export function sanitizeFileName(name: string, fallback = 'Untitled'): string {
-  const cleaned = name
-    // eslint-disable-next-line no-control-regex -- control characters are invalid in file names
-    .replace(/[\u0000-\u001f\u007f/\\:*?"<>|]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/[. ]+$/, '')
+  const cleaned = withoutTrailingDotsAndSpaces(
+    name
+      // eslint-disable-next-line no-control-regex -- control characters are invalid in file names
+      .replace(/[\u0000-\u001f\u007f/\\:*?"<>|]/g, '-')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  )
     .slice(0, 120)
     .trim();
   if (!cleaned) return fallback;

@@ -69,6 +69,44 @@ describe('BasicMarkdownCodec (no DOM)', () => {
     );
     expect(extractPlainText(doc)).toBe('Title\nHello world\nLast');
   });
+
+  it('reads HTML exactly as the regexes it replaces did', () => {
+    const before = (html: string) =>
+      html
+        .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+        .replace(/<\/(p|div|h[1-6]|li|br)>/gi, '\n')
+        .replace(/<[^>]*>/g, ' ')
+        .split(/\n+/)
+        .map((line) => line.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .join('\n');
+    for (const html of [
+      '<p>One</p><p>Two <i>three</i></p>',
+      '<SCRIPT>x()</script><Style>p{}</STYLE>kept',
+      '<script>never closed <p>still text</p>',
+      '<script>open<style>s</style>after',
+      '<style>a</style><script>b</script><style>c</style>d',
+      '<scripted>x</script>y',
+      '<</p>a < b > c',
+      'a < b',
+      '<a title="<script>">x</script>y',
+      '<li>one</li><br><h2>Two</h2><div>3</div>',
+    ]) {
+      expect(extractPlainText(codec.parseHTML(html)), html).toBe(before(html));
+    }
+  });
+
+  it('reads long, hostile text in linear time', () => {
+    // Each took seconds at 40,000 characters with the former regexes (CodeQL js/polynomial-redos).
+    const started = performance.now();
+    codec.parse(`#${' '.repeat(50_000)}a\u2028b`);
+    codec.parseHTML('<'.repeat(50_000));
+    codec.parseHTML('<style'.repeat(10_000));
+    codec.parseHTML('<script></script>'.repeat(5_000));
+    expect(sanitizeFileName(`${'. '.repeat(25_000)}x`)).toMatch(/^\. \. /);
+    expect(sanitizeFileName(`Report${'. '.repeat(25_000)}`)).toBe('Report');
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
 });
 
 describe('import paths and file names', () => {

@@ -77,6 +77,63 @@ function paragraphNode(text: string): AnyNodeJSON {
   return text ? { type: 'paragraph', content: [{ type: 'text', text }] } : { type: 'paragraph' };
 }
 
+/*
+ * HTML to text without a DOM, in forward scans. The regexes these replace
+ * (`<(script|style)[\s\S]*?<\/\1>` and `<[^>]*>`) restarted a scan to the end of the input at
+ * every `<`, so pasted text like `<<<<…` or `<style<style…` took seconds.
+ */
+
+/** Removes `<script>…</script>` and `<style>…</style>` elements (any case); unclosed ones stay. */
+function withoutScriptsAndStyles(html: string): string {
+  // Lowercases ASCII only, so positions in `lower` match positions in `html`.
+  const lower = html.replace(/[A-Z]/g, (letter) => letter.toLowerCase());
+  const next = new Map(['script', 'style'].map((name) => [name, lower.indexOf(`<${name}`)]));
+  let result = '';
+  let from = 0;
+  for (;;) {
+    let name: string | null = null;
+    let start = -1;
+    for (const [candidate, cached] of next) {
+      let position = cached;
+      if (position !== -1 && position < from) {
+        position = lower.indexOf(`<${candidate}`, from);
+        next.set(candidate, position);
+      }
+      if (position !== -1 && (start === -1 || position < start)) {
+        start = position;
+        name = candidate;
+      }
+    }
+    if (name === null) break;
+    const end = lower.indexOf(`</${name}>`, start + name.length + 1);
+    if (end === -1) {
+      // No closing tag after this one, so none after any later one either.
+      next.set(name, -1);
+      continue;
+    }
+    result += `${html.slice(from, start)} `;
+    from = end + name.length + 3;
+  }
+  return result + html.slice(from);
+}
+
+/** Replaces closing block tags with line breaks, then every other tag with a space. */
+function tagsToText(html: string): string {
+  const text = html.replace(/<\/(p|div|h[1-6]|li|br)>/gi, '\n');
+  let result = '';
+  let from = 0;
+  for (;;) {
+    const open = text.indexOf('<', from);
+    if (open === -1) break;
+    const close = text.indexOf('>', open + 1);
+    // Without a `>` after it, no `<` from here on starts a tag.
+    if (close === -1) break;
+    result += `${text.slice(from, open)} `;
+    from = close + 1;
+  }
+  return result + text.slice(from);
+}
+
 /**
  * The stub {@link MarkdownCodec}: headings (`#`, `##`, `###`; deeper levels become level 3) and
  * paragraphs only, simple `key: value` frontmatter. Everything else is kept as plain text so
@@ -104,13 +161,15 @@ export class BasicMarkdownCodec implements MarkdownCodec {
         .map((line) => line.trim())
         .filter(Boolean);
       if (!lines.length) continue;
-      const heading = /^(#{1,6})\s+(.*)$/.exec(lines[0] ?? '');
-      if (heading?.[1] && lines.length === 1) {
-        const level = Math.min(3, heading[1].length);
+      // Marks, then the text. (Not `\s+(.*)$`: its two runs retried every split of a long line.)
+      const line = lines[0] ?? '';
+      const marks = /^#{1,6}(?=\s)/.exec(line)?.[0];
+      if (marks && lines.length === 1) {
+        const text = line.slice(marks.length).trim();
         content.push({
           type: 'heading',
-          attrs: { level },
-          content: heading[2] ? [{ type: 'text', text: heading[2] }] : [],
+          attrs: { level: Math.min(3, marks.length) },
+          content: text ? [{ type: 'text', text }] : [],
         });
       } else {
         content.push(paragraphNode(lines.join(' ')));
@@ -159,10 +218,7 @@ export class BasicMarkdownCodec implements MarkdownCodec {
         if (text) content.push(paragraphNode(text));
       }
     } else {
-      const text = html
-        .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
-        .replace(/<\/(p|div|h[1-6]|li|br)>/gi, '\n')
-        .replace(/<[^>]*>/g, ' ');
+      const text = tagsToText(withoutScriptsAndStyles(html));
       for (const line of text.split(/\n+/)) {
         const clean = line.replace(/\s+/g, ' ').trim();
         if (clean) content.push(paragraphNode(clean));
