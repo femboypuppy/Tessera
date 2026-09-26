@@ -196,6 +196,16 @@ describe('ci.yml', () => {
   });
 });
 
+describe('docker.yml', () => {
+  it('publishes ghcr.io/<owner>/tessera whatever the repository is called', () => {
+    // The repository became Tessera-Notes; the image kept its name so docker commands keep working.
+    const job = byName('docker.yml').jobs.image ?? {};
+    const name = steps(job).find((step) => step.name === 'Image name');
+    expect(name?.env).toEqual({ OWNER: '${{ github.repository_owner }}' });
+    expect(name?.run).toContain('name=ghcr.io/${OWNER,,}/tessera');
+  });
+});
+
 describe('desktop.yml', () => {
   const desktop = byName('desktop.yml');
   const job = Object.values(desktop.jobs)[0] ?? {};

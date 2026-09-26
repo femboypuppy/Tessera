@@ -1,7 +1,7 @@
 # The server image (`Dockerfile`: the sync server serving the web app).
 #
 # - Tags: `release.yml` calls this workflow for every `v*` tag. It builds linux/amd64 and
-#   linux/arm64 and pushes `ghcr.io/<owner>/<repo>` tagged `X.Y.Z`, `X.Y`, `X` (from 1.0 on) and
+#   linux/arm64 and pushes `ghcr.io/<owner>/tessera` tagged `X.Y.Z`, `X.Y`, `X` (from 1.0 on) and
 #   `latest` (stable releases only), with provenance and an SBOM.
 # - Manual runs: the same, optionally pushed (tagged with the branch and commit).
 # - Pull requests that touch the image: an amd64 build that is never pushed.
@@ -45,12 +45,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # GHCR image names must be lowercase, and repository names may not be.
+      # The image kept its name when the repository became Tessera-Notes, so existing
+      # `docker pull ghcr.io/<owner>/tessera` commands keep working. GHCR names are lowercase.
       - name: Image name
         id: image
         env:
-          REPOSITORY: ${{ github.repository }}
-        run: echo "name=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          OWNER: ${{ github.repository_owner }}
+        run: echo "name=ghcr.io/${OWNER,,}/tessera" >> "$GITHUB_OUTPUT"
       - name: Platforms
         id: platforms
         env:
