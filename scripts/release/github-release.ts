@@ -30,9 +30,25 @@ export function isPrerelease(tag: string): boolean {
   return versionFromTag(tag).split('+')[0]?.includes('-') ?? false;
 }
 
+/** Versions the app reports besides the desktop's, each checked against the tag when present. */
+const REPORTED_VERSIONS = [
+  { file: 'apps/web/package.json', what: 'version', pattern: /"version":\s*"([^"]*)"/ },
+  {
+    file: 'apps/server/src/http/app.ts',
+    what: 'SERVER_VERSION',
+    pattern: /SERVER_VERSION = '([^']*)'/,
+  },
+  {
+    file: 'packages/plugins/src/constants.ts',
+    what: 'APP_VERSION',
+    pattern: /APP_VERSION = '([^']*)'/,
+  },
+] as const;
+
 /**
  * Checks that the tag matches the desktop app's version (its bundles and updater manifest use
- * it). Returns problems as messages; an empty list means the tag is fine.
+ * it) and every other version the app reports (Settings → About, `/api/health`, plugins'
+ * `minAppVersion`). Returns problems as messages; an empty list means the tag is fine.
  */
 export function verifyVersion(tag: string, root: string): { errors: string[]; notes: string[] } {
   const version = versionFromTag(tag);
@@ -48,6 +64,18 @@ export function verifyVersion(tag: string, root: string): { errors: string[]; no
     }
   } else {
     notes.push('No apps/desktop/src-tauri/tauri.conf.json; skipped the desktop version check.');
+  }
+  // The other versions the app reports: a missed one ships a server whose /api/health, or an app
+  // whose About and bug reports, name the previous release.
+  for (const source of REPORTED_VERSIONS) {
+    const file = path.join(root, source.file);
+    if (!existsSync(file)) continue;
+    const found = source.pattern.exec(readFileSync(file, 'utf8'))?.[1] ?? null;
+    if (found !== version) {
+      errors.push(
+        `${source.file} has ${source.what} "${String(found)}", but the tag is ${tag}. Update it, commit, and tag again.`,
+      );
+    }
   }
   const rootPackage = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as {
     version?: unknown;

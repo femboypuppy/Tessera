@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -24,6 +24,16 @@ describe('tags and versions', () => {
     expect(isPrerelease('v0.2.0-rc.1')).toBe(true);
     expect(isPrerelease('v0.2.0')).toBe(false);
     expect(isPrerelease('v0.2.0+build.5')).toBe(false);
+  });
+});
+
+describe('this repository', () => {
+  it('reports one version everywhere, the one of its next or latest tag', () => {
+    const repo = path.resolve(import.meta.dirname, '..', '..');
+    const web = JSON.parse(readFileSync(path.join(repo, 'apps/web/package.json'), 'utf8')) as {
+      version: string;
+    };
+    expect(verifyVersion(`v${web.version}`, repo)).toEqual({ errors: [], notes: [] });
   });
 });
 
@@ -53,6 +63,20 @@ describe('verifyVersion', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toMatch(/has version "0.1.0", but the tag is v0.2.0/);
     expect(result.notes).toEqual(['package.json has version "0.0.0" (the tag is v0.2.0).']);
+  });
+
+  it('fails when a version the app reports was not bumped', () => {
+    setup('0.2.0', '0.2.0');
+    const write = (file: string, text: string) => {
+      mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+      writeFileSync(path.join(root, file), text);
+    };
+    write('apps/web/package.json', JSON.stringify({ name: '@tessera/web', version: '0.2.0' }));
+    write('apps/server/src/http/app.ts', "export const SERVER_VERSION = '0.1.0';\n");
+    write('packages/plugins/src/constants.ts', "export const APP_VERSION = '0.2.0';\n");
+    expect(verifyVersion('v0.2.0', root).errors).toEqual([
+      'apps/server/src/http/app.ts has SERVER_VERSION "0.1.0", but the tag is v0.2.0. Update it, commit, and tag again.',
+    ]);
   });
 
   it('skips the desktop check when there is no desktop app', () => {
