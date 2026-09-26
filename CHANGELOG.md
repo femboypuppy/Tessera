@@ -32,9 +32,14 @@ unchanged, including your data and settings. Upgrading is recommended.
 - **importers:** reject a long, hostile CSV number cell in linear time ([`d40059b`](https://github.com/femboypuppy/Tessera/commit/d40059b06dfd1f6a00dda6f54e364b046c36b033))
 - **db-views:** read numbers, dates, emails and URLs in cells in linear time ([`4a427db`](https://github.com/femboypuppy/Tessera/commit/4a427db56e375e1cfda579f8d181e0c6c1ce3d60))
 
-<details>
-<summary><strong>Maintenance</strong> (1)</summary>
+### Documentation
 
+- the desktop app updates itself only from releases with signed update files ([`19ef694`](https://github.com/femboypuppy/Tessera/commit/19ef69466a87ef0713068a44eae2bc56d48efbd4))
+
+<details>
+<summary><strong>Maintenance</strong> (2)</summary>
+
+- **release:** version 0.1.1 ([`054a55c`](https://github.com/femboypuppy/Tessera/commit/054a55c00d4b1d89aa381b49ca7443f52dfd8a27))
 - **release:** the tag must match every version the app reports ([`ae8cda1`](https://github.com/femboypuppy/Tessera/commit/ae8cda1d4feff882de543b809648d62c525d8d55))
 
 </details>
