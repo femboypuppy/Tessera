@@ -53,6 +53,32 @@ export function isCurrencyCode(code: string): boolean {
 }
 
 /**
+ * Digits with an optional decimal part, or a bare decimal part, and an optional exponent. (Not
+ * `\d+\.?\d*`: with the dot optional, the two digit runs can split `000…0x` every which way.)
+ */
+const NUMBER = /^(\d+(?:\.\d*)?|\.\d+)(e[+-]?\d+)?$/i;
+
+const SUFFIX_SYMBOLS = new Set(['$', '€', '£', '¥', '₹', '₩']);
+
+/**
+ * A currency symbol or code at the end of a number (`12 €`, `1200 EUR`) and the text before it.
+ * Read from the end rather than with a regex: `\s*` before a suffix, tried at every position of a
+ * long run of spaces, made a cell of a few thousand spaces take seconds.
+ */
+function currencySuffix(source: string): { currency: string; rest: string } | null {
+  const last = source.at(-1) ?? '';
+  if (SUFFIX_SYMBOLS.has(last)) {
+    const currency = CURRENCY_SYMBOLS[last];
+    return currency ? { currency, rest: source.slice(0, -1) } : null;
+  }
+  const code = source.slice(-3);
+  if (/^[A-Z]{3}$/.test(code) && /\s/.test(source.at(-4) ?? '') && isCurrencyCode(code)) {
+    return { currency: code, rest: source.slice(0, -3) };
+  }
+  return null;
+}
+
+/**
  * Parses a number written by a person or a spreadsheet: thousands separators (`1,234.5`,
  * `1.234,5`, `1 234,5`), a leading sign or accounting parentheses, `%`, and currency symbols or
  * codes (`$1,200`, `1200 EUR`). Returns null when the text is not a number.
@@ -80,11 +106,10 @@ export function parseNumberText(text: string): ParsedNumber | null {
     currency = CURRENCY_SYMBOLS[prefix] ?? prefix;
     source = (symbol[1] ?? '') + source.slice(symbol[0].length);
   } else {
-    const suffix = /(?:\s*([$€£¥₹₩])|\s+([A-Z]{3}))$/.exec(source);
-    const code = suffix?.[1] ?? suffix?.[2];
-    if (suffix && code && (CURRENCY_SYMBOLS[code] || isCurrencyCode(code))) {
-      currency = CURRENCY_SYMBOLS[code] ?? code;
-      source = source.slice(0, -suffix[0].length);
+    const suffix = currencySuffix(source);
+    if (suffix) {
+      currency = suffix.currency;
+      source = suffix.rest;
     }
   }
   source = source.replace(SPACES, '');
@@ -106,7 +131,7 @@ export function parseNumberText(text: string): ParsedNumber | null {
   } else if (/^\d{1,3}(\.\d{3}){2,}$/.test(source)) {
     source = source.replace(/\./g, '');
   }
-  if (!/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(source)) return null;
+  if (!NUMBER.test(source)) return null;
   let value = Number(source);
   if (!Number.isFinite(value)) return null;
   if (negative) value = -value;
@@ -268,7 +293,8 @@ function parsePoint(input: string, dayFirst: boolean): ParsedPoint | null {
   return null;
 }
 
-const RANGE_SEPARATOR = /\s+(?:→|->|–|—|to)\s+/i;
+/** Between the two dates of a range, once runs of whitespace are single spaces. */
+const RANGE_SEPARATOR = / (?:→|->|–|—|to) /i;
 
 /**
  * Parses a date or a range (`2026-09-23 → 2026-09-30`). Times without an offset are read in the
@@ -283,7 +309,9 @@ export function parseDateText(
   ctx: Pick<QueryContext, 'timeZone'>,
   options: { dayFirst?: boolean } = {},
 ): DateValue | null {
-  const parts = text.trim().split(RANGE_SEPARATOR);
+  // Whitespace is collapsed first (parsePoint does it too), so the separator needs no `\s+`,
+  // which split a long run of spaces in quadratic time.
+  const parts = text.trim().replace(/\s+/g, ' ').split(RANGE_SEPARATOR);
   if (parts.length > 2) return null;
   const points = parts.map((part) => parsePoint(part, options.dayFirst ?? false));
   const [start, end] = points;
@@ -313,17 +341,38 @@ export function parseDateText(
   return value;
 }
 
-const EMAIL = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/;
-const URL_LIKE = /^(https?:\/\/[^\s]+|www\.[^\s]+\.[^\s]+)$/i;
+/** Characters allowed on either side of an email address's `@`. */
+const EMAIL_PART = /^[^\s@<>()[\]\\,;:"]+$/;
 
-/** True for text that looks like an email address. */
+/**
+ * What follows the first dot at index 1 or later (`tld` of `name.tld`), or null. Domains are read
+ * this way instead of with patterns like `[^\s]+\.[^\s]+`, whose two overlapping runs took seconds
+ * to reject a long cell.
+ */
+function afterInnerDot(value: string): string | null {
+  const dot = value.indexOf('.', 1);
+  return dot === -1 ? null : value.slice(dot + 1);
+}
+
+/** True for text that looks like an email address (`name@domain.tld`, a tld of 2+ characters). */
 export function looksLikeEmail(text: string): boolean {
-  return EMAIL.test(text.trim());
+  const value = text.trim();
+  const at = value.indexOf('@');
+  if (at === -1) return false;
+  const domain = value.slice(at + 1);
+  return (
+    EMAIL_PART.test(value.slice(0, at)) &&
+    EMAIL_PART.test(domain) &&
+    (afterInnerDot(domain)?.length ?? 0) >= 2
+  );
 }
 
 /** True for text that looks like a web address (`https://…` or `www.…`). */
 export function looksLikeUrl(text: string): boolean {
-  return URL_LIKE.test(text.trim());
+  const value = text.trim();
+  if (!/^\S+$/.test(value)) return false;
+  if (/^https?:\/\/./i.test(value)) return true;
+  return /^www\./i.test(value) && (afterInnerDot(value.slice(4))?.length ?? 0) >= 1;
 }
 
 /** Splits a multi-select cell (`Design, Research`) into unique, trimmed names. */

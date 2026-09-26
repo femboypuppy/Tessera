@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { property, testContext } from '../test/fixtures';
 import {
@@ -171,6 +172,72 @@ describe('helpers', () => {
     expect(looksLikeUrl('www.example.com')).toBe(true);
     expect(looksLikeUrl('example')).toBe(false);
     expect(splitNames(' Design, research ,design,, Ops ')).toEqual(['Design', 'research', 'Ops']);
+  });
+
+  it('detects emails and URLs exactly as the regexes they replace did', () => {
+    // The former patterns: two overlapping runs each, which took seconds on a long cell.
+    const email = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/;
+    const url = /^(https?:\/\/[^\s]+|www\.[^\s]+\.[^\s]+)$/i;
+    const unit = fc.constantFrom(
+      'a',
+      'Z',
+      '.',
+      '@',
+      ' ',
+      '/',
+      ':',
+      '"',
+      '\\',
+      'www.',
+      'WWW.',
+      'https://',
+      'http://',
+      'HTTP://',
+    );
+    fc.assert(
+      fc.property(fc.string({ unit, maxLength: 12 }), (text) => {
+        expect(looksLikeEmail(text)).toBe(email.test(text.trim()));
+        expect(looksLikeUrl(text)).toBe(url.test(text.trim()));
+      }),
+      { numRuns: 3000 },
+    );
+  });
+});
+
+describe('long, hostile cells', () => {
+  it('reads currencies at the end and ranges with any spacing, as before', () => {
+    expect(parseNumberText('12 €')).toEqual({ value: 12, percent: false, currency: 'EUR' });
+    expect(parseNumberText('1,200   EUR')).toEqual({
+      value: 1200,
+      percent: false,
+      currency: 'EUR',
+    });
+    expect(parseNumberText('12$')).toEqual({ value: 12, percent: false, currency: 'USD' });
+    expect(parseNumberText('12EUR')).toBeNull();
+    expect(parseNumberText('EUR')).toBeNull();
+    expect(parseNumberText('1.')?.value).toBe(1);
+    expect(parseDateText('2026-09-01    to    2026-09-03', ctx)).toEqual(
+      parseDateText('2026-09-01 → 2026-09-03', ctx),
+    );
+  });
+
+  it('are rejected in linear time (CSV cells and filters are untrusted text)', () => {
+    // Each of these took seconds with the former regexes (CodeQL js/polynomial-redos).
+    const cells = [
+      `1${' '.repeat(50_000)}x`,
+      `${'0'.repeat(50_000)}x`,
+      `a${' '.repeat(50_000)}b`,
+      `www.!.${'!.'.repeat(25_000)} x`,
+      `a@${'b.'.repeat(25_000)} x`,
+    ];
+    const started = performance.now();
+    for (const cell of cells) {
+      expect(parseNumberText(cell)).toBeNull();
+      expect(parseDateText(cell, ctx)).toBeNull();
+      expect(looksLikeUrl(cell)).toBe(false);
+      expect(looksLikeEmail(cell)).toBe(false);
+    }
+    expect(performance.now() - started).toBeLessThan(1000);
   });
 });
 
