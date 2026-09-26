@@ -41,4 +41,14 @@ describe('parseQuery', () => {
     expect(hasFilters(parsed)).toBe(true);
     expect(hasFilters(parseQuery('plain words'))).toBe(false);
   });
+
+  it('reads a pasted wall of text in linear time', () => {
+    // `""""…` took about 6 s at 40,000 characters when a key could run over quotes and colons.
+    const started = performance.now();
+    for (const query of ['""'.repeat(25_000), 'a:'.repeat(25_000), `in:"${'!'.repeat(50_000)}`]) {
+      parseQuery(query);
+    }
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(parseQuery('in:"Mission notes" x:y:"z"').within).toEqual(['Mission notes']);
+  });
 });

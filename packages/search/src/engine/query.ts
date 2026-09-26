@@ -23,7 +23,11 @@ export interface ParsedQuery {
   hasTasks: boolean;
 }
 
-const TOKEN = /(\S+?):"([^"]*)"?|"([^"]*)"?|(\S+)/g;
+/**
+ * `key:"quoted value"`, `"a phrase"` or a bare word. A key has no colon or quote, so a failed
+ * `key:"` stops at the first one (an unbounded key rescanned the rest of `""""…` at every quote).
+ */
+const TOKEN = /([^\s:"]+):"([^"]*)"?|"([^"]*)"?|(\S+)/g;
 
 /** Splits a query into free text and filters. */
 export function parseQuery(query: string): ParsedQuery {
