@@ -88,6 +88,15 @@ describe('cells', () => {
     expect(parseNumberCell('-3')).toMatchObject({ value: -3 });
     expect(parseNumberCell('12 GBP')).toMatchObject({ value: 12, currency: 'GBP' });
     for (const bad of ['1.2.3', 'abc', '1,23', '']) expect(parseNumberCell(bad)).toBeNull();
+    expect(parseNumberCell('7.')).toMatchObject({ value: 7 });
+    expect(parseNumberCell('.5e2')).toMatchObject({ value: 50 });
+  });
+
+  it('rejects a long, hostile cell in linear time', () => {
+    // `0000…0x` took minutes at 10,000 to 40,000 characters with `\d+\.?\d*`.
+    const started = performance.now();
+    expect(parseNumberCell(`${'0'.repeat(50_000)}x`)).toBeNull();
+    expect(performance.now() - started).toBeLessThan(1000);
   });
 
   it('parses checkboxes and relations', () => {

@@ -220,7 +220,8 @@ export function parseNumberCell(raw: string): NumberCell | null {
   const percent = value.endsWith('%');
   if (percent) value = value.slice(0, -1);
   if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(value)) value = value.replace(/,/g, '');
-  if (!/^-?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(value)) return null;
+  // Not `\d+\.?\d*`: with the dot optional, the two digit runs split `000…0x` every which way.
+  if (!/^-?(\d+(?:\.\d*)?|\.\d+)(e[+-]?\d+)?$/i.test(value)) return null;
   const number = Number(value);
   if (!Number.isFinite(number)) return null;
   const decimals = /\.(\d+)/.exec(value)?.[1]?.length ?? 0;
