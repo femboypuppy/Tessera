@@ -16,7 +16,7 @@ import { chromium } from 'playwright';
 const docsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(docsDir, '.vitepress', 'dist');
 const outDir = path.resolve(docsDir, '..', 'assets', 'screenshots', 'docs');
-const base = process.env.DOCS_BASE ?? '/Tessera/';
+const base = process.env.DOCS_BASE ?? '/Tessera-Notes/';
 
 const SHOTS = [
   { name: 'docs-home', path: '' },

@@ -3,20 +3,20 @@
 <Container version="2">
   <Name>Tessera</Name>
   <Repository>ghcr.io/femboypuppy/tessera:latest</Repository>
-  <Registry>https://github.com/femboypuppy/Tessera/pkgs/container/tessera</Registry>
+  <Registry>https://github.com/femboypuppy/Tessera-Notes/pkgs/container/tessera</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-  <Support>https://github.com/femboypuppy/Tessera/issues</Support>
-  <Project>https://github.com/femboypuppy/Tessera</Project>
+  <Support>https://github.com/femboypuppy/Tessera-Notes/issues</Support>
+  <Project>https://github.com/femboypuppy/Tessera-Notes</Project>
   <Overview>Tessera is a local-first, open-source knowledge app: Notion-style pages and databases, Obsidian-style [[links]], backlinks and a graph, real-time collaboration and plugins. This container is the sync server and the web app. Your notes also stay on every device that uses them, and export to plain markdown any time.&#xD;
 &#xD;
 After the first start, create the owner from the container's console: su-exec node tessera-server create-owner</Overview>
   <Category>Productivity: Tools:</Category>
   <WebUI>http://[IP]:[PORT:8787]/</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/femboypuppy/Tessera/main/deploy/appstores/unraid/tessera.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/femboypuppy/Tessera/main/apps/desktop/src-tauri/icons/icon.png</Icon>
+  <TemplateURL>https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/deploy/appstores/unraid/tessera.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/apps/desktop/src-tauri/icons/icon.png</Icon>
   <!-- Started as root so the entrypoint can give the appdata folder to the app user (uid 1000); the server then runs unprivileged. -->
   <ExtraParams>--user 0 --security-opt no-new-privileges:true</ExtraParams>
   <PostArgs/>

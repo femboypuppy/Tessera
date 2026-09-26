@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Most questions get a faster answer in [GitHub Discussions](https://github.com/femboypuppy/Tessera/discussions/categories/q-a)**, where the whole community can help and the answer stays easy to find.
-        The [docs](https://femboypuppy.github.io/Tessera/), the [FAQ](https://femboypuppy.github.io/Tessera/guide/faq) and [troubleshooting](https://femboypuppy.github.io/Tessera/guide/troubleshooting) may already answer it.
+        **Most questions get a faster answer in [GitHub Discussions](https://github.com/femboypuppy/Tessera-Notes/discussions/categories/q-a)**, where the whole community can help and the answer stays easy to find.
+        The [docs](https://femboypuppy.github.io/Tessera-Notes/), the [FAQ](https://femboypuppy.github.io/Tessera-Notes/guide/faq) and [troubleshooting](https://femboypuppy.github.io/Tessera-Notes/guide/troubleshooting) may already answer it.
   - type: textarea
     id: question
     attributes:

@@ -12,7 +12,7 @@ const FIXTURES = fileURLToPath(new URL('./fixtures/', import.meta.url));
 const LOCK = `${EXAMPLES}.e2e-build-lock`;
 
 /** Where the default registry and the example zips are published (served locally in tests). */
-export const REGISTRY_BASE = 'https://femboypuppy.github.io/Tessera/plugins/';
+export const REGISTRY_BASE = 'https://femboypuppy.github.io/Tessera-Notes/plugins/';
 /** Test-only plugins in e2e/plugins/fixtures, served under this origin. */
 export const FIXTURE_BASE = 'https://fixtures.tessera.test/';
 

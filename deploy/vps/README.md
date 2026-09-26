@@ -37,7 +37,7 @@ only Caddy is reachable from outside.
 
 ```bash
 sudo mkdir -p /opt/tessera && sudo chown "$USER" /opt/tessera && cd /opt/tessera
-base=https://raw.githubusercontent.com/femboypuppy/Tessera/main
+base=https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main
 curl -fsSLO "$base/docker-compose.yml"
 curl -fsSL "$base/.env.example" -o .env
 mkdir -p deploy/caddy deploy/backup
@@ -47,7 +47,7 @@ curl -fsSL "$base/deploy/backup/restore.sh" -o deploy/backup/restore.sh
 chmod +x deploy/backup/*.sh
 ```
 
-Or clone the repository and use it in place: `git clone https://github.com/femboypuppy/Tessera /opt/tessera`.
+Or clone the repository and use it in place: `git clone https://github.com/femboypuppy/Tessera-Notes /opt/tessera`.
 
 ## 5. Configure
 

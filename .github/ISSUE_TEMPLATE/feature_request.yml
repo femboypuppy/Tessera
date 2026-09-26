@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the idea! Please check the [roadmap](https://github.com/femboypuppy/Tessera#roadmap) and [existing requests](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+label%3Aenhancement) first.
-        Could this be a plugin? Many ideas can be, and plugins ship faster. See the [plugin docs](https://femboypuppy.github.io/Tessera/plugins/).
+        Thanks for the idea! Please check the [roadmap](https://github.com/femboypuppy/Tessera-Notes#roadmap) and [existing requests](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+label%3Aenhancement) first.
+        Could this be a plugin? Many ideas can be, and plugins ship faster. See the [plugin docs](https://femboypuppy.github.io/Tessera-Notes/plugins/).
   - type: textarea
     id: problem
     attributes:

@@ -119,7 +119,7 @@ pnpm --filter @tessera/desktop tauri build --config '{"bundle":{"createUpdaterAr
 ```
 
 `tauri-action` with `includeUpdaterJson: true` uploads `latest.json`, which the app reads from
-`https://github.com/femboypuppy/Tessera/releases/latest/download/latest.json`.
+`https://github.com/femboypuppy/Tessera-Notes/releases/latest/download/latest.json`.
 
 ## Icons
 

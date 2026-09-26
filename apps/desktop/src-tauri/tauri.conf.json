@@ -51,7 +51,7 @@
     "active": true,
     "targets": "all",
     "publisher": "Tessera contributors",
-    "homepage": "https://github.com/femboypuppy/Tessera",
+    "homepage": "https://github.com/femboypuppy/Tessera-Notes",
     "license": "MIT",
     "category": "Productivity",
     "shortDescription": "Local-first notes, docs and databases",
@@ -96,7 +96,9 @@
       }
     },
     "updater": {
-      "endpoints": ["https://github.com/femboypuppy/Tessera/releases/latest/download/latest.json"],
+      "endpoints": [
+        "https://github.com/femboypuppy/Tessera-Notes/releases/latest/download/latest.json"
+      ],
       "pubkey": "REPLACE_WITH_TAURI_SIGNING_PUBLIC_KEY",
       "windows": {
         "installMode": "passive"

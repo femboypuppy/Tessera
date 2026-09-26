@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug! Please search [existing issues](https://github.com/femboypuppy/Tessera/issues) first.
+        Thanks for taking the time to report a bug! Please search [existing issues](https://github.com/femboypuppy/Tessera-Notes/issues) first.
         **Security vulnerabilities:** don't file them here. Report them privately through the repository's Security tab.
   - type: textarea
     id: what-happened

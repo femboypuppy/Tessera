@@ -8,5 +8,5 @@
   "entry": "main.js",
   "permissions": ["pages:read", "ui:panels"],
   "icon": "🔢",
-  "repository": "https://github.com/femboypuppy/Tessera"
+  "repository": "https://github.com/femboypuppy/Tessera-Notes"
 }

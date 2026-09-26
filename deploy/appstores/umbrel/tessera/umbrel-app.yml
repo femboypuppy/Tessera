@@ -4,7 +4,7 @@ category: files
 name: Tessera
 version: '0.1.1'
 tagline: Local-first notes, docs and databases
-icon: https://raw.githubusercontent.com/femboypuppy/Tessera/main/apps/desktop/src-tauri/icons/icon.png
+icon: https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/apps/desktop/src-tauri/icons/icon.png
 description: >-
   Tessera is an open-source knowledge app: Notion-style pages and databases, Obsidian-style
   [[links]], backlinks and a graph, real-time collaboration and plugins.
@@ -18,10 +18,10 @@ description: >-
   `tessera-server create-owner`.
 releaseNotes: ''
 developer: Tessera contributors
-website: https://github.com/femboypuppy/Tessera
+website: https://github.com/femboypuppy/Tessera-Notes
 dependencies: []
-repo: https://github.com/femboypuppy/Tessera
-support: https://github.com/femboypuppy/Tessera/issues
+repo: https://github.com/femboypuppy/Tessera-Notes
+support: https://github.com/femboypuppy/Tessera-Notes/issues
 port: 8787
 gallery:
   - 1.jpg

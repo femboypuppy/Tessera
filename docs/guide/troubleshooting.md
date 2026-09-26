@@ -1,7 +1,7 @@
 # Troubleshooting
 
 Something not working? Start here. If your problem isn't listed,
-[open an issue](https://github.com/femboypuppy/Tessera/issues/new/choose) with the details from
+[open an issue](https://github.com/femboypuppy/Tessera-Notes/issues/new/choose) with the details from
 **Diagnostics** below.
 
 ## Diagnostics
@@ -39,7 +39,7 @@ synced to a server, open it again from **Settings → Sync & account**. Otherwis
 ## Desktop app
 
 **macOS says the app is damaged or from an unidentified developer.**
-Download it again from the [releases page](https://github.com/femboypuppy/Tessera/releases/latest)
+Download it again from the [releases page](https://github.com/femboypuppy/Tessera-Notes/releases/latest)
 and compare the checksum. If the release notes say that build isn't signed yet, right-click the
 app, choose **Open**, and confirm.
 

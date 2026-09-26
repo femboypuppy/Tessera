@@ -32,8 +32,8 @@ command.
 
 ```bash
 mkdir tessera && cd tessera
-curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera/main/docker-compose.yml
-curl -fsSL https://raw.githubusercontent.com/femboypuppy/Tessera/main/.env.example -o .env
+curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/.env.example -o .env
 ```
 
 Edit `.env`: at least set `PUBLIC_URL` to the address people will use. Then:
@@ -64,7 +64,7 @@ Sign in as the owner, open **Settings → Sync & account**, and create an invite
 ## Hosting platforms
 
 Step-by-step guides for a VPS with Docker and Caddy, Fly.io, Railway and Render are in the
-[`deploy/` folder](https://github.com/femboypuppy/Tessera/tree/main/deploy) of the repository.
+[`deploy/` folder](https://github.com/femboypuppy/Tessera-Notes/tree/main/deploy) of the repository.
 
 ## Keep it safe
 

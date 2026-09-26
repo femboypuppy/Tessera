@@ -57,13 +57,13 @@ GitHub release downloads don't.
 
 The **Browse** tab of Settings → Plugins lists the plugins of a registry: one `registry.json`
 file that anyone can host. The default registry is
-[`examples/plugins/registry.json`](https://github.com/femboypuppy/Tessera/blob/main/examples/plugins/registry.json) in the Tessera
-repository, published at `https://femboypuppy.github.io/Tessera/plugins/registry.json`. Users can
+[`examples/plugins/registry.json`](https://github.com/femboypuppy/Tessera-Notes/blob/main/examples/plugins/registry.json) in the Tessera
+repository, published at `https://femboypuppy.github.io/Tessera-Notes/plugins/registry.json`. Users can
 switch to another registry with **Change registry**, next to the search box.
 
 ```json
 {
-  "$schema": "https://femboypuppy.github.io/Tessera/plugins/registry.schema.json",
+  "$schema": "https://femboypuppy.github.io/Tessera-Notes/plugins/registry.schema.json",
   "version": 1,
   "name": "My plugins",
   "updatedAt": "2026-09-24",
@@ -101,7 +101,7 @@ Each entry has:
 | `tags` | No | Up to 10 words, used by search. |
 
 The format has a JSON Schema,
-[`registry.schema.json`](https://github.com/femboypuppy/Tessera/blob/main/examples/plugins/registry.schema.json): editors validate the file
+[`registry.schema.json`](https://github.com/femboypuppy/Tessera-Notes/blob/main/examples/plugins/registry.schema.json): editors validate the file
 as you type when it links the schema with `$schema`. Entries that aren't valid are left out of
 the Browse tab (it says how many), so one broken entry never hides the others.
 

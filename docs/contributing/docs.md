@@ -57,8 +57,8 @@ It writes `assets/brand/` and copies the favicon set into `docs/public/`.
 
 ## Deploying (GitHub Pages)
 
-GitHub Pages serves the site at `https://femboypuppy.github.io/Tessera/`, so the site is built
-with the base path `/Tessera/` (set in `docs/.vitepress/config.mts`). To serve it somewhere else,
+GitHub Pages serves the site at `https://femboypuppy.github.io/Tessera-Notes/`, so the site is built
+with the base path `/Tessera-Notes/` (set in `docs/.vitepress/config.mts`). To serve it somewhere else,
 set `DOCS_BASE` when building:
 
 ```bash

@@ -1,7 +1,7 @@
 # Launch kit
 
 Drafts for launch day. Edit freely; they're written to be humble, specific and easy to try.
-Links assume the repository is `github.com/femboypuppy/Tessera` and the docs are on GitHub Pages.
+Links assume the repository is `github.com/femboypuppy/Tessera-Notes` and the docs are on GitHub Pages.
 
 **Before you post anything:** the [launch-day checklist](#launch-day-checklist) at the bottom.
 
@@ -26,7 +26,7 @@ Alternatives:
 - Show HN: Tessera – open-source notes with databases, backlinks and real-time sync
 - Show HN: Tessera – Notion-style blocks and databases that work offline, MIT licensed
 
-**URL:** `https://github.com/femboypuppy/Tessera`
+**URL:** `https://github.com/femboypuppy/Tessera-Notes`
 
 **Text:**
 
@@ -74,7 +74,7 @@ Alternatives:
 >   app over a validated postMessage RPC, with permissions checked on every call.
 > - Search is MiniSearch in a worker; the graph is sigma.js with ForceAtlas2 in a worker.
 >
-> The architecture doc is here: https://femboypuppy.github.io/Tessera/contributing/architecture
+> The architecture doc is here: https://femboypuppy.github.io/Tessera-Notes/contributing/architecture
 >
 > Happy to go into any of it.
 
@@ -131,8 +131,8 @@ run, what it stores, and how to back it up.
 >
 > Screenshots: [link to the README or an album]
 >
-> Docs: https://femboypuppy.github.io/Tessera/self-hosting/ · Repo:
-> https://github.com/femboypuppy/Tessera
+> Docs: https://femboypuppy.github.io/Tessera-Notes/self-hosting/ · Repo:
+> https://github.com/femboypuppy/Tessera-Notes
 >
 > It's 0.1, so I'd especially love feedback on the deployment story: what's missing for your
 > setup (Unraid/CasaOS templates, OIDC, S3 backups…)?
@@ -164,9 +164,9 @@ editing (`sync/presence`) and the page in dark mode.
 > Contributions are very welcome. There are good first issues with pointers to the code, a
 > contributor guide, and an architecture overview:
 >
-> - Repo: https://github.com/femboypuppy/Tessera
-> - Good first issues: https://github.com/femboypuppy/Tessera/issues?q=label%3A%22good+first+issue%22
-> - Architecture: https://femboypuppy.github.io/Tessera/contributing/architecture
+> - Repo: https://github.com/femboypuppy/Tessera-Notes
+> - Good first issues: https://github.com/femboypuppy/Tessera-Notes/issues?q=label%3A%22good+first+issue%22
+> - Architecture: https://femboypuppy.github.io/Tessera-Notes/contributing/architecture
 >
 > Feedback on the code and the docs is as welcome as feedback on the app.
 
@@ -220,7 +220,7 @@ Each post fits 280 characters (Bluesky: 300, Mastodon: 500). Attach one image or
    > databases, Obsidian's [[links]] and graph, real-time collaboration, and a server you host
    > in one container. MIT licensed. 🧵
    >
-   > github.com/femboypuppy/Tessera
+   > github.com/femboypuppy/Tessera-Notes
 
    *Image: `assets/demo.gif`*
 
@@ -253,7 +253,7 @@ Each post fits 280 characters (Bluesky: 300, Mastodon: 500). Attach one image or
    > click.
 
 7. > It's 0.1 and I'd love your feedback, bug reports and first PRs. Docs:
-   > femboypuppy.github.io/Tessera ⭐ if you'd like to follow along!
+   > femboypuppy.github.io/Tessera-Notes ⭐ if you'd like to follow along!
 
 Hashtags (Mastodon, where they help discovery): #OpenSource #SelfHosted #LocalFirst #PKM
 #NoteTaking.
@@ -272,7 +272,7 @@ if people ask for details.*
 Most note apps make you choose. Notion has blocks, databases and real-time collaboration, but
 your notes live on someone else's server. Obsidian keeps everything in files on your disk, but
 collaboration and databases are afterthoughts. I wanted both, so I built
-[Tessera](https://github.com/femboypuppy/Tessera): open source, local-first, and self-hostable.
+[Tessera](https://github.com/femboypuppy/Tessera-Notes): open source, local-first, and self-hostable.
 
 This post is about the core decision that makes it work: every piece of content is a
 [Yjs](https://github.com/yjs/yjs) document.
@@ -386,9 +386,9 @@ The complexity is real, but it lives in a few places: the document layout, the w
 server's authorization. Everything else, from the editor to databases to plugins, just edits
 `Y.Doc`s through small typed helpers and gets offline support and collaboration for free.
 
-If you want to dig in, the [architecture guide](https://femboypuppy.github.io/Tessera/contributing/architecture)
+If you want to dig in, the [architecture guide](https://femboypuppy.github.io/Tessera-Notes/contributing/architecture)
 goes deeper, and the code is MIT licensed on
-[GitHub](https://github.com/femboypuppy/Tessera). Try the demo workspace, break it, and tell me
+[GitHub](https://github.com/femboypuppy/Tessera-Notes). Try the demo workspace, break it, and tell me
 what you find.
 
 ---

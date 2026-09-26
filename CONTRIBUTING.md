@@ -17,10 +17,10 @@ By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Ways to help
 
-- **Report a bug** with the [bug report form](https://github.com/femboypuppy/Tessera/issues/new?template=bug_report.yml).
+- **Report a bug** with the [bug report form](https://github.com/femboypuppy/Tessera-Notes/issues/new?template=bug_report.yml).
   Steps to reproduce are the most useful thing you can give us.
-- **Suggest a feature** with the [feature request form](https://github.com/femboypuppy/Tessera/issues/new?template=feature_request.yml).
-- **Answer questions** in [Discussions](https://github.com/femboypuppy/Tessera/discussions).
+- **Suggest a feature** with the [feature request form](https://github.com/femboypuppy/Tessera-Notes/issues/new?template=feature_request.yml).
+- **Answer questions** in [Discussions](https://github.com/femboypuppy/Tessera-Notes/discussions).
 - **Improve the docs.** Every docs page has an "Edit this page on GitHub" link.
 - **Write code**: start with a [good first issue](#pick-a-first-issue).
 - **Build a plugin** and share it in the community registry.
@@ -34,8 +34,8 @@ You need:
 - Git
 
 ```bash
-git clone https://github.com/femboypuppy/Tessera.git
-cd Tessera
+git clone https://github.com/femboypuppy/Tessera-Notes.git
+cd Tessera-Notes
 corepack enable
 pnpm install
 pnpm dev
@@ -111,7 +111,7 @@ A few ideas make the codebase easy to work in:
 
 - **`packages/core` is the contract.** Types, the document schema, service interfaces and the
   runtime live there. Everything else builds on it. Read [SPEC.md](SPEC.md) for the details and
-  the [architecture guide](https://femboypuppy.github.io/Tessera/contributing/architecture) for
+  the [architecture guide](https://femboypuppy.github.io/Tessera-Notes/contributing/architecture) for
   the overview.
 - **Features plug in; they don't patch.** Each feature registers routes, commands, panels, blocks
   and services through one `FeatureModule` in `apps/web/src/features/<area>/index.ts`. The code
@@ -123,13 +123,13 @@ A few ideas make the codebase easy to work in:
 
 ## Pick a first issue
 
-1. Browse [`good first issue`](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+1. Browse [`good first issue`](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
    Each one says what to change, where, and how to check it works.
 2. Comment "I'd like to take this" so nobody else starts on it. A maintainer assigns it to you.
 3. Stuck? Ask in the issue. Questions are welcome; there are no silly ones.
 
 For anything bigger than a small fix, open a
-[discussion](https://github.com/femboypuppy/Tessera/discussions) or an issue first, so we can agree
+[discussion](https://github.com/femboypuppy/Tessera-Notes/discussions) or an issue first, so we can agree
 on the approach before you spend time on code.
 
 ## Make a change
@@ -211,7 +211,7 @@ The scaffold includes a manifest, source, a build, and tests with a mocked API. 
 
 1. Load your plugin in Tessera from **Settings → Plugins** in dev mode, with live reload.
 2. Read the plugin guide and API reference in the
-   [docs](https://femboypuppy.github.io/Tessera/plugins/).
+   [docs](https://femboypuppy.github.io/Tessera-Notes/plugins/).
 3. Look at the example plugins in [`examples/`](examples) for patterns.
 4. Publish it to the community registry when it's ready.
 

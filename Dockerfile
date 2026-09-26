@@ -108,7 +108,7 @@ FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS node
 FROM alpine:${ALPINE_VERSION} AS runtime
 LABEL org.opencontainers.image.title="Tessera" \
       org.opencontainers.image.description="Local-first knowledge app: sync server and web app" \
-      org.opencontainers.image.source="https://github.com/femboypuppy/Tessera" \
+      org.opencontainers.image.source="https://github.com/femboypuppy/Tessera-Notes" \
       org.opencontainers.image.licenses="MIT"
 # libstdc++/libgcc: what the node binary links against. tini forwards signals (a graceful
 # shutdown flushes the database) and reaps zombies.

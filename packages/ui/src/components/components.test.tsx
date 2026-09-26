@@ -250,7 +250,9 @@ describe('FeatureBoundary', () => {
     const link = screen.getByRole('link', { name: 'Report on GitHub' });
     expect(link).toHaveAttribute('target', '_blank');
     const url = new URL(link.getAttribute('href') ?? '');
-    expect(url.origin + url.pathname).toBe('https://github.com/femboypuppy/Tessera/issues/new');
+    expect(url.origin + url.pathname).toBe(
+      'https://github.com/femboypuppy/Tessera-Notes/issues/new',
+    );
     expect(url.searchParams.get('template')).toBe('bug_report.yml');
     expect(url.searchParams.get('title')).toBe('[Bug]: graph layout failed');
     expect(url.searchParams.get('version')).toBe('0.1.0');

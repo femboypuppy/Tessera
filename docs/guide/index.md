@@ -52,6 +52,6 @@ way.
 
 Tessera 0.1 has no native mobile apps (the web app works at phone width), no end-to-end
 encryption, no public page sharing or per-page permissions, no comments, and no AI features. The
-[roadmap](https://github.com/femboypuppy/Tessera#roadmap) lists what comes next.
+[roadmap](https://github.com/femboypuppy/Tessera-Notes#roadmap) lists what comes next.
 
 Ready? [Install Tessera](./installation), then take the [first steps](./first-steps).

@@ -3,7 +3,7 @@
 Thanks for helping! Tessera welcomes code, docs, translations, bug reports, plugins and ideas.
 First contributions are very welcome, and every pull request gets a friendly review.
 
-The full guide is [CONTRIBUTING.md](https://github.com/femboypuppy/Tessera/blob/main/CONTRIBUTING.md)
+The full guide is [CONTRIBUTING.md](https://github.com/femboypuppy/Tessera-Notes/blob/main/CONTRIBUTING.md)
 in the repository. Here is the short version.
 
 ## Set up
@@ -11,7 +11,7 @@ in the repository. Here is the short version.
 You need Node.js 24 and pnpm 11 (Corepack installs it).
 
 ```bash
-git clone https://github.com/femboypuppy/Tessera.git && cd Tessera
+git clone https://github.com/femboypuppy/Tessera-Notes.git && cd Tessera-Notes
 corepack enable
 pnpm install
 pnpm dev
@@ -34,10 +34,10 @@ Run one package with `pnpm --filter @tessera/<name> <script>`, for example
 ## Find something to work on
 
 - Issues labeled
-  [good first issue](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+  [good first issue](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
   are small, well described and have a pointer to the code.
 - Bigger ideas start as a
-  [discussion](https://github.com/femboypuppy/Tessera/discussions) so we can agree on the approach
+  [discussion](https://github.com/femboypuppy/Tessera-Notes/discussions) so we can agree on the approach
   before you write code.
 - Comment on an issue to claim it, so nobody duplicates your work.
 

@@ -1,7 +1,7 @@
 # Upgrading
 
 Tessera follows [semantic versioning](https://semver.org). Read the
-[release notes](https://github.com/femboypuppy/Tessera/releases) before upgrading: they call out
+[release notes](https://github.com/femboypuppy/Tessera-Notes/releases) before upgrading: they call out
 anything you need to do.
 
 ## Docker Compose
@@ -46,4 +46,4 @@ update is required.
 
 If an upgrade goes wrong, stop the server, restore the backup you took (see
 [Backups and restore](./backups)) and run the previous image tag. Then
-[open an issue](https://github.com/femboypuppy/Tessera/issues/new/choose) so we can fix it.
+[open an issue](https://github.com/femboypuppy/Tessera-Notes/issues/new/choose) so we can fix it.

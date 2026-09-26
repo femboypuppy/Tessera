@@ -19,7 +19,7 @@ hero:
       link: /self-hosting/
     - theme: alt
       text: View on GitHub
-      link: https://github.com/femboypuppy/Tessera
+      link: https://github.com/femboypuppy/Tessera-Notes
 
 features:
   - title: Local-first, literally

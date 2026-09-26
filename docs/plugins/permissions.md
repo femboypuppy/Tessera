@@ -140,4 +140,4 @@ The sandbox is strong, but it isn't magic. What it doesn't do:
   (16 different ways) sends nothing once it is in a nested frame.
 
 Found a way around the sandbox? Please report it privately; see the repository's
-[security policy](https://github.com/femboypuppy/Tessera/blob/main/SECURITY.md).
+[security policy](https://github.com/femboypuppy/Tessera-Notes/blob/main/SECURITY.md).

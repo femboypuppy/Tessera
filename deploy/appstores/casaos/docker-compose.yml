@@ -51,7 +51,7 @@ x-casaos:
   author: Tessera contributors
   developer: Tessera contributors
   category: Productivity
-  icon: https://raw.githubusercontent.com/femboypuppy/Tessera/main/apps/desktop/src-tauri/icons/icon.png
+  icon: https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/apps/desktop/src-tauri/icons/icon.png
   tagline:
     en_us: Local-first notes, docs and databases
   description:

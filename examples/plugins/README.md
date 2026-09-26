@@ -32,5 +32,5 @@ Outside this repository, each folder is a standalone project: `pnpm install`, `p
 
 [`registry.json`](registry.json) lists these plugins in the [registry format](registry.schema.json).
 It is published with the example zips to
-`https://femboypuppy.github.io/Tessera/plugins/`, the default registry of Settings → Plugins →
+`https://femboypuppy.github.io/Tessera-Notes/plugins/`, the default registry of Settings → Plugins →
 Browse. See [docs/plugins/publishing.md](../../docs/plugins/publishing.md) to list your own plugin.

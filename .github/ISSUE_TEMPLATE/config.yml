@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question or share an idea
-    url: https://github.com/femboypuppy/Tessera/discussions
+    url: https://github.com/femboypuppy/Tessera-Notes/discussions
     about: Questions, ideas and show-and-tell live in GitHub Discussions.
   - name: Report a security vulnerability
-    url: https://github.com/femboypuppy/Tessera/security/advisories/new
+    url: https://github.com/femboypuppy/Tessera-Notes/security/advisories/new
     about: Please report vulnerabilities privately, never in a public issue.
   - name: Read the docs
-    url: https://femboypuppy.github.io/Tessera/
+    url: https://femboypuppy.github.io/Tessera-Notes/
     about: Guides for using, self-hosting and extending Tessera.

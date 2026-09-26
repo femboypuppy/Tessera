@@ -26,7 +26,7 @@ Milestones from `agents/10-docs-launch.md`, each committed when it worked. All d
 | `assets/brand/` | `logo-mark.svg`, `app-icon.svg`, `favicon.svg`, `favicon.ico` (16/32/48), `wordmark-light.svg`, `wordmark-dark.svg`, `social-preview.html` (template) → `social-preview.png` (1280×640), `png/` (mark at 16–512, app icon at 180/192/512/1024, wordmarks, `legibility.png` review sheet, `demo-placeholder.png`). |
 | `assets/demo.gif` | A clearly labeled "Demo recording coming soon" placeholder. The polish phase replaces it; the brand script never overwrites an existing GIF. |
 | `docs/` | A standalone pnpm project (`@tessera/docs`, own `pnpm-workspace.yaml` and lockfile, because the root workspace only globs `apps/*` and `packages/*`). |
-| `docs/.vitepress/config.mts` | Nav, sidebars, local search, edit links, Mermaid, `base` from `DOCS_BASE` (default `/Tessera/`), a dev middleware and a `buildEnd` copy that serve `assets/screenshots` at `/screenshots/`, and the plugins sidebar built from `docs/plugins/`. |
+| `docs/.vitepress/config.mts` | Nav, sidebars, local search, edit links, Mermaid, `base` from `DOCS_BASE` (default `/Tessera-Notes/`), a dev middleware and a `buildEnd` copy that serve `assets/screenshots` at `/screenshots/`, and the plugins sidebar built from `docs/plugins/`. |
 | `docs/.vitepress/theme/` | Default theme + token colors (`style.css`) + `<Screenshot name alt>` (light/dark image, hides itself if the file doesn't exist yet). |
 | `docs/index.md`, `docs/guide/*`, `docs/self-hosting/*`, `docs/contributing/*` | 22 pages with the home page: what is Tessera, installation, first steps, editor, keyboard shortcuts, databases, links and graph, search, import and export, sync and collaboration, desktop, FAQ, troubleshooting; self-hosting overview, configuration reference, HTTPS, backups, upgrading; contributing, architecture (from SPEC.md, with the Mermaid diagram), writing docs (incl. the GitHub Pages base path). |
 | `docs/scripts/brand.ts`, `render-brand.ts` | Brand geometry and colors from `packages/ui/src/styles/tokens.css`; `pnpm --dir docs brand` regenerates everything in `assets/brand/`, `assets/demo.gif` (only if missing, needs ffmpeg) and `docs/public/`. |
@@ -178,7 +178,7 @@ None.
   `pnpm --filter @tessera/desktop exec tauri icon ../../assets/brand/png/app-icon-1024.png`.
 - **Docs deploy (Agent 09's `docs.yml`).** Build with `pnpm --dir docs install --frozen-lockfile`
   then `pnpm --dir docs build` (runs the checks first), upload `docs/.vitepress/dist`, and set Pages
-  to deploy from Actions. The base path is `/Tessera/` (override with `DOCS_BASE`). If you'd rather
+  to deploy from Actions. The base path is `/Tessera-Notes/` (override with `DOCS_BASE`). If you'd rather
   make `docs` a root workspace package, delete `docs/pnpm-workspace.yaml` and `docs/pnpm-lock.yaml`
   and add `docs` to the root `pnpm-workspace.yaml`.
 - **Plugin docs (Agent 06).** Nothing to wire: pages in `docs/plugins/` appear in the sidebar. Add

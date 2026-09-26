@@ -196,7 +196,7 @@ typechecked.
 - **Registry**: one static `registry.json` (any host with CORS), zod-validated per entry. Invalid
   entries are skipped and counted, never fatal. The optional `sha256` is checked, and a manifest
   may not ask for permissions its entry doesn't list. The default URL is
-  `https://femboypuppy.github.io/Tessera/plugins/registry.json`: the repository's Pages site,
+  `https://femboypuppy.github.io/Tessera-Notes/plugins/registry.json`: the repository's Pages site,
   which serves with `Access-Control-Allow-Origin: *`. Community listings go through pull requests
   to `examples/plugins/registry.json` (documented in `docs/plugins/publishing.md`).
 - **Dev mode polls** the dev server's `manifest.json` and entry every second and reinstalls on a

@@ -63,7 +63,7 @@ export function describeError(error: Error, context: Record<string, string> = {}
 }
 
 /** The repository's bug report form (`.github/ISSUE_TEMPLATE/bug_report.yml`). */
-const BUG_REPORT_FORM = 'https://github.com/femboypuppy/Tessera/issues/new';
+const BUG_REPORT_FORM = 'https://github.com/femboypuppy/Tessera-Notes/issues/new';
 /** GitHub answers 414 above about 8 KB of URL; the stack is cut to stay well below. */
 const MAX_REPORT_DETAILS = 5000;
 let reportedVersion = '';

@@ -48,7 +48,7 @@ describe('example plugins', () => {
         permissions: manifest.permissions,
         name: manifest.name,
         icon: manifest.icon,
-        download: `https://femboypuppy.github.io/Tessera/plugins/${entry.id}-${manifest.version}.zip`,
+        download: `https://femboypuppy.github.io/Tessera-Notes/plugins/${entry.id}-${manifest.version}.zip`,
       });
     }
   });

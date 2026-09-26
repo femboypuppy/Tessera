@@ -8,7 +8,7 @@ syncing with a newer server. Read the release notes before a major version.
 
 1. **Back up first**: `deploy/backup/backup.sh`.
 2. **Read the release notes** of every version between yours and the new one
-   (<https://github.com/femboypuppy/Tessera/releases>).
+   (<https://github.com/femboypuppy/Tessera-Notes/releases>).
 3. **Change the version** in `.env` (pin releases instead of `latest`, so upgrades happen when you
    decide):
    ```bash

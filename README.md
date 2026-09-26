@@ -1,7 +1,7 @@
 <a id="readme-top"></a>
 
 <p align="center">
-  <a href="https://github.com/femboypuppy/Tessera">
+  <a href="https://github.com/femboypuppy/Tessera-Notes">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg">
       <source media="(prefers-color-scheme: light)" srcset="assets/brand/wordmark-light.svg">
@@ -9,6 +9,8 @@
     </picture>
   </a>
 </p>
+
+<h1 align="center">Tessera Notes</h1>
 
 <h3 align="center">Your notes, your server. Notion's power, Obsidian's freedom.</h3>
 
@@ -18,26 +20,26 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/femboypuppy/Tessera/stargazers"><img src="https://img.shields.io/github/stars/femboypuppy/Tessera?style=flat&logo=github" alt="GitHub stars" width="85" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/forks"><img src="https://img.shields.io/github/forks/femboypuppy/Tessera?style=flat&logo=github" alt="GitHub forks" width="89" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/releases/latest"><img src="https://img.shields.io/github/v/release/femboypuppy/Tessera?include_prereleases&sort=semver" alt="Latest release" width="94" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/femboypuppy/Tessera/ci.yml?branch=main&label=CI" alt="CI status" width="74" height="20"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/femboypuppy/Tessera" alt="License: MIT" width="108" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/pkgs/container/tessera"><img src="https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white" alt="Docker image on GitHub Container Registry" width="111" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/stargazers"><img src="https://img.shields.io/github/stars/femboypuppy/Tessera-Notes?style=flat&logo=github" alt="GitHub stars" width="85" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/forks"><img src="https://img.shields.io/github/forks/femboypuppy/Tessera-Notes?style=flat&logo=github" alt="GitHub forks" width="89" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/releases/latest"><img src="https://img.shields.io/github/v/release/femboypuppy/Tessera-Notes?include_prereleases&sort=semver" alt="Latest release" width="94" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/femboypuppy/Tessera-Notes/ci.yml?branch=main&label=CI" alt="CI status" width="74" height="20"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/femboypuppy/Tessera-Notes" alt="License: MIT" width="108" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/pkgs/container/tessera"><img src="https://img.shields.io/badge/docker-ghcr.io-2496ED?logo=docker&logoColor=white" alt="Docker image on GitHub Container Registry" width="111" height="20"></a>
   <br>
-  <a href="https://github.com/femboypuppy/Tessera/commits/main"><img src="https://img.shields.io/github/last-commit/femboypuppy/Tessera" alt="Last commit" width="116" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/issues"><img src="https://img.shields.io/github/issues/femboypuppy/Tessera" alt="Open issues" width="104" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/graphs/contributors"><img src="https://img.shields.io/github/contributors/femboypuppy/Tessera" alt="Contributors" width="108" height="20"></a>
-  <a href="https://github.com/femboypuppy/Tessera/discussions"><img src="https://img.shields.io/github/discussions/femboypuppy/Tessera" alt="GitHub Discussions" width="132" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/commits/main"><img src="https://img.shields.io/github/last-commit/femboypuppy/Tessera-Notes" alt="Last commit" width="116" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/issues"><img src="https://img.shields.io/github/issues/femboypuppy/Tessera-Notes" alt="Open issues" width="104" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/graphs/contributors"><img src="https://img.shields.io/github/contributors/femboypuppy/Tessera-Notes" alt="Contributors" width="108" height="20"></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/discussions"><img src="https://img.shields.io/github/discussions/femboypuppy/Tessera-Notes" alt="GitHub Discussions" width="132" height="20"></a>
 </p>
 
 <p align="center">
-  <a href="https://femboypuppy.github.io/Tessera/"><strong>Docs</strong></a> ·
-  <a href="https://github.com/femboypuppy/Tessera/releases/latest"><strong>Download</strong></a> ·
-  <a href="https://femboypuppy.github.io/Tessera/self-hosting/"><strong>Self-host</strong></a> ·
-  <a href="https://femboypuppy.github.io/Tessera/plugins/"><strong>Plugins</strong></a> ·
+  <a href="https://femboypuppy.github.io/Tessera-Notes/"><strong>Docs</strong></a> ·
+  <a href="https://github.com/femboypuppy/Tessera-Notes/releases/latest"><strong>Download</strong></a> ·
+  <a href="https://femboypuppy.github.io/Tessera-Notes/self-hosting/"><strong>Self-host</strong></a> ·
+  <a href="https://femboypuppy.github.io/Tessera-Notes/plugins/"><strong>Plugins</strong></a> ·
   <a href="#roadmap"><strong>Roadmap</strong></a> ·
-  <a href="https://github.com/femboypuppy/Tessera/discussions"><strong>Discussions</strong></a>
+  <a href="https://github.com/femboypuppy/Tessera-Notes/discussions"><strong>Discussions</strong></a>
 </p>
 
 <p align="center">
@@ -51,7 +53,7 @@
 > [!NOTE]
 > Tessera is an early release (0.1). It's ready to try and to build on, and there will be rough
 > edges. Keep a backup of anything important, and please
-> [tell us what breaks](https://github.com/femboypuppy/Tessera/issues/new/choose).
+> [tell us what breaks](https://github.com/femboypuppy/Tessera-Notes/issues/new/choose).
 
 <details>
 <summary><strong>Table of contents</strong></summary>
@@ -197,7 +199,7 @@ Then open `http://localhost:8787`, choose **Join a workspace on a server**, and 
 account with that code.
 
 Prefer a native app? Download it for macOS, Windows or Linux from the
-[latest release](https://github.com/femboypuppy/Tessera/releases/latest).
+[latest release](https://github.com/femboypuppy/Tessera-Notes/releases/latest).
 
 <details>
 <summary><strong>All install methods</strong></summary>
@@ -205,14 +207,14 @@ Prefer a native app? Download it for macOS, Windows or Linux from the
 <br>
 
 **Desktop app.** Download the installer for your system from the
-[latest release](https://github.com/femboypuppy/Tessera/releases/latest) and open it. Each
+[latest release](https://github.com/femboypuppy/Tessera-Notes/releases/latest) and open it. Each
 workspace is a folder on your disk, and everything works offline.
 
 **Docker Compose**, with a restart policy and optional automatic HTTPS through Caddy:
 
 ```bash
 mkdir tessera && cd tessera
-curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/docker-compose.yml
 docker compose up -d
 ```
 
@@ -240,13 +242,13 @@ workspace in the browser and syncs when it's online.
 **From source** (Node 24 and pnpm 11):
 
 ```bash
-git clone https://github.com/femboypuppy/Tessera.git && cd Tessera
+git clone https://github.com/femboypuppy/Tessera-Notes.git && cd Tessera-Notes
 corepack enable
 pnpm install
 pnpm dev
 ```
 
-The [installation guide](https://femboypuppy.github.io/Tessera/guide/installation) covers each
+The [installation guide](https://femboypuppy.github.io/Tessera-Notes/guide/installation) covers each
 option in detail.
 
 </details>
@@ -254,8 +256,8 @@ option in detail.
 > [!IMPORTANT]
 > Before anyone signs in over the internet, put the server behind HTTPS and keep sign-ups
 > invite-only (`SIGNUP_MODE=invite`). The
-> [self-hosting guide](https://femboypuppy.github.io/Tessera/self-hosting/) covers HTTPS, every
-> setting, and [backups](https://femboypuppy.github.io/Tessera/self-hosting/backups).
+> [self-hosting guide](https://femboypuppy.github.io/Tessera-Notes/self-hosting/) covers HTTPS, every
+> setting, and [backups](https://femboypuppy.github.io/Tessera-Notes/self-hosting/backups).
 
 > [!WARNING]
 > A workspace that lives only in a browser is as durable as that browser profile: clearing site
@@ -288,7 +290,7 @@ flowchart LR
 - **The server is optional.** It stores updates and forwards them to other clients; your devices
   keep working without it.
 - **Features plug in.** The editor, databases, search, sync and plugins are separate modules on one
-  small core. The [architecture guide](https://femboypuppy.github.io/Tessera/contributing/architecture)
+  small core. The [architecture guide](https://femboypuppy.github.io/Tessera-Notes/contributing/architecture)
   and [SPEC.md](SPEC.md) explain the details.
 
 ## How Tessera compares
@@ -320,14 +322,14 @@ and license. ✅ yes · ⚠️ partly · ❌ no
 8. Notion has a public API for integrations, but no plugins that run inside the app.
 
 Prices are the lowest paid tier, billed yearly, in USD. Spotted something out of date?
-[Open an issue](https://github.com/femboypuppy/Tessera/issues/new/choose) and we'll fix it.
+[Open an issue](https://github.com/femboypuppy/Tessera-Notes/issues/new/choose) and we'll fix it.
 
 <p align="right"><a href="#readme-top">back to top ↑</a></p>
 
 ## Roadmap
 
 Tessera 0.1 covers everything above. Next, roughly in order (follow along in
-[issues labeled `roadmap`](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+label%3Aroadmap)):
+[issues labeled `roadmap`](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+label%3Aroadmap)):
 
 - Comments and @-mentions
 - Public sharing and per-page permissions
@@ -409,8 +411,8 @@ Not yet. The web app works on phones and tablets; native apps are on the [roadma
 
 </details>
 
-More answers in the [FAQ](https://femboypuppy.github.io/Tessera/guide/faq) and
-[troubleshooting](https://femboypuppy.github.io/Tessera/guide/troubleshooting) guides.
+More answers in the [FAQ](https://femboypuppy.github.io/Tessera-Notes/guide/faq) and
+[troubleshooting](https://femboypuppy.github.io/Tessera-Notes/guide/troubleshooting) guides.
 
 <p align="right"><a href="#readme-top">back to top ↑</a></p>
 
@@ -418,32 +420,32 @@ More answers in the [FAQ](https://femboypuppy.github.io/Tessera/guide/faq) and
 
 Tessera is a friendly place for a first contribution. Read [CONTRIBUTING.md](CONTRIBUTING.md) for
 the dev setup and a tour of the repo, then pick a
-[good first issue](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+[good first issue](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 Plugins are welcome too: `pnpm create tessera-plugin my-plugin` scaffolds one.
 
-<a href="https://github.com/femboypuppy/Tessera/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=femboypuppy/Tessera" alt="Avatars of the people who have contributed to Tessera" width="400">
+<a href="https://github.com/femboypuppy/Tessera-Notes/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=femboypuppy/Tessera-Notes" alt="Avatars of the people who have contributed to Tessera" width="400">
 </a>
 
 ## Community and support
 
-- **Questions and ideas:** [GitHub Discussions](https://github.com/femboypuppy/Tessera/discussions)
-- **Bugs and feature requests:** [Issues](https://github.com/femboypuppy/Tessera/issues/new/choose)
+- **Questions and ideas:** [GitHub Discussions](https://github.com/femboypuppy/Tessera-Notes/discussions)
+- **Bugs and feature requests:** [Issues](https://github.com/femboypuppy/Tessera-Notes/issues/new/choose)
 - **Security reports:** privately, through
-  [GitHub security advisories](https://github.com/femboypuppy/Tessera/security/advisories/new)
+  [GitHub security advisories](https://github.com/femboypuppy/Tessera-Notes/security/advisories/new)
 - Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Star history
 
 If Tessera is useful to you, or you'd like to see where it goes,
-**⭐ [star the repo](https://github.com/femboypuppy/Tessera)**. It helps other people find it,
+**⭐ [star the repo](https://github.com/femboypuppy/Tessera-Notes)**. It helps other people find it,
 and it makes our day.
 
-<a href="https://star-history.com/#femboypuppy/Tessera&Date">
+<a href="https://star-history.com/#femboypuppy/Tessera-Notes&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date&theme=dark">
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date">
-    <img src="https://api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date" alt="Star history chart for femboypuppy/Tessera" width="600">
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera-Notes&type=Date&theme=dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=femboypuppy/Tessera-Notes&type=Date">
+    <img src="https://api.star-history.com/svg?repos=femboypuppy/Tessera-Notes&type=Date" alt="Star history chart for femboypuppy/Tessera-Notes" width="600">
   </picture>
 </a>
 
@@ -483,6 +485,6 @@ Curious how it was made? [BUILT_WITH_AGENTS.md](BUILT_WITH_AGENTS.md) describes 
 version was built by parallel AI agents working from written briefs.
 
 **Contact:** [femboypuppy@tutanota.de](mailto:femboypuppy@tutanota.de) · Security issues: please
-use [private security advisories](https://github.com/femboypuppy/Tessera/security/advisories/new).
+use [private security advisories](https://github.com/femboypuppy/Tessera-Notes/security/advisories/new).
 
 <p align="right"><a href="#readme-top">back to top ↑</a></p>

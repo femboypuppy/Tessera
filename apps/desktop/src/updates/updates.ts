@@ -4,7 +4,7 @@ import type { UpdateInfo } from '../backend/protocol';
 import { t } from '../i18n';
 import { createStore } from '../lib/store';
 
-export const RELEASES_URL = 'https://github.com/femboypuppy/Tessera/releases';
+export const RELEASES_URL = 'https://github.com/femboypuppy/Tessera-Notes/releases';
 const DAY = 24 * 60 * 60 * 1000;
 
 export type UpdateState =

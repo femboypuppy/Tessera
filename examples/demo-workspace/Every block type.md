@@ -8,7 +8,7 @@ One page with every kind of block Tessera has. Type `/` on an empty line to add 
 
 ## Text
 
-A paragraph is the default block. Text can be **bold**, *italic*, ~~struck through~~, `inline code`, ==highlighted==, or a [link to the Tessera docs](https://femboypuppy.github.io/Tessera/).
+A paragraph is the default block. Text can be **bold**, *italic*, ~~struck through~~, `inline code`, ==highlighted==, or a [link to the Tessera docs](https://femboypuppy.github.io/Tessera-Notes/).
 
 A line can end with a hard break (backslash and Enter),\
 so the next line stays in the same paragraph.

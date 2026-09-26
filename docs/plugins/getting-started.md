@@ -25,7 +25,7 @@ from the ID (`Hello world`) and the author from `git config user.name`. Pass `--
 | `scripts/pack.mjs` | Zips `dist/` into a file anyone can install. |
 
 The same project is in the repository as
-[`examples/plugin-template`](https://github.com/femboypuppy/Tessera/tree/main/examples/plugin-template), if you'd rather copy it.
+[`examples/plugin-template`](https://github.com/femboypuppy/Tessera-Notes/tree/main/examples/plugin-template), if you'd rather copy it.
 
 ## 2. Run it in Tessera
 
@@ -211,5 +211,5 @@ plugin's tests with the others.
 
 - The [API reference](./api.md) lists everything `api` can do.
 - [Permissions and security](./permissions.md) explains what users are asked to allow.
-- The [examples](https://github.com/femboypuppy/Tessera/tree/main/examples/plugins) show complete plugins: the Mermaid block is a good
+- The [examples](https://github.com/femboypuppy/Tessera-Notes/tree/main/examples/plugins) show complete plugins: the Mermaid block is a good
   model for rich custom blocks.

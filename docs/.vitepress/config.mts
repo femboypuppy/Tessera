@@ -7,13 +7,13 @@ import { withMermaid } from 'vitepress-plugin-mermaid';
 
 const docsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const screenshotsDir = path.resolve(docsDir, '..', 'assets', 'screenshots');
-const repo = 'https://github.com/femboypuppy/Tessera';
+const repo = 'https://github.com/femboypuppy/Tessera-Notes';
 
 /**
- * GitHub Pages serves the site from https://femboypuppy.github.io/Tessera/, so every URL lives
- * under `/Tessera/`. Set `DOCS_BASE=/` for a custom domain or a local preview at the root.
+ * GitHub Pages serves the site from https://femboypuppy.github.io/Tessera-Notes/, so every URL lives
+ * under `/Tessera-Notes/`. Set `DOCS_BASE=/` for a custom domain or a local preview at the root.
  */
-const base = process.env.DOCS_BASE ?? '/Tessera/';
+const base = process.env.DOCS_BASE ?? '/Tessera-Notes/';
 
 /** Reads a page's title from its frontmatter `title` or its first `# ` heading. */
 function pageTitle(file: string): string {
@@ -170,7 +170,9 @@ function screenshotsPlugin(): Plugin {
 export default withMermaid({
   base,
   lang: 'en-US',
-  title: 'Tessera',
+  // "Tessera Notes" in page titles and link previews tells the project apart from others named
+  // Tessera; the nav bar keeps the product's name (themeConfig.siteTitle).
+  title: 'Tessera Notes',
   description:
     'Tessera is an open-source, local-first knowledge app: blocks and databases, wikilinks and a graph, real-time collaboration and plugins, on your device and your own server.',
   cleanUrls: true,
@@ -182,7 +184,9 @@ export default withMermaid({
     ['link', { rel: 'apple-touch-icon', href: `${base}apple-touch-icon.png` }],
     ['meta', { name: 'theme-color', content: '#5b5bd6' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'Tessera' }],
+    ['meta', { property: 'og:site_name', content: 'Tessera Notes' }],
+    ['meta', { property: 'og:title', content: 'Tessera Notes' }],
+    ['meta', { property: 'og:url', content: `https://femboypuppy.github.io${base}` }],
     [
       'meta',
       {
@@ -198,6 +202,7 @@ export default withMermaid({
   ],
   themeConfig: {
     logo: { src: '/logo-mark.svg', alt: '' },
+    siteTitle: 'Tessera',
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
       { text: 'Self-hosting', link: '/self-hosting/', activeMatch: '^/self-hosting/' },

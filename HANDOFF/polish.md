@@ -271,7 +271,7 @@ Notion-style blocks and databases, Obsidian-style `[[links]]` and a graph, real-
 collaboration and sandboxed plugins, on your own device and, if you want one, your own server.
 Everything works offline; the server only syncs.
 
-![A 20-second tour of Tessera](https://raw.githubusercontent.com/femboypuppy/Tessera/v0.1.0/assets/demo.gif)
+![A 20-second tour of Tessera](https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/v0.1.0/assets/demo.gif)
 
 ### Highlights
 
@@ -300,7 +300,7 @@ Everything works offline; the server only syncs.
 - **Try it:** choose **Open the demo workspace** on the first screen: a project board, a
   reading list, meeting notes and a small knowledge garden about space exploration.
 - **Self-host:** `docker run -d -p 8787:8787 -v tessera-data:/data ghcr.io/femboypuppy/tessera:0.1.0`,
-  then open `http://localhost:8787`. The [self-hosting guide](https://femboypuppy.github.io/Tessera/self-hosting/)
+  then open `http://localhost:8787`. The [self-hosting guide](https://femboypuppy.github.io/Tessera-Notes/self-hosting/)
   covers HTTPS, settings and backups.
 - **Desktop:** download the file for your system below.
 
@@ -317,8 +317,8 @@ macOS and Windows ask you to confirm the first launch.
 ### Good to know
 
 This is an early release: keep a backup of anything important (Settings → Import & export →
-Download backup), and please [tell us what breaks](https://github.com/femboypuppy/Tessera/issues/new/choose).
-Known issues are [labeled `bug`](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+is%3Aopen+label%3Abug);
+Download backup), and please [tell us what breaks](https://github.com/femboypuppy/Tessera-Notes/issues/new/choose).
+Known issues are [labeled `bug`](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+is%3Aopen+label%3Abug);
 the main ones: typing on pages of thousands of blocks is slower in Firefox than in Chromium, a
 plugin panel stuck in a loop can freeze the app in Firefox, and the phone layout is a web page,
 not a native app.
@@ -402,7 +402,7 @@ Each is a GitHub issue (#1–#55). The ones a user may notice first:
 
 None left for another agent. The owner steps are in the release checklist. For the next release:
 write `.github/releases/vX.Y.Z.md` (the highlights), bump the versions, and put
-`node scripts/release/changelog.ts --to vX.Y.Z --repo femboypuppy/Tessera --heading --intro
+`node scripts/release/changelog.ts --to vX.Y.Z --repo femboypuppy/Tessera-Notes --heading --intro
 .github/releases/vX.Y.Z.md` (after tagging, or `--to HEAD` before) above the previous release in
 `CHANGELOG.md`; the release workflow writes the same notes into the GitHub Release. On this machine the
 quickstart test left a stopped container `tessera`, a volume `tessera-data` and the image

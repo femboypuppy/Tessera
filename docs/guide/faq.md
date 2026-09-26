@@ -2,7 +2,7 @@
 
 ## Is Tessera free?
 
-Yes. Tessera is open source under the [MIT license](https://github.com/femboypuppy/Tessera/blob/main/LICENSE).
+Yes. Tessera is open source under the [MIT license](https://github.com/femboypuppy/Tessera-Notes/blob/main/LICENSE).
 There's no paid plan, no account with us and no telemetry. Running a server costs whatever your
 hosting costs.
 
@@ -26,7 +26,7 @@ server comfortably, and [the self-hosting guide](../self-hosting/) takes a few m
 
 Traffic between the apps and your server is encrypted with HTTPS. Data at rest is stored as-is on
 your device and your server; protect them with disk encryption. End-to-end encryption is on the
-[roadmap](https://github.com/femboypuppy/Tessera#roadmap).
+[roadmap](https://github.com/femboypuppy/Tessera-Notes#roadmap).
 
 ## Can I use my Obsidian vault directly?
 
@@ -53,7 +53,7 @@ can revoke them at any time. The plugin docs cover the security model in detail.
 
 ## How is Tessera different from Notion, Obsidian, Anytype, AFFiNE or Logseq?
 
-The [README](https://github.com/femboypuppy/Tessera#how-tessera-compares) has a comparison table,
+The [README](https://github.com/femboypuppy/Tessera-Notes#how-tessera-compares) has a comparison table,
 checked against each product's own docs. In short: Tessera is MIT-licensed, local-first,
 self-hostable in one container, and has real-time collaboration, databases, plugins and a graph
 together. It is also much younger than all of them.
@@ -61,5 +61,5 @@ together. It is also much younger than all of them.
 ## How can I help?
 
 Star the repo, tell a friend, report bugs, or pick a
-[good first issue](https://github.com/femboypuppy/Tessera/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+[good first issue](https://github.com/femboypuppy/Tessera-Notes/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 [Contributing](../contributing/) explains how to get started.

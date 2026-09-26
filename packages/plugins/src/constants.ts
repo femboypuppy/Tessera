@@ -15,7 +15,8 @@ export const APP_VERSION = '0.1.1';
  * `examples/plugins/registry.json` and the example zips to GitHub Pages, which serves them with
  * CORS headers (see HANDOFF/plugins.md).
  */
-export const DEFAULT_REGISTRY_URL = 'https://femboypuppy.github.io/Tessera/plugins/registry.json';
+export const DEFAULT_REGISTRY_URL =
+  'https://femboypuppy.github.io/Tessera-Notes/plugins/registry.json';
 
 /** Device settings owned by the plugins feature. */
 export const PLUGIN_SETTING_KEYS = {

@@ -127,7 +127,7 @@ describe('issue forms', () => {
       assert.ok(isRecord(link) && nonEmptyString(link.name) && nonEmptyString(link.about));
       assert.match(
         String(link.url),
-        /^https:\/\/(github\.com\/femboypuppy\/Tessera\/|femboypuppy\.github\.io\/Tessera\/)/,
+        /^https:\/\/(github\.com\/femboypuppy\/Tessera-Notes\/|femboypuppy\.github\.io\/Tessera-Notes\/)/,
       );
     }
     const urls = config.contact_links.map((link: unknown) => (isRecord(link) ? link.url : ''));

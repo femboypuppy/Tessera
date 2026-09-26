@@ -180,7 +180,7 @@ fn build_items<R: Runtime>(app: &AppHandle<R>, nodes: &[MenuNode]) -> Result<Ite
                         let metadata = AboutMetadata {
                             name: Some(info.name.clone()),
                             version: Some(info.version.to_string()),
-                            website: Some("https://github.com/femboypuppy/Tessera".into()),
+                            website: Some("https://github.com/femboypuppy/Tessera-Notes".into()),
                             license: Some("MIT".into()),
                             icon: app.default_window_icon().cloned(),
                             ..Default::default()

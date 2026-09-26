@@ -1,7 +1,7 @@
 # Architecture
 
 This page is a map of Tessera for contributors. The detailed contract, with every type, schema and
-extension point, is [SPEC.md](https://github.com/femboypuppy/Tessera/blob/main/SPEC.md); the code
+extension point, is [SPEC.md](https://github.com/femboypuppy/Tessera-Notes/blob/main/SPEC.md); the code
 in `packages/core` is the source of truth.
 
 ## The big picture

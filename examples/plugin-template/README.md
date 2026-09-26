@@ -1,10 +1,10 @@
 # My plugin
 
-A [Tessera](https://github.com/femboypuppy/Tessera) plugin, made with `pnpm create tessera-plugin`.
+A [Tessera](https://github.com/femboypuppy/Tessera-Notes) plugin, made with `pnpm create tessera-plugin`.
 
 It adds a **Say hello** command to the command palette and a side panel that shows the page you
 are on. Change it into anything: the API is in the
-[plugin docs](https://github.com/femboypuppy/Tessera/tree/main/docs/plugins).
+[plugin docs](https://github.com/femboypuppy/Tessera-Notes/tree/main/docs/plugins).
 
 ## Develop
 
@@ -34,7 +34,7 @@ pnpm pack
 
 This writes `my-plugin-0.1.0.zip`, which anyone can install with **Install plugin → From a file**.
 To list it in a registry, see
-[Publishing](https://github.com/femboypuppy/Tessera/blob/main/docs/plugins/publishing.md).
+[Publishing](https://github.com/femboypuppy/Tessera-Notes/blob/main/docs/plugins/publishing.md).
 
 ## Files
 

@@ -24,7 +24,7 @@ const DOCS = [
   'BUILT_WITH_AGENTS.md',
 ];
 
-const REPO_URL = 'https://github.com/femboypuppy/Tessera';
+const REPO_URL = 'https://github.com/femboypuppy/Tessera-Notes';
 
 function isExternal(target: string): boolean {
   return /^(https?:|mailto:)/.test(target);
@@ -82,7 +82,7 @@ test('README: every image has alt text and an explicit width', () => {
 test('README: repo images use relative paths, and light/dark pictures come in pairs', () => {
   const readme = readRepoFile('README.md');
   expect(readme).not.toContain(`${REPO_URL}/raw/`);
-  expect(readme).not.toContain('raw.githubusercontent.com/femboypuppy/Tessera/main/assets');
+  expect(readme).not.toContain('raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/assets');
   const pictures = [...readme.matchAll(/<picture>([\s\S]*?)<\/picture>/g)].map((m) => m[1] ?? '');
   expect(pictures.length).toBeGreaterThanOrEqual(8);
   for (const picture of pictures) {
@@ -103,18 +103,20 @@ test('README top: centered logo, tagline, badges, quick links and the demo, kept
   expect(top).toMatch(/<p align="center">\s*<a [^>]+>\s*<picture>/);
   expect(top).toContain('srcset="assets/brand/wordmark-dark.svg"');
   expect(top).toContain('src="assets/brand/wordmark-light.svg"');
+  // "Tessera Notes" tells the project apart from others named Tessera; the product is Tessera.
+  expect(top).toContain('<h1 align="center">Tessera Notes</h1>');
   expect(top).toContain("Notion's power, Obsidian's freedom.");
   for (const badge of [
-    'img.shields.io/github/stars/femboypuppy/Tessera',
-    'img.shields.io/github/forks/femboypuppy/Tessera',
-    'img.shields.io/github/v/release/femboypuppy/Tessera',
-    'img.shields.io/github/actions/workflow/status/femboypuppy/Tessera/ci.yml',
-    'img.shields.io/github/license/femboypuppy/Tessera',
+    'img.shields.io/github/stars/femboypuppy/Tessera-Notes',
+    'img.shields.io/github/forks/femboypuppy/Tessera-Notes',
+    'img.shields.io/github/v/release/femboypuppy/Tessera-Notes',
+    'img.shields.io/github/actions/workflow/status/femboypuppy/Tessera-Notes/ci.yml',
+    'img.shields.io/github/license/femboypuppy/Tessera-Notes',
     'img.shields.io/badge/docker-ghcr.io',
-    'img.shields.io/github/last-commit/femboypuppy/Tessera',
-    'img.shields.io/github/issues/femboypuppy/Tessera',
-    'img.shields.io/github/contributors/femboypuppy/Tessera',
-    'img.shields.io/github/discussions/femboypuppy/Tessera',
+    'img.shields.io/github/last-commit/femboypuppy/Tessera-Notes',
+    'img.shields.io/github/issues/femboypuppy/Tessera-Notes',
+    'img.shields.io/github/contributors/femboypuppy/Tessera-Notes',
+    'img.shields.io/github/discussions/femboypuppy/Tessera-Notes',
   ]) {
     expect(top).toContain(badge);
   }
@@ -232,10 +234,10 @@ test('README: star history with a dark variant, contributors and the footer', ()
   const stars = section(readme, '## Star history', '## Acknowledgements');
   expect(stars).toContain('⭐');
   expect(stars).toContain(
-    'api.star-history.com/svg?repos=femboypuppy/Tessera&type=Date&theme=dark',
+    'api.star-history.com/svg?repos=femboypuppy/Tessera-Notes&type=Date&theme=dark',
   );
   expect(stars).toMatch(/<source media="\(prefers-color-scheme: dark\)"/);
-  expect(readme).toContain('contrib.rocks/image?repo=femboypuppy/Tessera');
+  expect(readme).toContain('contrib.rocks/image?repo=femboypuppy/Tessera-Notes');
   const footer = readme.slice(readme.indexOf('## License and contact'));
   expect(footer).toContain('[MIT License](LICENSE)');
   expect(footer).toContain('[BUILT_WITH_AGENTS.md](BUILT_WITH_AGENTS.md)');

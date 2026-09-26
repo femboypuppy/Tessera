@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://femboypuppy.github.io/Tessera/plugins/registry.schema.json",
+  "$id": "https://femboypuppy.github.io/Tessera-Notes/plugins/registry.schema.json",
   "title": "Tessera plugin registry",
   "description": "A list of plugins Tessera can browse and install (Settings → Plugins → Browse). Tessera validates every entry and skips invalid ones.",
   "type": "object",

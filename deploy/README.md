@@ -18,9 +18,9 @@ Then: [back up and restore](backup/README.md), and [upgrade between versions](UP
 
 ```bash
 mkdir tessera && cd tessera
-curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera/main/docker-compose.yml
-curl -fsSL https://raw.githubusercontent.com/femboypuppy/Tessera/main/.env.example -o .env
-mkdir -p deploy/caddy && curl -fsSL https://raw.githubusercontent.com/femboypuppy/Tessera/main/deploy/caddy/Caddyfile -o deploy/caddy/Caddyfile
+curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/.env.example -o .env
+mkdir -p deploy/caddy && curl -fsSL https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/deploy/caddy/Caddyfile -o deploy/caddy/Caddyfile
 nano .env                                   # PUBLIC_URL, and TESSERA_DOMAIN for HTTPS
 docker compose --profile https up -d        # or `docker compose up -d` without Caddy
 docker compose exec tessera tessera-server create-owner

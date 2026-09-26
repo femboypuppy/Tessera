@@ -10,7 +10,7 @@ There are three ways to run Tessera. Pick one; you can connect them later.
 
 ## Desktop app
 
-1. Open the [latest release](https://github.com/femboypuppy/Tessera/releases/latest).
+1. Open the [latest release](https://github.com/femboypuppy/Tessera-Notes/releases/latest).
 2. Download the file for your system:
 
    | System                | File                                   |
@@ -54,7 +54,7 @@ configuration in a `.env` file and can add automatic HTTPS:
 
 ```bash
 mkdir tessera && cd tessera
-curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/femboypuppy/Tessera-Notes/main/docker-compose.yml
 docker compose up -d
 ```
 
@@ -78,14 +78,14 @@ profile. Use the desktop app or a server for anything you'd hate to lose, and
 You need [Node.js 24](https://nodejs.org) and pnpm 11 (Corepack installs the right version).
 
 ```bash
-git clone https://github.com/femboypuppy/Tessera.git && cd Tessera
+git clone https://github.com/femboypuppy/Tessera-Notes.git && cd Tessera-Notes
 corepack enable
 pnpm install
 pnpm dev
 ```
 
 `pnpm dev` starts the web app (with hot reload) and the sync server together, the app proxying
-`/api` and `/sync` to the server. [CONTRIBUTING.md](https://github.com/femboypuppy/Tessera/blob/main/CONTRIBUTING.md)
+`/api` and `/sync` to the server. [CONTRIBUTING.md](https://github.com/femboypuppy/Tessera-Notes/blob/main/CONTRIBUTING.md)
 explains how to run them separately, the desktop app and the tests.
 
 ## Next

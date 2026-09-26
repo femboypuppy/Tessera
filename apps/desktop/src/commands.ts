@@ -8,7 +8,7 @@ import { getBackend, onReset } from './runtime';
 import { checkForUpdatesInteractive, RELEASES_URL } from './updates/updates';
 import { desktopRegistry, pickAndOpenFolder } from './workspace/flows';
 
-export const REPO_URL = 'https://github.com/femboypuppy/Tessera';
+export const REPO_URL = 'https://github.com/femboypuppy/Tessera-Notes';
 export const DOCS_URL = `${REPO_URL}#readme`;
 export const ISSUES_URL = `${REPO_URL}/issues/new/choose`;
 
