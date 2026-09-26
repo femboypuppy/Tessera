@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { formatQuery, hasFilters, parseQuery } from './query';
+import { formatQuery, hasFilters, parseQuery, tokenizeQuery, type QueryToken } from './query';
+
+/**
+ * The regex the tokenizer replaced (keys without `:` or `"`), as the reference for what it must
+ * return. It runs in linear time here, but CodeQL can't tell, and the scanner is plainer.
+ */
+function tokenizeWithRegex(query: string): QueryToken[] {
+  const tokens: QueryToken[] = [];
+  for (const match of query.matchAll(/([^\s:"]+):"([^"]*)"?|"([^"]*)"?|(\S+)/g)) {
+    const [, key, value, phrase, word] = match;
+    if (key !== undefined) tokens.push({ kind: 'quoted', key, value: value ?? '' });
+    else if (phrase !== undefined) tokens.push({ kind: 'phrase', text: phrase });
+    else tokens.push({ kind: 'word', text: word ?? '' });
+  }
+  return tokens;
+}
 
 describe('parseQuery', () => {
   it('separates free text from filters', () => {
@@ -40,6 +55,25 @@ describe('parseQuery', () => {
     expect(parseQuery(formatQuery(parsed))).toEqual(parsed);
     expect(hasFilters(parsed)).toBe(true);
     expect(hasFilters(parseQuery('plain words'))).toBe(false);
+  });
+
+  it('tokenizes every short query exactly as the regex it replaces did', () => {
+    // Every string of 1 to 6 characters over the ones that matter: 19,530 queries.
+    const alphabet = ['a', ':', '"', ' ', '#'];
+    let queries = [''];
+    for (let length = 1; length <= 6; length += 1) {
+      queries = queries
+        .flatMap((query) => (query.length === length - 1 ? alphabet.map((c) => query + c) : []))
+        .concat(queries);
+      for (const query of queries.filter((candidate) => candidate.length === length)) {
+        expect(tokenizeQuery(query), JSON.stringify(query)).toEqual(tokenizeWithRegex(query));
+      }
+    }
+    expect(tokenizeQuery('in:"Mission notes" #space x')).toEqual([
+      { kind: 'quoted', key: 'in', value: 'Mission notes' },
+      { kind: 'word', text: '#space' },
+      { kind: 'word', text: 'x' },
+    ]);
   });
 
   it('reads a pasted wall of text in linear time', () => {

@@ -23,28 +23,70 @@ export interface ParsedQuery {
   hasTasks: boolean;
 }
 
+/** A piece of a query: `key:"quoted value"`, `"a phrase"` or a bare word. */
+export type QueryToken =
+  | { kind: 'quoted'; key: string; value: string }
+  | { kind: 'phrase'; text: string }
+  | { kind: 'word'; text: string };
+
+const SPACE = /\s/;
+/** `key:"` at the start of a word; a key has no whitespace, colon or quote. */
+const QUOTED_KEY = /^([^\s:"]+):"/;
+
 /**
- * `key:"quoted value"`, `"a phrase"` or a bare word. A key has no colon or quote, so a failed
- * `key:"` stops at the first one (an unbounded key rescanned the rest of `""""…` at every quote).
+ * Splits a query into tokens in one forward scan. A quote runs to the next quote (spaces
+ * included) or to the end. (A single regex with the three forms as alternatives was flagged by
+ * CodeQL, js/polynomial-redos: its key pattern could be retried from every position of a run.)
  */
-const TOKEN = /([^\s:"]+):"([^"]*)"?|"([^"]*)"?|(\S+)/g;
+export function tokenizeQuery(query: string): QueryToken[] {
+  const tokens: QueryToken[] = [];
+  const quoteEnd = (from: number) => {
+    const close = query.indexOf('"', from);
+    return close === -1 ? query.length : close;
+  };
+  let index = 0;
+  while (index < query.length) {
+    if (SPACE.test(query.charAt(index))) {
+      index += 1;
+      continue;
+    }
+    if (query.charAt(index) === '"') {
+      const end = quoteEnd(index + 1);
+      tokens.push({ kind: 'phrase', text: query.slice(index + 1, end) });
+      index = end + 1;
+      continue;
+    }
+    let end = index;
+    while (end < query.length && !SPACE.test(query.charAt(end))) end += 1;
+    const word = query.slice(index, end);
+    const key = QUOTED_KEY.exec(word);
+    if (key?.[1]) {
+      const valueStart = index + key[0].length;
+      const valueEnd = quoteEnd(valueStart);
+      tokens.push({ kind: 'quoted', key: key[1], value: query.slice(valueStart, valueEnd) });
+      index = valueEnd + 1;
+      continue;
+    }
+    tokens.push({ kind: 'word', text: word });
+    index = end;
+  }
+  return tokens;
+}
 
 /** Splits a query into free text and filters. */
 export function parseQuery(query: string): ParsedQuery {
   const parsed: ParsedQuery = { text: '', tags: [], within: [], kinds: [], hasTasks: false };
   const words: string[] = [];
-  TOKEN.lastIndex = 0;
-  for (let match = TOKEN.exec(query); match; match = TOKEN.exec(query)) {
-    const [, quotedKey, quotedValue, phrase, bare] = match;
-    if (quotedKey !== undefined) {
-      if (!applyFilter(parsed, quotedKey, quotedValue ?? '')) words.push(quotedValue ?? '');
+  for (const token of tokenizeQuery(query)) {
+    if (token.kind === 'quoted') {
+      if (!applyFilter(parsed, token.key, token.value)) words.push(token.value);
       continue;
     }
-    if (phrase !== undefined) {
-      words.push(phrase);
+    if (token.kind === 'phrase') {
+      words.push(token.text);
       continue;
     }
-    const word = bare ?? '';
+    const word = token.text;
     if (word.startsWith('#') && word.length > 1) {
       const tag = normalizeTagName(word);
       if (tag) {
