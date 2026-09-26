@@ -5,7 +5,7 @@ and databases when you allow it. They are small ES modules written against a typ
 [`@tessera/plugin-api`](./api.md), and every one of them runs in a sandbox: a plugin can only do
 what its permissions allow, and a broken plugin can't take the app down with it.
 
-![Settings → Plugins with five plugins installed](https://github.com/femboypuppy/Tessera-Notes/blob/main/assets/screenshots/plugins/plugin-settings-light.png)
+<Screenshot name="plugins/plugin-settings" alt="Settings → Plugins with five plugins installed" />
 
 ## For plugin authors
 
@@ -58,7 +58,7 @@ The repository ships five complete plugins in
 - **Random page** 🎲: the smallest useful plugin, one command.
 - **Mermaid diagrams** 🧜: a custom block with a live editor, drawn in the app's theme.
 
-![A Mermaid diagram block](https://github.com/femboypuppy/Tessera-Notes/blob/main/assets/screenshots/plugins/mermaid-block-light.png)
+<Screenshot name="plugins/mermaid-block" alt="A Mermaid diagram block" />
 
 ## Installing plugins
 
@@ -76,4 +76,4 @@ Before anything is installed, Tessera shows what the plugin will be able to do, 
 Each plugin's page in Settings has its permissions (each can be revoked at any time), its
 settings, a console with its logs and errors, and Uninstall, which also deletes its stored data.
 
-![The permission prompt shown before installing](https://github.com/femboypuppy/Tessera-Notes/blob/main/assets/screenshots/plugins/permission-prompt-light.png)
+<Screenshot name="plugins/permission-prompt" alt="The permission prompt shown before installing" />

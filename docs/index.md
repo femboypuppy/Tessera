@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Tessera
+title: Tessera Notes
 titleTemplate: Your notes, your server
 
 hero:
