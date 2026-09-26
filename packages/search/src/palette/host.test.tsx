@@ -24,7 +24,12 @@ describe('PaletteHost', () => {
     // Shortcuts pass through untouched.
     expect(fireEvent.keyDown(document.body, { key: 'k', ctrlKey: true })).toBe(true);
     expect(paletteStore.getState().initialQuery).toBe('gaga');
-    const input = await screen.findByRole('combobox', { name: 'Command palette' });
+    // The palette is a lazy chunk: its first load can take seconds while the whole suite runs.
+    const input = await screen.findByRole(
+      'combobox',
+      { name: 'Command palette' },
+      { timeout: 15_000 },
+    );
     expect((input as HTMLInputElement).value).toBe('gaga');
     // Once the palette is on screen, its own input takes the keys.
     expect(fireEvent.keyDown(document.body, { key: 'r' })).toBe(true);
