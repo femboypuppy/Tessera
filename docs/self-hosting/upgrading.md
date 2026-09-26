@@ -32,14 +32,15 @@ Your data is in the volume, so removing the container doesn't touch it.
 ```yaml
 services:
   tessera:
-    image: ghcr.io/femboypuppy/tessera:0.1.0
+    image: ghcr.io/femboypuppy/tessera:0.1.1
 ```
 
 ## Clients
 
-The desktop app updates itself (it asks first). Web browsers load the new app the next time you
-open or reload it. Clients a version behind keep syncing; the release notes say when an update is
-required.
+The desktop app updates itself (it asks first) when a release includes signed update files;
+otherwise install the new version from the releases page. Web browsers load the new app the next
+time you open or reload it. Clients a version behind keep syncing; the release notes say when an
+update is required.
 
 ## Going back
 
